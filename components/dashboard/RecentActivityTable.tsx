@@ -24,8 +24,9 @@ const HEADER_BG = "#f0f2f5";
 /* ── Card brand mini-badge ─────────────────────────────────────────────── */
 function CardBrand({ brand }: { brand: string | null | undefined }) {
   if (brand === "visa") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black tracking-tight text-white"
-      style={{ background: "#1a1f71" }}>VISA</span>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+      <Image src="/visa.png" alt="Visa" width={26} height={12} style={{ objectFit: "contain" }} />
+    </span>
   );
   if (brand === "mastercard") return (
     <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
@@ -71,8 +72,8 @@ function fmtAmt(amount: number, currency: string) {
 }
 
 /* ── Column header ─────────────────────────────────────────────────────── */
-const TH = ({ children }: { children: React.ReactNode }) => (
-  <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 whitespace-nowrap">
+const TH = ({ children, hideOnMobile }: { children: React.ReactNode; hideOnMobile?: boolean }) => (
+  <th className={cn("px-4 py-3 text-left text-[11px] font-semibold text-gray-500 whitespace-nowrap", hideOnMobile && "hidden md:table-cell")}>
     {children}
   </th>
 );
@@ -119,7 +120,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
           {tab === "transactions" ? (
             <motion.table key="tx" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              style={{ tableLayout: "fixed", width: "100%" }}>
+              style={{ tableLayout: "fixed", width: "100%", minWidth: 800 }}>
               <colgroup>
                 <col style={{ width: 120 }} />{/* Amount */}
                 <col style={{ width: 140 }} />{/* Status */}
@@ -128,17 +129,17 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 <col style={{ width: 185 }} />{/* Email */}
                 <col style={{ width: 150 }} />{/* Transaction ID */}
                 <col style={{ width: 148 }} />{/* Date */}
-                <col style={{ width: "100%" }} />{/* spacer */}
+                <col style={{ width: 160 }} />{/* CTA */}
               </colgroup>
               <thead>
                 <tr style={{ background: HEADER_BG, borderBottom: "1px solid #e8eaed" }}>
                   <TH>Amount</TH>
                   <TH>Status</TH>
-                  <TH>Payment method</TH>
+                  <TH hideOnMobile>Payment method</TH>
                   <TH>Customer name</TH>
-                  <TH>Email</TH>
-                  <TH>Transaction ID</TH>
-                  <TH>Date and time</TH>
+                  <TH hideOnMobile>Email</TH>
+                  <TH hideOnMobile>Transaction ID</TH>
+                  <TH hideOnMobile>Date and time</TH>
                   <th className="pr-4" />{/* spacer / CTA header */}
                 </tr>
               </thead>
@@ -169,7 +170,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                       {/* Status */}
                       <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={tx.status} size="sm" /></td>
                       {/* Method */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
                         <PaymentMethod method={tx.method} cardBrand={tx.cardBrand} cardLast4={tx.cardLast4} />
                       </td>
                       {/* Customer name */}
@@ -177,17 +178,17 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                         <span className="text-[13px] font-medium text-gray-800">{tx.customerName}</span>
                       </td>
                       {/* Email */}
-                      <td className="px-4 py-3 whitespace-nowrap overflow-hidden">
+                      <td className="px-4 py-3 whitespace-nowrap overflow-hidden hidden md:table-cell">
                         <span className="text-[13px] text-gray-700">{tx.email}</span>
                       </td>
                       {/* Transaction ID */}
-                      <td className="px-4 py-3 whitespace-nowrap overflow-hidden">
+                      <td className="px-4 py-3 whitespace-nowrap overflow-hidden hidden md:table-cell">
                         <span className="text-[13px] font-mono text-[#0061E3]/70 hover:text-[#0061E3] transition-colors cursor-pointer">
                           {tx.id}
                         </span>
                       </td>
                       {/* Date */}
-                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700">
+                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700 hidden md:table-cell">
                         {formatDate(tx.date)}
                       </td>
                       {/* Hover CTA */}
@@ -205,7 +206,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
           ) : (
             <motion.table key="stl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              style={{ tableLayout: "fixed", width: "100%" }}>
+              style={{ tableLayout: "fixed", width: "100%", minWidth: 700 }}>
               <colgroup>
                 <col style={{ width: 170 }} />{/* Settlement ID */}
                 <col style={{ width: 135 }} />{/* Amount */}
@@ -213,7 +214,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 <col style={{ width: 155 }} />{/* Bank */}
                 <col style={{ width: 110 }} />{/* Transactions */}
                 <col style={{ width: 135 }} />{/* Date */}
-                <col style={{ width: "100%" }} />{/* spacer */}
+                <col style={{ width: 140 }} />{/* CTA */}
               </colgroup>
               <thead>
                 <tr style={{ background: HEADER_BG, borderBottom: "1px solid #e8eaed" }}>

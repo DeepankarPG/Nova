@@ -12,7 +12,7 @@ const quickLinks = [
 export function QuickAccess() {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mr-1">Quick Access</span>
+      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mr-1 leading-none">Quick Access</span>
       {quickLinks.map((item) => {
         const Icon = item.icon;
         return (

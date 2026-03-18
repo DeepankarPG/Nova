@@ -30,8 +30,9 @@ function fmtAmt(amount: number, currency: string) {
 
 function CardBrand({ brand }: { brand: string | null | undefined }) {
   if (brand === "visa") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black tracking-tight text-white"
-      style={{ background: "#1a1f71" }}>VISA</span>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+      <Image src="/visa.png" alt="Visa" width={26} height={12} style={{ objectFit: "contain" }} />
+    </span>
   );
   if (brand === "mastercard") return (
     <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
@@ -167,7 +168,7 @@ export default function TransactionsPage() {
       />
 
       {/* Summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <StatCard
           title="Total Volume"
           value={847250}
@@ -224,17 +225,17 @@ export default function TransactionsPage() {
         style={{ border: "1px solid #e5e7eb" }}>
 
         {/* Search */}
-        <div className="relative min-w-[200px] max-w-xs flex-1">
+        <div className="relative min-w-[160px] max-w-xs flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input type="text" placeholder="Search customer, email, ID…" value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-600 placeholder:text-gray-400 focus:outline-none transition-all"
-            onFocus={(e) => { e.currentTarget.style.borderColor = "#0061E3"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,97,227,0.08)"; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#6b7280"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(75,85,99,0.10)"; }}
             onBlur={(e)  => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "none"; }}
           />
         </div>
 
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="hidden sm:block h-4 w-px bg-gray-200" />
 
         {/* Status pills */}
         <div className="flex items-center gap-1 flex-wrap">
@@ -251,10 +252,10 @@ export default function TransactionsPage() {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="hidden sm:block h-4 w-px bg-gray-200" />
 
         {/* Method pills */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {methodOptions.map((m) => (
             <button key={m} onClick={() => setMethodFilter(m)}
               className={cn(

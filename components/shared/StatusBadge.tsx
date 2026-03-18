@@ -19,13 +19,13 @@ type BadgeStyle = {
  */
 const config: Record<string, BadgeStyle> = {
   // ── Success — white bg, green-600 text, green-300 border ──
-  success:                    { label: "Success",                     bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  sent_for_capture:           { label: "Sent for capture",            bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  settled:                    { label: "Settled",                     bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  paid:                       { label: "Paid",                        bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  active:                     { label: "Active",                      bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  completed:                  { label: "Completed",                   bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
-  won:                        { label: "Won",                         bg: "#ffffff", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  success:                    { label: "Success",                     bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  sent_for_capture:           { label: "Sent for capture",            bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  settled:                    { label: "Settled",                     bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  paid:                       { label: "Paid",                        bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  active:                     { label: "Active",                      bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  completed:                  { label: "Completed",                   bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
+  won:                        { label: "Won",                         bg: "#f0fdf4", text: "#15803d", border: "#86efac", trailIcon: "check"   },
   issued:                     { label: "Issued",                      bg: "#ffffff", text: "#0047b0", border: "#93c5fd", trailIcon: "check"   },
 
   // ── Pending — amber-50 bg, amber-700 text, amber-300 border

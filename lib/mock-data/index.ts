@@ -435,6 +435,63 @@ export const invoices = [
   },
 ];
 
+// ─── Invoice Links ─────────────────────────────────────────────────────────────
+
+export const invoiceLinks = [
+  {
+    id: "invl_001",
+    invoiceNumber: "INV-2026-0090",
+    amount: 94400,
+    currency: "INR",
+    status: "paid",
+    customer: "Deepankar Raj",
+    phone: "+91 7011458408",
+    email: "deepankar@payglocal.in",
+    paymentLink: "https://api.payment/48df4",
+    createdAt: "2026-02-19T14:00:00",
+    dueDate: "2026-03-01T00:00:00",
+  },
+  {
+    id: "invl_002",
+    invoiceNumber: "INV-2026-0089",
+    amount: 1003,
+    currency: "USD",
+    status: "active",
+    customer: "John Miller Antonio",
+    phone: "+91 7011458408",
+    email: "john.miller@gmail.com",
+    paymentLink: "https://api.payment/29ab2",
+    createdAt: "2026-02-19T14:00:00",
+    dueDate: "2026-03-21T00:00:00",
+  },
+  {
+    id: "invl_003",
+    invoiceNumber: "INV-2026-0088",
+    amount: 100003,
+    currency: "INR",
+    status: "overdue",
+    customer: "Deepankar Raj",
+    phone: "+91 7011458408",
+    email: "deepankar@payglocal.in",
+    paymentLink: "https://api.payment/c91f3",
+    createdAt: "2026-02-19T14:00:00",
+    dueDate: "2026-03-16T00:00:00",
+  },
+  {
+    id: "invl_004",
+    invoiceNumber: "INV-2026-0087",
+    amount: 103,
+    currency: "USD",
+    status: "draft",
+    customer: "John Miller Antonio",
+    phone: "+91 7011458408",
+    email: "john.miller@gmail.com",
+    paymentLink: "https://api.payment/f72b1",
+    createdAt: "2026-02-19T14:00:00",
+    dueDate: "2026-04-01T00:00:00",
+  },
+];
+
 // ─── eBRC ──────────────────────────────────────────────────────────────────────
 
 export const ebrcEntries = [

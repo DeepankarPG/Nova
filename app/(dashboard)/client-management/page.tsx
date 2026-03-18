@@ -146,7 +146,7 @@ export default function ClientManagementPage() {
                 "w-full px-3 py-2 text-sm bg-slate-50 border rounded-lg text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all",
                 emailError
                   ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-                  : "border-slate-200 focus:ring-[#0061E3]/20 focus:border-[#0061E3]"
+                  : "border-slate-200 focus:ring-gray-500/10 focus:border-gray-500"
               )}
             />
             {emailError && (
@@ -161,7 +161,7 @@ export default function ClientManagementPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <select className="h-9 px-3 text-sm bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0061E3]/20 focus:border-[#0061E3] transition-all">
+            <select className="h-9 px-3 text-sm bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-gray-500/10 focus:border-gray-500 transition-all">
               <option>Viewer</option>
               <option>Developer</option>
               <option>Manager</option>

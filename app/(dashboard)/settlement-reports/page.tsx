@@ -114,51 +114,28 @@ export default function SettlementReportsPage() {
         }
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Summary — same card style as dashboard StatCards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          {
-            icon: CheckCircle2,
-            iconColor: "text-green-600",
-            iconBg: "bg-green-50",
-            label: "Total Settled",
-            value: isLoading ? null : `₹${(totalSettled / 100000).toFixed(2)}L`,
-          },
-          {
-            icon: Clock,
-            iconColor: "text-blue-600",
-            iconBg: "bg-blue-50",
-            label: "Processing",
-            value: isLoading ? null : `₹${pendingAmount.toLocaleString("en-IN")}`,
-          },
-          {
-            icon: TrendingUp,
-            iconColor: "text-[#0047b0]",
-            iconBg: "bg-[#eff4ff]",
-            label: "Settlement Cycle",
-            value: isLoading ? null : "T+1 Daily",
-          },
-          {
-            icon: Banknote,
-            iconColor: "text-slate-600",
-            iconBg: "bg-slate-100",
-            label: "Bank Account",
-            value: isLoading ? null : "HDFC ****4521",
-          },
+          { icon: CheckCircle2, iconColor: "text-emerald-500", iconBg: "bg-emerald-50", label: "Total Settled",      value: isLoading ? null : `₹${(totalSettled / 100000).toFixed(2)}L` },
+          { icon: Clock,        iconColor: "text-blue-500",    iconBg: "bg-blue-50",    label: "Processing",         value: isLoading ? null : `₹${pendingAmount.toLocaleString("en-IN")}` },
+          { icon: TrendingUp,   iconColor: "text-[#0061E3]",   iconBg: "bg-[#eff4ff]",  label: "Settlement Cycle",   value: isLoading ? null : "T+1 Daily" },
+          { icon: Banknote,     iconColor: "text-gray-500",    iconBg: "bg-gray-100",   label: "Bank Account",       value: isLoading ? null : "HDFC ****4521" },
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", s.iconBg)}>
-                  <Icon className={cn("w-3.5 h-3.5", s.iconColor)} />
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">{s.label}</p>
+            <div key={s.label} className="bg-white rounded-xl p-5 flex flex-col gap-3"
+              style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-center gap-2">
+                <Icon className={s.iconColor} style={{ width: 16, height: 16, opacity: 0.7 }} />
+                <span className="text-[13px] font-normal text-gray-500">{s.label}</span>
               </div>
               {isLoading ? (
-                <Shimmer className="h-5 w-24" />
+                <Shimmer className="h-8 w-32 rounded-md" />
               ) : (
-                <p className="text-base font-bold text-slate-900 tabular-nums">{s.value}</p>
+                <p className="text-[1.75rem] font-bold text-gray-900 leading-none tracking-tight tabular-nums">
+                  {s.value}
+                </p>
               )}
             </div>
           );
@@ -166,44 +143,63 @@ export default function SettlementReportsPage() {
       </div>
 
       {/* Settlement timeline indicator */}
-      <div className="bg-white rounded-2xl border border-slate-200 px-5 py-4 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-800">Today&apos;s Settlement Cycle</h3>
-          <span className="text-xs text-slate-500">Settles at 11:59 PM IST</span>
+      <div className="bg-white rounded-xl px-6 py-5"
+        style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-[15px] font-semibold text-gray-900">Today&apos;s Settlement Cycle</h3>
+          <span className="text-[12px] text-gray-400 font-medium">Settles at 11:59 PM IST</span>
         </div>
-        <div className="flex items-center gap-0">
+
+        <div className="flex items-start">
           {[
-            { label: "Transactions Captured", done: true },
-            { label: "Processing Started", done: true },
-            { label: "Bank Transfer Initiated", done: true },
-            { label: "Settlement Complete", done: false },
-          ].map((step, i, arr) => (
-            <div key={step.label} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div
-                  className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
-                    step.done
-                      ? "bg-[#eff4ff]0 text-white"
-                      : "bg-slate-100 text-slate-400 border-2 border-slate-200"
-                  )}
-                >
-                  {step.done ? "✓" : i + 1}
+            { label: "Transactions\nCaptured",      done: true  },
+            { label: "Processing\nStarted",         done: true  },
+            { label: "Bank Transfer\nInitiated",    done: true  },
+            { label: "Settlement\nComplete",        done: false, step: 4 },
+          ].map((s, i, arr) => {
+            const isLast = i === arr.length - 1;
+            return (
+              <div key={s.label} className="flex items-start flex-1 min-w-0">
+                {/* Step + connector */}
+                <div className="flex flex-col items-center flex-1 min-w-0">
+                  {/* Dot row */}
+                  <div className="flex items-center w-full">
+                    {/* Left connector */}
+                    <div className={cn(
+                      "flex-1 h-[2px] rounded-full",
+                      i === 0 ? "invisible" : s.done ? "bg-[#0061E3]" : "bg-gray-200"
+                    )} />
+
+                    {/* Circle */}
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 transition-all",
+                      s.done
+                        ? "bg-[#0061E3] text-white shadow-sm"
+                        : "bg-white text-gray-400 border-2 border-gray-200"
+                    )}
+                      style={s.done ? { boxShadow: "0 0 0 4px rgba(0,97,227,0.08)" } : {}}>
+                      {s.done ? (
+                        <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+                          <path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : s.step ?? i + 1}
+                    </div>
+
+                    {/* Right connector */}
+                    <div className={cn(
+                      "flex-1 h-[2px] rounded-full",
+                      isLast ? "invisible" : s.done && arr[i + 1]?.done ? "bg-[#0061E3]" : s.done ? "bg-[#0061E3]" : "bg-gray-200"
+                    )} />
+                  </div>
+
+                  {/* Label */}
+                  <p className="text-[11px] font-medium text-gray-500 text-center mt-2.5 leading-snug whitespace-pre-line px-1">
+                    {s.label}
+                  </p>
                 </div>
-                <p className="text-[10px] text-slate-500 text-center mt-1.5 leading-tight max-w-[80px]">
-                  {step.label}
-                </p>
               </div>
-              {i < arr.length - 1 && (
-                <div
-                  className={cn(
-                    "h-0.5 flex-1 -mt-5",
-                    step.done ? "bg-[#60a5fa]" : "bg-slate-200"
-                  )}
-                />
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

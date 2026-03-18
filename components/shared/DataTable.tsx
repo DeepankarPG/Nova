@@ -6,6 +6,19 @@ import { EmptyState } from "./EmptyState";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
+/** Builds the visible page numbers including ellipsis markers */
+function getPageRange(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [1];
+  if (current > 3) pages.push("…");
+  const lo = Math.max(2, current - 1);
+  const hi = Math.min(total - 1, current + 1);
+  for (let p = lo; p <= hi; p++) pages.push(p);
+  if (current < total - 2) pages.push("…");
+  pages.push(total);
+  return pages;
+}
+
 export type Column<T> = {
   key:       string;
   header:    string;
@@ -48,14 +61,19 @@ export function DataTable<T>({
     <div className={cn("bg-white rounded-xl overflow-hidden", className)}
       style={{ border: "1px solid #e5e7eb" }}>
 
-      <div className="overflow-x-auto">
+      {/* scrollbar space always reserved; thumb invisible until hovered — prevents layout-shift flicker */}
+      <div
+        className="overflow-x-auto [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&:hover::-webkit-scrollbar-thumb]:bg-gray-300"
+        style={{ scrollbarWidth: "thin", scrollbarColor: "transparent transparent" }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.scrollbarColor = "#d1d5db transparent"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.scrollbarColor = "transparent transparent"; }}
+      >
         <table style={{ tableLayout: "fixed", width: "100%" }}>
           <colgroup>
             {columns.map((col) => (
               <col key={col.key} style={{ width: col.minWidth ?? 120 }} />
             ))}
-            {/* spacer absorbs remaining width; holds the CTA when present */}
-            <col style={{ width: "100%" }} />
+            <col style={{ width: 130 }} />
           </colgroup>
 
           <thead>
@@ -132,22 +150,63 @@ export function DataTable<T>({
         </table>
       </div>
 
-      {/* ── Pagination ────────────────────────────────────────── */}
+      {/* ── Footer / Pagination ───────────────────────────────── */}
       {!isLoading && data.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2.5"
+        <div className="flex items-center justify-between px-4 py-3 gap-4 flex-wrap"
           style={{ borderTop: "1px solid #f0f0f0" }}>
-          <span className="text-xs text-gray-400">
-            {data.length.toLocaleString()} result{data.length !== 1 ? "s" : ""}
+
+          {/* Row count */}
+          <span className="text-[12px] text-gray-400 tabular-nums">
+            Showing{" "}
+            <span className="text-gray-600 font-medium">
+              {Math.min((page - 1) * pageSize + 1, data.length)}–{Math.min(page * pageSize, data.length)}
+            </span>{" "}
+            of{" "}
+            <span className="text-gray-600 font-medium">{data.length.toLocaleString()}</span>{" "}
+            {data.length !== 1 ? "results" : "result"}
           </span>
+
+          {/* Page buttons */}
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              {/* Prev */}
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <span className="text-xs text-gray-500 px-1.5 tabular-nums">{page}/{totalPages}</span>
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+
+              {/* Number pills */}
+              {getPageRange(page, totalPages).map((p, idx) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${idx}`}
+                    className="w-7 h-7 flex items-center justify-center text-[12px] text-gray-400 select-none">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={cn(
+                      "w-7 h-7 rounded-md text-[12px] font-medium transition-colors tabular-nums flex items-center justify-center",
+                      page === p
+                        ? "bg-[#0061E3] text-white shadow-sm"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                    )}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              {/* Next */}
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>

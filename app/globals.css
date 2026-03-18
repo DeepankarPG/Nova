@@ -54,6 +54,14 @@ body {
 }
 .count-up { animation: countUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+/* ─── Wave ───────────────────────────────────────────────────────────────── */
+@keyframes wave {
+  0%,  60%, 100% { transform: rotate(0deg);   }
+  15%            { transform: rotate(16deg);  }
+  30%            { transform: rotate(-8deg);  }
+  45%            { transform: rotate(12deg);  }
+}
+
 /* ─── Page enter ─────────────────────────────────────────────────────────── */
 @keyframes pageFade {
   from { opacity: 0; transform: translateY(5px); }
@@ -62,7 +70,16 @@ body {
 .page-enter { animation: pageFade 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* ─── Focus ──────────────────────────────────────────────────────────────── */
-*:focus-visible { outline: 2px solid #0061E3; outline-offset: 2px; }
+/* Blue ring only for keyboard-navigable interactive elements, not form controls */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible { outline: 2px solid #0061E3; outline-offset: 2px; }
+
+/* Form controls use their own inline border/shadow styles */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible { outline: none; }
 
 /* ─── Recharts ───────────────────────────────────────────────────────────── */
 .recharts-tooltip-wrapper { outline: none !important; }

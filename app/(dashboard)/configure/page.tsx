@@ -82,7 +82,7 @@ function Input({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none transition-all"
-      onFocus={(e) => { e.currentTarget.style.borderColor = "#0061E3"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,97,227,0.08)"; }}
+      onFocus={(e) => { e.currentTarget.style.borderColor = "#6b7280"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(75,85,99,0.10)"; }}
       onBlur={(e) => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "none"; props.onBlur?.(e); }}
     />
   );
