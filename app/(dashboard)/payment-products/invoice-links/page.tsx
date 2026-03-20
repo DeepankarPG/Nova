@@ -508,6 +508,25 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
   const [addLineItem, setAddLineItem]      = useState(false);
   const [previewOpen, setPreviewOpen]      = useState(false);
   const [sendOpen, setSendOpen]            = useState(false);
+  const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+  const templateSnapshotRef = useRef<string | null>(null);
+
+  /* ── Template snapshot (for "Update template" disabled when no changes) ── */
+  function getTemplateSnapshot() {
+    return JSON.stringify({
+      lineItems: lineItems.map(({ id, ...r }) => r),
+      recipients: recipients.map(({ id, avatar, ...r }) => r),
+      dueDate, issueDate, notes, terms, gst, currency,
+      recurring, frequency, recurringStart,
+      logoEnabled, sigEnabled, discountValue, discountType,
+    });
+  }
+  const hasTemplateChanges = template !== "Blank invoice" && templateSnapshotRef.current !== null && getTemplateSnapshot() !== templateSnapshotRef.current;
+  useEffect(() => {
+    if (template !== "Blank invoice") templateSnapshotRef.current = getTemplateSnapshot();
+    else templateSnapshotRef.current = null;
+  }, [template]);
 
   /* ── Auto-save indicator ── */
   const [savedAt, setSavedAt]             = useState<string | null>(null);
@@ -540,6 +559,7 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
   }
 
   function handleTemplateChange(next: string) {
+    templateSnapshotRef.current = null;
     setTemplate(next);
     if (next === "Blank invoice") {
       setDueDate("");
@@ -636,10 +656,35 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-500 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors">
-              <Plus className="w-3 h-3" />
-              Save as template
-            </button>
+            {template !== "Blank invoice" && (
+              <div className="relative flex-shrink-0 ml-auto">
+                <button
+                  onClick={() => setTemplateMenuOpen(o => !o)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  aria-label="Template options"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                {templateMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setTemplateMenuOpen(false)} aria-hidden />
+                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] py-1 rounded-lg bg-white border border-gray-200 shadow-lg" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+                      <button
+                        onClick={() => {
+                          handleTemplateChange("Blank invoice");
+                          setTemplateMenuOpen(false);
+                          toast.success("Template removed");
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete this template
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Invoice details */}
@@ -744,8 +789,9 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
                   </div>
                 ))}
                 <button onClick={() => setAddRecipient(true)}
-                  className="text-[12px] text-gray-400 hover:text-gray-600 transition-colors">
-                  + Add another recipient
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-[#0061E3] hover:text-[#0049ad] transition-colors">
+                  <Plus className="w-3.5 h-3.5" />
+                  Add another recipient
                 </button>
               </div>
             )}
@@ -984,7 +1030,7 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
                 <PenLine className="w-3.5 h-3.5 text-amber-500" />
               </div>
               <span className="text-[14px] font-semibold text-gray-800 flex-1">Customer notes &amp; terms</span>
-              <span className="text-[11px] text-gray-400 mr-2">Optional</span>
+              <span className="mr-2"><OptionalBadge /></span>
               <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", notesOpen && "rotate-180")} />
             </button>
             <AnimatePresence>
@@ -1093,7 +1139,40 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
 
             {[
               { icon: FileText,   label: "Save as draft",     sub: "Come back later",          action: () => { toast.success("Saved as draft"); onBack(); } },
-              { icon: CreditCard, label: "Save as template",  sub: "Reuse for future invoices", action: () => toast.success("Saved as template") },
+            ].map(item => (
+              <button key={item.label} onClick={item.action}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                style={{ borderBottom: "1px solid #f5f5f5" }}>
+                <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-4 h-4 text-gray-500" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[13px] font-medium text-gray-800">{item.label}</p>
+                  <p className="text-[11px] text-gray-400">{item.sub}</p>
+                </div>
+              </button>
+            ))}
+            {/* Save / Update template — "Update template" when a template is selected; disabled if no changes */}
+            <button
+              onClick={() => (template === "Blank invoice" || hasTemplateChanges) && setSaveAsTemplateOpen(true)}
+              disabled={template !== "Blank invoice" && !hasTemplateChanges}
+              className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 disabled:hover:bg-transparent"
+              style={{ borderBottom: "1px solid #f5f5f5" }}>
+              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <CreditCard className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-[13px] font-medium text-gray-800">
+                  {template !== "Blank invoice" ? "Update template" : "Save as template"}
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  {template !== "Blank invoice" && !hasTemplateChanges
+                    ? "No changes to save"
+                    : "Reuse for future invoices"}
+                </p>
+              </div>
+            </button>
+            {[
               { icon: Download,   label: "Download PDF",      sub: "Export invoice as PDF",     action: () => toast.info("Download coming soon") },
             ].map(item => (
               <button key={item.label} onClick={item.action}
@@ -1247,6 +1326,21 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
             invoiceNumber={invoiceNumber}
             recipients={recipients}
             onClose={() => setSendOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Save as Template Modal ── */}
+      <AnimatePresence>
+        {saveAsTemplateOpen && (
+          <SaveAsTemplateModal
+            initialName={template}
+            isUpdate={template !== "Blank invoice"}
+            onClose={() => setSaveAsTemplateOpen(false)}
+            onSaved={() => {
+              setSaveAsTemplateOpen(false);
+              toast.success("Template saved successfully");
+            }}
           />
         )}
       </AnimatePresence>
@@ -1806,8 +1900,8 @@ function PreviewModal({ invoiceNumber, issueDate, total, dueDate, recipient, lin
   biller: { name: string; address: string; gstin: string };
   onClose: () => void; onSend: () => void;
 }) {
-  const [tab, setTab] = useState<"email" | "pdf" | "hosted">("email");
-  const tabs = ["email","pdf","hosted"] as const;
+  const [tab, setTab] = useState<"email" | "pdf">("email");
+  const tabs = ["email", "pdf"] as const;
   const subtotal = lineItems.reduce((s, i) => s + i.qty * i.rate, 0);
   const hasHours = lineItems.some(i => i.itemType === "hours");
   const qtyHeader = hasHours ? "Hours" : "Qty";
@@ -1816,16 +1910,18 @@ function PreviewModal({ invoiceNumber, issueDate, total, dueDate, recipient, lin
     <ModalBackdrop onClose={onClose}>
       <ModalBox title="Invoice preview" onClose={onClose} maxW={640} maxH="min(92vh, 780px)">
         {/* Tabs */}
-        <div className="flex items-center px-5 gap-1" style={{ borderBottom: "1px solid #f0f0f0" }}>
+        <div className="flex items-center gap-1 flex-shrink-0" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 4, paddingBottom: 0, borderBottom: "1px solid #f0f0f0" }}>
           {tabs.map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={cn(
-                "relative pb-3 px-1 mr-4 text-[13px] font-medium transition-colors capitalize",
+                "relative pb-2 pt-1 px-1 mr-4 text-[13px] font-medium transition-colors capitalize",
                 tab === t ? "text-[#0061E3]" : "text-gray-400 hover:text-gray-600"
               )}>
-              {t === "hosted" ? "Hosted page" : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t.charAt(0).toUpperCase() + t.slice(1)}
               {tab === t && (
-                <motion.div layoutId="preview-tab"
+                <motion.div
+                  layoutId="preview-tab"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
                   style={{ background: "#0061E3" }} />
               )}
@@ -1833,179 +1929,236 @@ function PreviewModal({ invoiceNumber, issueDate, total, dueDate, recipient, lin
           ))}
         </div>
 
-        <div className="p-5">
-          {/* Email / Hosted preview */}
-          {(tab === "email" || tab === "hosted") && (
+        {/* Content area: fixed height so modal doesn't resize on tab change; top padding for spacing */}
+        <div className="px-5 pb-5" style={{ paddingTop: 24 }}>
+          <div className="overflow-y-auto rounded-xl" style={{ height: "min(55vh, 520px)", minHeight: 360 }}>
+          {/* Email / Hosted preview — payment-request style with grouped sections */}
+          {tab === "email" && (
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #e5e7eb" }}>
-              <div className="px-5 py-3.5 flex items-center justify-between"
-                style={{ background: "#0061E3" }}>
-                <div className="flex items-center gap-3">
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="h-8 max-w-[120px] object-contain" />
-                  ) : (
-                    <span className="text-[15px] font-bold text-white">PayGlocal</span>
-                  )}
-                  <p className="text-[11px] text-white/60">Invoice from {biller.name}</p>
-                </div>
-                <span className="text-[12px] text-white/70 font-mono">{invoiceNumber}</span>
+              {/* Blue header */}
+              <div className="px-5 py-4" style={{ background: "#0061E3" }}>
+                <p className="text-[11px] font-semibold tracking-wider uppercase text-white/70 mb-1">Invoice</p>
+                <p className="text-[20px] font-bold text-white">Invoice from {biller.name}</p>
+                <p className="text-[13px] text-white/70 mt-0.5">Invoice: {invoiceNumber}</p>
               </div>
+              {/* White body */}
               <div className="bg-white px-5 py-5">
-                <p className="text-[26px] font-black text-gray-900 tabular-nums">{total > 0 ? fmt(total) : `${sym}0.00`}</p>
-                <p className="text-[13px] text-gray-400 mt-1">
-                  {dueDate ? `Due ${formatDate(dueDate + "T00:00:00", { day: "2-digit", month: "short", year: "numeric" })}` : "Due date not set"}
-                </p>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">TO</p>
-                    <p className="text-[13px] font-bold text-gray-800 mt-0.5">{recipient?.name ?? "—"}</p>
-                    <p className="text-[12px] text-gray-400">{recipient?.email ?? "No recipient"}</p>
+                {/* Group 1: Details (key-value rows) */}
+                <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-3">Details</p>
+                <div className="space-y-0">
+                  <div className="flex justify-between items-baseline py-2.5" style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <span className="text-[12px] font-semibold text-gray-400 uppercase">Date of issue</span>
+                    <span className="text-[13px] font-medium text-gray-900">{issueDate ? formatDate(issueDate + "T00:00:00", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</span>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">FROM</p>
-                    <p className="text-[13px] font-bold text-gray-800 mt-0.5">{biller.name}</p>
-                    <p className="text-[12px] text-gray-400 whitespace-pre-line">{biller.address}</p>
+                  <div className="flex justify-between items-baseline py-2.5" style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <span className="text-[12px] font-semibold text-gray-400 uppercase">Issued to</span>
+                    <span className="text-[13px] font-medium text-[#0061E3]">{recipient?.email ?? "—"}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline py-2.5 rounded-md mt-1 -mx-1 px-2" style={{ background: "#fffbeb" }}>
+                    <span className="text-[12px] font-semibold uppercase" style={{ color: "#92400e" }}>Due date</span>
+                    <span className="text-[13px] font-bold" style={{ color: "#92400e" }}>
+                      {dueDate ? formatDate(dueDate + "T00:00:00", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                    </span>
                   </div>
                 </div>
+
+                {/* Group 2: Amount due + CTA (same row) */}
+                <div className="flex flex-wrap items-center justify-between gap-4 py-5" style={{ borderBottom: "1px solid #f3f4f6", marginTop: 4 }}>
+                  <div>
+                    <p className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Amount due</p>
+                    <p className="text-[28px] font-extrabold text-gray-900 tabular-nums">{total > 0 ? fmt(total) : `${sym}0.00`}</p>
+                  </div>
+                  <button className="px-6 py-2.5 rounded-lg text-[14px] font-semibold text-white shrink-0" style={{ background: "#0061E3" }}>
+                    Pay this invoice
+                  </button>
+                </div>
+
+                {/* Group 3: Line items */}
                 {lineItems.length > 0 && (
-                  <div className="mt-5 space-y-2" style={{ borderTop: "1px solid #f0f0f0", paddingTop: "16px" }}>
-                    {lineItems.map(item => (
-                      <div key={item.id} className="flex justify-between">
-                        <div>
-                          <p className="text-[13px] font-medium text-gray-800">{item.name}</p>
-                          <p className="text-[11px] text-gray-400">{qtyHeader} {item.qty} × {fmt(item.rate)}</p>
-                        </div>
-                        <span className="text-[13px] font-medium text-gray-800 tabular-nums">{fmt(item.qty * item.rate)}</span>
+                  <div className="pt-4">
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Line items</p>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="grid grid-cols-4 gap-2 px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase bg-gray-50" style={{ borderBottom: "1px solid #e5e7eb" }}>
+                        <span>Description</span>
+                        <span className="text-right">{qtyHeader}</span>
+                        <span className="text-right">Unit price</span>
+                        <span className="text-right">Amount</span>
                       </div>
-                    ))}
+                      {lineItems.map(item => (
+                        <div key={item.id} className="grid grid-cols-4 gap-2 px-3 py-2.5 text-[13px]" style={{ borderBottom: "1px solid #f3f4f6" }}>
+                          <div>
+                            <p className="font-semibold text-gray-900">{item.name}</p>
+                            <p className="text-[11px] text-gray-400">Qty {item.qty}</p>
+                          </div>
+                          <span className="text-right text-gray-700">{item.qty}</span>
+                          <span className="text-right text-gray-700 tabular-nums">{fmt(item.rate)}</span>
+                          <span className="text-right font-semibold text-gray-900 tabular-nums">{fmt(item.qty * item.rate)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-6 mt-3 text-[13px]">
+                      <div className="flex justify-between gap-8 py-1">
+                        <span className="text-gray-500">Subtotal</span>
+                        <span className="tabular-nums font-medium">{fmt(subtotal)}</span>
+                      </div>
+                    </div>
                     {gstAmt > 0 && (
-                      <div className="flex justify-between text-[13px] text-gray-500 pt-1">
-                        <span>GST 18%</span><span>{fmt(gstAmt)}</span>
+                      <div className="flex justify-end gap-6 text-[13px]">
+                        <div className="flex justify-between gap-8 py-0.5">
+                          <span className="text-gray-500">Tax</span>
+                          <span className="tabular-nums font-medium">{fmt(gstAmt)}</span>
+                        </div>
                       </div>
                     )}
-                    <div className="flex justify-between pt-2" style={{ borderTop: "1px solid #e5e7eb" }}>
-                      <span className="text-[15px] font-black text-gray-900">Total</span>
-                      <span className="text-[15px] font-black text-gray-900 tabular-nums">{fmt(total)}</span>
+                    <div className="flex justify-end gap-6 mt-1 pt-2 text-[13px] font-bold" style={{ borderTop: "1px solid #e5e7eb" }}>
+                      <div className="flex justify-between gap-8">
+                        <span className="text-gray-900">Amount due</span>
+                        <span className="tabular-nums text-gray-900">{fmt(total)}</span>
+                      </div>
                     </div>
                   </div>
                 )}
-                <button className="mt-5 w-full h-11 rounded-xl text-[14px] font-bold text-white"
-                  style={{ background: "#0061E3" }}>
-                  Pay this invoice
-                </button>
+
+                {/* Footer: thanks + support */}
+                <div className="mt-6 pt-4 rounded-lg px-4 py-3" style={{ background: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                  <p className="text-[14px] font-bold text-gray-900 mb-2">Thank you for your business! 💙</p>
+                  <p className="text-[12px] text-gray-500 leading-relaxed">If you have any questions about this invoice, please contact your merchant. Please do not reply to this email. This is an automated message.</p>
+                  <p className="text-[12px] text-gray-500 mt-2">Need help? Contact us at <span className="text-[#0061E3] font-semibold">support@payglocal.in</span> or <span className="text-[#0061E3] font-semibold">+91 92402 19400</span></p>
+                  <p className="text-[11px] text-gray-400 mt-3">Powered by PayGlocal</p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* PDF preview — document-style layout, compact to fit modal */}
+          {/* PDF preview — document layout (ref: professional invoice format) */}
           {tab === "pdf" && (
-            <div className="max-h-[min(58vh,480px)] overflow-y-auto rounded-xl" style={{ border: "1px solid #e5e7eb" }}>
-              <div className="rounded-xl overflow-hidden bg-white font-mono" style={{ fontFamily: "ui-monospace, monospace" }}>
-              {/* Header: logo left, INVOICE right */}
-              <div className="flex items-start justify-between px-4 pt-3 pb-2">
-                <div>
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="h-7 max-w-[100px] object-contain" />
-                  ) : (
-                    <span className="text-[13px] font-bold text-gray-900">PayGlocal</span>
+            <div className="rounded-xl" style={{ border: "1px solid #e5e7eb" }}>
+              <div className="bg-white rounded-xl p-6 min-w-0 max-w-full" style={{ width: "min(100%, 560px)", margin: "0 auto" }}>
+                {/* Header: Invoice title left, logo right */}
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Invoice</h1>
+                    <dl className="mt-3 space-y-0.5 text-[12px]">
+                      <div className="flex gap-2">
+                        <dt className="font-semibold text-gray-700">Invoice number:</dt>
+                        <dd className="text-gray-900">{invoiceNumber}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="font-semibold text-gray-700">Date of issue:</dt>
+                        <dd className="text-gray-900">{issueDate ? formatDate(issueDate + "T00:00:00", { month: "long", day: "numeric", year: "numeric" }) : "—"}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="font-semibold text-gray-700">Date due:</dt>
+                        <dd className="text-gray-900">{dueDate ? formatDate(dueDate + "T00:00:00", { month: "long", day: "numeric", year: "numeric" }) : "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {logoUrl ? (
+                      <div className="w-12 h-12 rounded flex items-center justify-center bg-gray-900 overflow-hidden">
+                        <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded flex items-center justify-center bg-gray-900 text-white text-lg font-bold">P</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Address blocks: Sender left, Bill to right */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <p className="text-[13px] font-bold text-gray-900">{biller.name}</p>
+                    <p className="text-[12px] text-gray-600 whitespace-pre-line mt-1">{biller.address}</p>
+                    <p className="text-[12px] text-gray-600 mt-0.5">GSTIN: {biller.gstin}</p>
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-bold text-gray-900 mb-1.5">Bill to</p>
+                    <p className="text-[13px] font-semibold text-gray-900">{recipient?.name ?? "—"}</p>
+                    <p className="text-[12px] text-gray-600 whitespace-pre-line mt-0.5">{recipient?.email ?? "No recipient"}</p>
+                  </div>
+                </div>
+
+                {/* Summary & Pay CTA */}
+                <div className="mb-6">
+                  <p className="text-[18px] font-bold text-gray-900 tabular-nums">
+                    {total > 0 ? fmt(total) : `${sym}0.00`}
+                    {dueDate && (
+                      <span className="font-semibold text-gray-700"> due {formatDate(dueDate + "T00:00:00", { month: "long", day: "numeric", year: "numeric" })}</span>
+                    )}
+                  </p>
+                  <a href="#pay" className="text-[13px] text-[#0061E3] hover:text-[#0049ad] underline mt-1 inline-block">Pay online</a>
+                  {lineItems.length > 0 && lineItems[0] && (
+                    <p className="text-[12px] text-gray-500 mt-0.5">{lineItems[0].name}</p>
                   )}
                 </div>
-                <span className="text-[17px] font-bold text-gray-900 tracking-tight">INVOICE</span>
-              </div>
-              {/* Meta row */}
-              <div className="flex justify-between px-4 pb-2 text-[10px] text-gray-600">
-                <div>
-                  <p>Invoice no.: {invoiceNumber}</p>
-                  <p>Invoice date: {issueDate ? formatDate(issueDate + "T00:00:00", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</p>
-                  <p>Due date: {dueDate ? formatDate(dueDate + "T00:00:00", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</p>
-                </div>
-                <div className="text-right">
-                  <p>{BILLER_PROFILE.bank.bank}</p>
-                  <p>{BILLER_PROFILE.bank.accountNo}</p>
-                </div>
-              </div>
-              {/* SELLER / RECIPIENT */}
-              <div className="grid grid-cols-2 gap-4 px-4 py-2.5" style={{ borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb" }}>
-                <div>
-                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">SELLER</p>
-                  <p className="text-[11px] font-semibold text-gray-900">{biller.name}</p>
-                  <p className="text-[10px] text-gray-600">GSTIN: {biller.gstin}</p>
-                  <p className="text-[10px] text-gray-600 whitespace-pre-line">{biller.address}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">RECIPIENT</p>
-                  <p className="text-[11px] font-semibold text-gray-900">{recipient?.name ?? "—"}</p>
-                  <p className="text-[10px] text-gray-600">{recipient?.email ?? "No recipient"}</p>
-                </div>
-              </div>
-              {/* Line items table */}
-              {lineItems.length > 0 && (
-                <div className="px-4 py-2.5">
-                  <div className="grid text-[10px] font-semibold text-gray-500 uppercase tracking-wider pb-1.5" style={{ gridTemplateColumns: "1fr 48px 64px 64px" }}>
-                    <span>Item</span>
-                    <span className="text-center">{qtyHeader}</span>
-                    <span className="text-right">Rate</span>
-                    <span className="text-right">Amount</span>
-                  </div>
-                  {lineItems.map((item, i) => (
-                    <div key={item.id} className="grid py-1.5 text-[11px]" style={{ gridTemplateColumns: "1fr 48px 64px 64px", borderTop: "1px solid #f0f0f0" }}>
-                      <div>
-                        <p className="font-medium text-gray-900">{item.name}</p>
-                        {(item.description || item.hsn || item.taxLabel || item.discount) && (
-                          <div className="flex flex-wrap gap-1 mt-0.5">
-                            {item.description && <span className="text-[9px] text-gray-400">{item.description}</span>}
-                            {item.hsn && <span className="text-[9px] text-gray-500">HSN {item.hsn}</span>}
-                            {item.taxLabel && item.taxLabel !== "None" && <span className="text-[9px] text-gray-500">{item.taxLabel}</span>}
-                            {item.discount && <span className="text-[9px] text-emerald-600">{item.discountType === "flat" ? `${sym}${item.discount} off` : `${item.discount}% off`}</span>}
+
+                {/* Line items table */}
+                {lineItems.length > 0 && (
+                  <>
+                    <div className="border-b border-gray-900 mb-1">
+                      <div className="grid gap-4 py-2 text-[11px] font-semibold text-gray-900 uppercase tracking-wider" style={{ gridTemplateColumns: "1fr 56px 80px 80px" }}>
+                        <span>Description</span>
+                        <span className="text-right">{qtyHeader}</span>
+                        <span className="text-right">Unit price</span>
+                        <span className="text-right">Amount</span>
+                      </div>
+                    </div>
+                    {lineItems.map((item) => (
+                      <div key={item.id} className="grid gap-4 py-3 text-[13px] border-b border-gray-100" style={{ gridTemplateColumns: "1fr 56px 80px 80px" }}>
+                        <div>
+                          <p className="font-semibold text-gray-900">{item.name}</p>
+                          {(item.description || item.hsn || item.taxLabel || item.discount) && (
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[12px] text-gray-500">
+                              {item.description && <span>{item.description}</span>}
+                              {item.hsn && <span>HSN {item.hsn}</span>}
+                              {item.taxLabel && item.taxLabel !== "None" && <span>{item.taxLabel}</span>}
+                              {item.discount && <span>{item.discountType === "flat" ? `${sym}${item.discount} off` : `${item.discount}% off`}</span>}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-right text-gray-700 tabular-nums">{item.qty}</span>
+                        <span className="text-right text-gray-700 tabular-nums">{fmt(item.rate)}</span>
+                        <span className="text-right font-semibold text-gray-900 tabular-nums">{fmt(item.qty * item.rate)}</span>
+                      </div>
+                    ))}
+
+                    {/* Totals — right-aligned */}
+                    <div className="flex justify-end mt-6">
+                      <div className="w-44 space-y-2 text-[13px]">
+                        <div className="flex justify-between text-gray-700">
+                          <span>Subtotal</span>
+                          <span className="tabular-nums">{fmt(subtotal)}</span>
+                        </div>
+                        {gstAmt > 0 && (
+                          <div className="flex justify-between text-gray-700">
+                            <span>Tax</span>
+                            <span className="tabular-nums">{fmt(gstAmt)}</span>
                           </div>
                         )}
+                        <div className="flex justify-between pt-2 border-t border-gray-200 font-semibold text-gray-900">
+                          <span>Total</span>
+                          <span className="tabular-nums">{fmt(total)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-gray-900">
+                          <span>Amount due</span>
+                          <span className="tabular-nums">{fmt(total)}</span>
+                        </div>
                       </div>
-                      <span className="text-center text-gray-700">{item.qty}</span>
-                      <span className="text-right text-gray-700">{fmt(item.rate)}</span>
-                      <span className="text-right font-semibold text-gray-900">{fmt(item.qty * item.rate)}</span>
                     </div>
-                  ))}
+                  </>
+                )}
+
+                {/* Footer */}
+                <div className="mt-10 pt-6 border-t border-gray-200">
+                  <p className="text-[11px] text-gray-500 text-right">Page 1 of 1</p>
                 </div>
-              )}
-              {/* Totals */}
-              <div className="px-4 py-2.5 flex justify-end">
-                <div className="w-36 space-y-0.5 text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span className="tabular-nums">{fmt(subtotal)}</span>
-                  </div>
-                  {gstAmt > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Tax 18%</span>
-                      <span className="tabular-nums">{fmt(gstAmt)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: "1px solid #e5e7eb" }}>
-                    <span>TOTAL</span>
-                    <span className="tabular-nums">{fmt(total)}</span>
-                  </div>
-                </div>
-              </div>
-              {/* Footer: contact + signature */}
-              <div className="flex items-end justify-between px-4 py-3" style={{ borderTop: "1px solid #e5e7eb", background: "#fafafa" }}>
-                <div className="text-[10px] text-gray-600">
-                  <p>deepankar@payglocal.in</p>
-                  <p>+91-9876543210</p>
-                  <p>payglocal.in</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-gray-500 mb-0.5">Thanks for being with us!</p>
-                  {sigUrl ? (
-                    <img src={sigUrl} alt="Signature" className="h-9 max-w-[80px] object-contain ml-auto" />
-                  ) : (
-                    <p className="text-[11px] font-semibold text-gray-800">Issuer Jack McQueen</p>
-                  )}
-                </div>
-              </div>
               </div>
             </div>
           )}
 
-          <div className="flex items-center gap-2 mt-4">
+          </div>
+
+          <div className="flex items-center gap-2 mt-4 flex-shrink-0">
             <button onClick={onClose}
               className="flex-1 h-10 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
               <Download className="w-3.5 h-3.5" />
@@ -2128,6 +2281,109 @@ function SendModal({ invoiceNumber, recipients, onClose }: {
             style={{ background: "#0061E3" }}>
             {sending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
             Send now
+          </button>
+        </div>
+      </ModalBox>
+    </ModalBackdrop>
+  );
+}
+
+/* ─── Save as Template Modal ────────────────────────────────────────────── */
+function SaveAsTemplateModal({ initialName, isUpdate, onClose, onSaved }: {
+  initialName: string;
+  isUpdate?: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(initialName);
+  const [include, setInclude] = useState({
+    lineItems: true,
+    taxSettings: true,
+    customerDetails: false,
+    notesAndTerms: true,
+  });
+
+  const toggle = (key: keyof typeof include) => setInclude(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      toast.error("Template name is required");
+      return;
+    }
+    onSaved();
+  };
+
+  const options = [
+    { key: "lineItems" as const, label: "Line items" },
+    { key: "taxSettings" as const, label: "Tax settings" },
+    { key: "customerDetails" as const, label: "Customer details" },
+    { key: "notesAndTerms" as const, label: "Notes & terms text" },
+  ] as const;
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <ModalBox title="Save as template" onClose={onClose} maxW={480}>
+        <div className="px-6 py-5 space-y-5">
+          {/* Template name */}
+          <div>
+            <FormLabel>Template name <span className="text-red-500">*</span></FormLabel>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Payflow design — monthly"
+              className="w-full h-10 px-3.5 text-[13px] bg-white border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
+            />
+          </div>
+
+          {/* What to include */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-[12px] font-medium text-gray-500">What to include:</p>
+              <OptionalBadge />
+            </div>
+            <div className="space-y-2">
+              {options.map(({ key, label }) => (
+                <label
+                  key={key}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(key); } }}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all",
+                    include[key]
+                      ? "border-[#0061E3] bg-[#0061E3]/5"
+                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+                  )}>
+                  <input
+                    type="checkbox"
+                    checked={include[key]}
+                    onChange={() => toggle(key)}
+                    className="sr-only"
+                    aria-hidden
+                  />
+                  <div className={cn(
+                    "w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors pointer-events-none",
+                    include[key] ? "bg-[#0061E3]" : "bg-white border-2 border-gray-300"
+                  )}>
+                    {include[key] && <Check className="w-3 h-3 text-white" strokeWidth={2.5} />}
+                  </div>
+                  <span className="text-[13px] font-medium text-gray-800 pointer-events-none">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 pb-6 flex items-center justify-end gap-2" style={{ borderTop: "1px solid #f0f0f0", paddingTop: "16px" }}>
+          <button onClick={onClose}
+            className="px-4 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={!name.trim()}
+            className="px-5 py-2 text-[13px] font-semibold text-white rounded-xl transition-opacity disabled:opacity-40 hover:opacity-90"
+            style={{ background: "#0061E3" }}>
+            {isUpdate ? "Save and update" : "Save template"}
           </button>
         </div>
       </ModalBox>

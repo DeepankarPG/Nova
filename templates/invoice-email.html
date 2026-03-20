@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Invoice from {{ MERCHANT_NAME }} – PayGlocal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #f1f3f6;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1A1D22;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .email-bg {
+      background-color: #f1f3f6;
+      padding: 40px 16px 56px;
+    }
+
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .logo-bar {
+      text-align: center;
+      padding-bottom: 24px;
+    }
+    .logo-bar img {
+      max-width: 150px;
+      height: auto;
+      display: inline-block;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ─── Blue header (same as payment request) ─── */
+    .card-header {
+      background: #0061E3;
+      padding: 28px 40px 32px;
+      color: #fff;
+    }
+    .card-header .header-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 6px;
+    }
+    .card-header .header-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .card-header .header-receipt {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .card-body {
+      padding: 36px 40px 32px;
+    }
+
+    /* ─── Group: Invoice details (key-value rows) ─── */
+    .detail-group {
+      margin-bottom: 28px;
+    }
+    .detail-group-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .detail-row {
+      display: flex;
+      padding: 11px 0;
+      border-bottom: 1px solid #f3f4f6;
+      align-items: baseline;
+      gap: 16px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      min-width: 130px;
+      flex-shrink: 0;
+    }
+    .detail-val {
+      font-size: 14px;
+      color: #1f2937;
+      font-weight: 500;
+    }
+    .detail-val a {
+      color: #0061E3;
+      text-decoration: none;
+    }
+    .detail-val a:hover { text-decoration: underline; }
+
+    /* ─── Highlighted row (Due date – like Link expiry) ─── */
+    .detail-row-highlight {
+      background: #fffbeb;
+      border-radius: 6px;
+      margin: 4px -8px 0;
+      padding: 11px 8px;
+      border-bottom: none !important;
+    }
+    .detail-row-highlight .detail-key {
+      color: #92400e;
+    }
+    .detail-val-highlight {
+      font-size: 14px;
+      font-weight: 700;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .highlight-icon {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Group: Amount + CTA (same row as payment request) ─── */
+    .amount-cta-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .amount-cta-group .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+    .amount-cta-group .amount {
+      font-size: 32px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -1px;
+    }
+    .btn-pay {
+      display: inline-block;
+      background: #0061E3;
+      color: #ffffff !important;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 13px 32px;
+      border-radius: 4px;
+      text-decoration: none;
+      letter-spacing: 0.1px;
+    }
+    .btn-pay:hover { background: #004fba; }
+
+    /* ─── Group: Line items (invoice-specific) ─── */
+    .line-items-group {
+      margin-bottom: 24px;
+    }
+    .line-items-group .detail-group-title {
+      margin-bottom: 14px;
+    }
+    .line-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .line-items-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .line-items-table th.num { text-align: right; }
+    .line-items-table td {
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+    }
+    .line-items-table td.num { text-align: right; font-weight: 500; }
+    .line-items-table .item-name { font-weight: 600; color: #111827; }
+    .line-items-table .item-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .line-items-totals {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .line-items-totals .totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 24px;
+      padding: 5px 0;
+      font-size: 13px;
+      color: #374151;
+    }
+    .line-items-totals .totals-row.amount-due-row {
+      font-weight: 700;
+      color: #111827;
+      padding-top: 8px;
+    }
+    .line-items-totals .totals-label { min-width: 90px; text-align: right; }
+    .line-items-totals .totals-value { min-width: 80px; text-align: right; }
+
+    /* ─── Optional: Download links ─── */
+    .download-links {
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+    .download-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0061E3;
+      text-decoration: none;
+      margin-right: 20px;
+      margin-bottom: 8px;
+    }
+    .download-links a:hover { text-decoration: underline; }
+    .download-links .down-icon {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ─── Card footer (same as payment request) ─── */
+    .card-footer {
+      background: #f9fafb;
+      border-top: 1px solid #f3f4f6;
+      padding: 20px 40px;
+    }
+    .card-footer .footer-thanks {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 14px;
+    }
+    .card-footer .footer-support {
+      font-size: 13px;
+      color: #9ca3af;
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .card-footer a {
+      color: #0061E3;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .card-footer a:hover { text-decoration: underline; }
+    .footer-divider {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 14px 0;
+    }
+    .footer-contact {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .footer-social {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-social a { display: inline-block; line-height: 1; }
+    .footer-social img {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    .footer-powered {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .email-footer {
+      padding: 24px 0 0;
+      text-align: center;
+    }
+    .email-footer p {
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.7;
+    }
+    .footer-links a {
+      margin: 0 8px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: #0061E3; }
+
+    @media only screen and (max-width: 480px) {
+      .card-header { padding: 24px 24px 28px; }
+      .card-body { padding: 24px 24px 20px; }
+      .card-footer { padding: 16px 24px; }
+      .amount-cta-group { flex-direction: column; align-items: flex-start; }
+      .amount-cta-group .amount { font-size: 26px; }
+      .detail-row { flex-direction: column; gap: 2px; }
+      .detail-key { min-width: unset; }
+      .btn-pay { display: block; text-align: center; width: 100%; }
+      .line-items-table { font-size: 12px; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-bg">
+    <div class="email-container">
+
+      <div class="logo-bar">
+        <img src="https://data.payglocal.in/images/logos/logo.png" alt="PayGlocal" />
+      </div>
+
+      <div class="card">
+
+        <!-- Blue header (same style as payment request) -->
+        <div class="card-header">
+          <div class="header-eyebrow">Invoice</div>
+          <div class="header-title">Invoice from {{ MERCHANT_NAME }}</div>
+          <div class="header-receipt">Invoice: {{ INVOICE_NUMBER }}</div>
+        </div>
+
+        <div class="card-body">
+
+          <!-- Group 1: Details (key-value rows) -->
+          <div class="detail-group">
+            <div class="detail-group-title">Details</div>
+            <div class="detail-row">
+              <span class="detail-key">Date of issue</span>
+              <span class="detail-val">{{ DATE_OF_ISSUE }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Issued to</span>
+              <span class="detail-val"><a href="mailto:{{ CUSTOMER_EMAIL }}">{{ CUSTOMER_EMAIL }}</a></span>
+            </div>
+            <div class="detail-row detail-row-highlight">
+              <span class="detail-key">Due date</span>
+              <span class="detail-val-highlight">
+                <span class="highlight-icon">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="7" cy="7" r="6" stroke="#92400e" stroke-width="1.5"/>
+                    <path d="M7 4v3.2l2 1.8" stroke="#92400e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                {{ DUE_DATE }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Group 2: Amount payable + CTA (same layout as payment request) -->
+          <div class="amount-cta-group">
+            <div>
+              <div class="label">Amount due</div>
+              <div class="amount">{{ CURRENCY_SYMBOL }}{{ AMOUNT }}</div>
+            </div>
+            <a href="{{ PAY_INVOICE_LINK }}" class="btn-pay">Pay this invoice</a>
+          </div>
+
+          <!-- Group 3: Line items (invoice-specific; more details) -->
+          <div class="line-items-group">
+            <div class="detail-group-title">Line items</div>
+            <table class="line-items-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th class="num">Qty</th>
+                  <th class="num">Unit price</th>
+                  <th class="num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Repeat for each line item -->
+                <tr>
+                  <td>
+                    <div class="item-name">{{ LINE_ITEM_NAME }}</div>
+                    <div class="item-meta">Qty {{ LINE_ITEM_QTY }}</div>
+                  </td>
+                  <td class="num">{{ LINE_ITEM_QTY }}</td>
+                  <td class="num">{{ CURRENCY_SYMBOL }}{{ LINE_ITEM_UNIT_PRICE }}</td>
+                  <td class="num">{{ CURRENCY_SYMBOL }}{{ LINE_ITEM_AMOUNT }}</td>
+                </tr>
+                <!-- Add more rows via template loop -->
+              </tbody>
+            </table>
+            <div class="line-items-totals">
+              <div class="totals-row">
+                <span class="totals-label">Subtotal</span>
+                <span class="totals-value">{{ CURRENCY_SYMBOL }}{{ SUBTOTAL }}</span>
+              </div>
+              <!-- Optional: <div class="totals-row"><span class="totals-label">Tax</span><span class="totals-value">{{ CURRENCY_SYMBOL }}{{ TAX_AMOUNT }}</span></div> -->
+              <div class="totals-row amount-due-row">
+                <span class="totals-label">Amount due</span>
+                <span class="totals-value">{{ CURRENCY_SYMBOL }}{{ AMOUNT }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optional: Download links -->
+          <div class="download-links">
+            <a href="{{ DOWNLOAD_INVOICE_LINK }}">
+              <svg class="down-icon" viewBox="0 0 14 14" fill="none"><path d="M7 9V2M7 9L4 6M7 9L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Download invoice
+            </a>
+            <a href="{{ DOWNLOAD_RECEIPT_LINK }}">
+              <svg class="down-icon" viewBox="0 0 14 14" fill="none"><path d="M7 9V2M7 9L4 6M7 9L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Download receipt
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Footer (same as payment request: thanks, support, contact, social, powered by) -->
+        <div class="card-footer">
+          <p class="footer-thanks">Thank you for your business! 💙</p>
+          <hr class="footer-divider" />
+          <p class="footer-support">If you have any questions about this invoice, please contact your merchant. Please do not reply to this email. This is an automated message.</p>
+          <p class="footer-contact">
+            Need help? Contact us at <a href="mailto:{{ SUPPORT_EMAIL }}">{{ SUPPORT_EMAIL }}</a> or <a href="tel:+919240219400">+91 92402 19400</a>
+          </p>
+          <div class="footer-bottom">
+            <div class="footer-social">
+              <a href="https://www.facebook.com/payglocal/" target="_blank"><img src="https://static.payglocal.in/icons/gcc/onboarding/facebook.png" alt="Facebook" /></a>
+              <a href="https://www.instagram.com/payglocal.in/?hl=en" target="_blank"><img src="https://static.payglocal.in/icons/gcc/onboarding/instagram.png" alt="Instagram" /></a>
+              <a href="https://in.linkedin.com/company/payglocal" target="_blank"><img src="https://static.payglocal.in/icons/gcc/onboarding/linkedin.png" alt="LinkedIn" /></a>
+            </div>
+            <p class="footer-powered">Powered by PayGlocal</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="email-footer">
+        <p>You received this email because an invoice was sent to you.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
