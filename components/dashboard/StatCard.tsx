@@ -375,6 +375,8 @@ export function StatCard({
                     fill={`url(#grad-${iconPreset}-${index})`}
                     dot={false}
                     activeDot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
+                    animationDuration={650}
+                    animationEasing="ease-out"
                   />
                 </AreaChart>
               </ResponsiveContainer>

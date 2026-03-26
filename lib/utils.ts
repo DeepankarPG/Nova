@@ -24,9 +24,43 @@ export function formatNumber(num: number): string {
   return num.toString();
 }
 
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+const MONTHS_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/**
+ * Formats dates for UI. Uses fixed English strings (not Intl) so server and client
+ * render identical markup and avoid hydration mismatches from engine/locale differences.
+ */
 export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("en-IN", {
+  const o: Intl.DateTimeFormatOptions = {
     day: "2-digit",
     month: "short",
     year: "2-digit",
@@ -34,7 +68,43 @@ export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOpt
     minute: "2-digit",
     hour12: true,
     ...options,
-  }).format(d);
+  };
+
+  const includeTime = o.hour !== undefined && o.minute !== undefined;
+
+  let datePart: string;
+  if (o.month === "long" && o.day === "numeric") {
+    const y =
+      o.year === "numeric"
+        ? String(d.getFullYear())
+        : String(d.getFullYear() % 100).padStart(2, "0");
+    datePart = `${MONTHS_LONG[d.getMonth()]} ${d.getDate()}, ${y}`;
+  } else {
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = o.month === "long" ? MONTHS_LONG[d.getMonth()] : MONTHS_SHORT[d.getMonth()];
+    const yr =
+      o.year === "numeric"
+        ? String(d.getFullYear())
+        : String(d.getFullYear() % 100).padStart(2, "0");
+    datePart = `${day} ${mon} ${yr}`;
+  }
+
+  if (!includeTime) return datePart;
+
+  const use12 = o.hour12 !== false;
+  let h = d.getHours();
+  const min = String(d.getMinutes()).padStart(2, "0");
+  let timePart: string;
+  if (use12) {
+    const ap = h >= 12 ? "PM" : "AM";
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    timePart = `${String(h12).padStart(2, "0")}:${min} ${ap}`;
+  } else {
+    timePart = `${String(h).padStart(2, "0")}:${min}`;
+  }
+
+  return `${datePart}, ${timePart}`;
 }
 
 export function truncate(str: string, length: number): string {

@@ -54,6 +54,10 @@ const config: Record<string, BadgeStyle> = {
   // ── Neutral ───────────────────────────────────────────────
   open:                       { label: "Open",                        bg: "#fff7ed", text: "#c2410c", border: "#fdba74", trailIcon: "alert"  },
   draft:                      { label: "Draft",                       bg: "#f9fafb", text: "#6b7280", border: "#d1d5db"                      },
+
+  // ── Inbound / collections (MCA) ───────────────────────────
+  sent_for_review:            { label: "Sent for review",             bg: "#f9fafb", text: "#4b5563", border: "#e5e7eb", trailIcon: "clock"  },
+  sent_for_settlement:        { label: "Sent for settlement",       bg: "#f9fafb", text: "#4b5563", border: "#e5e7eb"                      },
 };
 
 interface StatusBadgeProps {

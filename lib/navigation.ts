@@ -4,7 +4,6 @@ import {
   ShoppingCart,
   FileText,
   AlertTriangle,
-  ArrowDownToLine,
   Settings,
   Users,
   Receipt,
@@ -41,14 +40,12 @@ export const navigation: NavGroup[] = [
         href:  "/payment-products",
         icon:  ShoppingCart,
         children: [
-          { label: "Multi Currency Accounts", href: "/payment-products/mca"            },
-          { label: "MCA Links",               href: "/payment-products/mca-links"       },
+          { label: "International accounts", href: "/payment-products/international-accounts" },
           { label: "Payment Links",           href: "/payment-products/payment-links"   },
           { label: "Invoice Links",           href: "/payment-products/invoice-links"   },
           { label: "Payment Button",          href: "/payment-products/payment-button"  },
         ],
       },
-      { label: "Platform Withdrawals",  href: "/platform-withdrawals",  icon: ArrowDownToLine },
     ],
   },
   {

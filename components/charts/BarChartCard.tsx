@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
@@ -48,7 +49,10 @@ export function BarChartCard({
   formatValue, height = 200, className,
 }: BarChartCardProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
       className={cn("bg-white rounded-xl px-5 pt-4 pb-3", className)}
       style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
     >
@@ -84,11 +88,19 @@ export function BarChartCard({
               cursor={{ fill: "#f9fafb", radius: 4 }}
             />
             {bars.map((bar) => (
-              <Bar key={bar.key} dataKey={bar.key} name={bar.label} fill={bar.color} radius={[5, 5, 0, 0]} />
+              <Bar
+                key={bar.key}
+                dataKey={bar.key}
+                name={bar.label}
+                fill={bar.color}
+                radius={[5, 5, 0, 0]}
+                animationDuration={720}
+                animationEasing="ease-out"
+              />
             ))}
           </BarChart>
         </ResponsiveContainer>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -52,11 +52,6 @@ export async function getPaymentProducts() {
   return mockData.paymentProducts;
 }
 
-export async function getWithdrawals() {
-  await delay(1100);
-  return mockData.withdrawals;
-}
-
 export async function getInvoices() {
   await delay(1000);
   return mockData.invoices;

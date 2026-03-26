@@ -351,40 +351,1158 @@ export const paymentProducts = [
   },
 ];
 
-// ─── Platform Withdrawals ──────────────────────────────────────────────────────
+// ─── International accounts (client location–first) ─────────────────────────────
 
-export const withdrawals = [
+export type BankDetailRow = { label: string; value: string };
+
+/** Mock corridor KPIs for MCA location page (illustrative — not tied to ledger balances). */
+export type McaCorridorAnalyticsStrip = {
+  totalRevenue: number;
+  outstanding: number;
+  changeRevenue: number;
+  sparkRevenue: number[];
+  /** Replaces trend % on Outstanding — clearing context (illustrative). */
+  outstandingContext: string;
+  /** INR — illustrative savings this month vs bank-style fees (MCA savings card). */
+  savingsThisMonthInr: number;
+  /** Shown as “saved X% on fees vs banks”. */
+  savingsVsBankPct: number;
+};
+
+export type ClientReceivingLocation = {
+  id: string;
+  label: string;
+  flag: string;
+  receiveTitle: string;
+  localCurrency: string;
+  localAccountTitle: string;
+  localAccountSubtitle: string;
+  paymentMethodLocal: string;
+  available: number;
+  pending: number;
+  fxRateToInr: number;
+  fxUpdatedAt: string;
+  estimatedSettlementDays: string;
+  localRows: BankDetailRow[];
+  swiftAccountTitle: string;
+  swiftCurrenciesNote: string;
+  swiftWarning?: string;
+  swiftRows: BankDetailRow[];
+  preferredRibbon?: string;
+  payerNote?: string;
+  corridorAnalytics: McaCorridorAnalyticsStrip;
+};
+
+export const clientReceivingLocations: ClientReceivingLocation[] = [
   {
-    id: "wdl_p1q2r3",
-    amount: 500000,
-    currency: "INR",
-    status: "completed",
-    bankAccount: "HDFC ****4521",
-    initiatedBy: "Yajat Gupta",
-    date: "2026-03-10T10:00:00",
-    completedAt: "2026-03-10T14:30:00",
+    id: "usa",
+    label: "United States",
+    flag: "🇺🇸",
+    receiveTitle: "United States of America",
+    localCurrency: "USD",
+    localAccountTitle: "USD account",
+    localAccountSubtitle: "Your client pays via ACH or Fedwire — lower fees than SWIFT for US payers.",
+    paymentMethodLocal: "ACH / Fedwire",
+    available: 8420.5,
+    pending: 0,
+    fxRateToInr: 83.25,
+    fxUpdatedAt: "2026-03-17T10:41:00",
+    estimatedSettlementDays: "1–3 business days",
+    preferredRibbon: "Preferred by payers in the US",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Account number", value: "9876543210" },
+      { label: "Routing (ABA)", value: "021000021" },
+      { label: "Bank name", value: "JPMorgan Chase Bank N.A." },
+      { label: "Account type", value: "Business checking" },
+      { label: "Beneficiary address", value: "5 Penn Plaza, 14th Floor, New York, NY 10001, US" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "USD, GBP, EUR, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Beneficiary bank country", value: "United Kingdom" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 128400,
+      outstanding: 14200,
+      changeRevenue: 8.4,
+      sparkRevenue: [58, 62, 59, 71, 68, 76, 74, 82, 79, 88, 91, 96],
+      outstandingContext:
+        "3 payers · ACH/Fedwire usually clears in 1–3 business days",
+      savingsThisMonthInr: 8240.25,
+      savingsVsBankPct: 4,
+    },
   },
   {
-    id: "wdl_s4t5u6",
-    amount: 250000,
-    currency: "INR",
-    status: "processing",
-    bankAccount: "HDFC ****4521",
-    initiatedBy: "Yajat Gupta",
-    date: "2026-03-12T09:00:00",
-    completedAt: null,
+    id: "uk",
+    label: "United Kingdom",
+    flag: "🇬🇧",
+    receiveTitle: "the United Kingdom",
+    localCurrency: "GBP",
+    localAccountTitle: "GBP account",
+    localAccountSubtitle: "Client pays via FPS, CHAPS, or BACS — UK payment rails.",
+    paymentMethodLocal: "FPS / CHAPS / BACS",
+    available: 2100,
+    pending: 450,
+    fxRateToInr: 103.5,
+    fxUpdatedAt: "2026-03-17T10:40:00",
+    estimatedSettlementDays: "2–5 business days",
+    preferredRibbon: "Preferred by payers in the UK",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Account number", value: "80273629" },
+      { label: "Sort code", value: "20-00-00" },
+      { label: "Bank name", value: "Barclays Bank UK" },
+      { label: "Account type", value: "Business checking" },
+      { label: "Beneficiary address", value: "1 Churchill Place, London, E14 5HP, GB" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "GBP, USD, EUR, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 48600,
+      outstanding: 8200,
+      changeRevenue: 5.7,
+      sparkRevenue: [52, 55, 54, 60, 58, 64, 62, 68, 66, 72, 70, 76],
+      outstandingContext: "FPS/CHAPS/BACS · most clear in 2–5 business days",
+      savingsThisMonthInr: 28940.0,
+      savingsVsBankPct: 3.5,
+    },
   },
   {
-    id: "wdl_v7w8x9",
-    amount: 750000,
-    currency: "INR",
-    status: "completed",
-    bankAccount: "ICICI ****8832",
-    initiatedBy: "Arjun Mehta",
-    date: "2026-03-05T11:00:00",
-    completedAt: "2026-03-05T16:45:00",
+    id: "uae",
+    label: "United Arab Emirates",
+    flag: "🇦🇪",
+    receiveTitle: "the United Arab Emirates",
+    localCurrency: "AED",
+    localAccountTitle: "AED account",
+    localAccountSubtitle: "Your client pays in UAE dirhams via bank transfer.",
+    paymentMethodLocal: "Bank transfer",
+    available: 128400,
+    pending: 22000,
+    fxRateToInr: 22.65,
+    fxUpdatedAt: "2026-03-17T09:55:00",
+    estimatedSettlementDays: "Same day – 2 business days",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "IBAN", value: "AE123456789012345678901" },
+      { label: "Bank name", value: "Emirates NBD" },
+      { label: "Account type", value: "Business current" },
+      { label: "Beneficiary address", value: "DIFC, Dubai, United Arab Emirates" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "AED, USD, EUR, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 892000,
+      outstanding: 118000,
+      changeRevenue: 12.1,
+      sparkRevenue: [55, 62, 58, 68, 64, 74, 71, 80, 77, 86, 82, 91],
+      outstandingContext: "Local transfers · same day to 2 business days for most credits",
+      savingsThisMonthInr: 156200.4,
+      savingsVsBankPct: 5.2,
+    },
+  },
+  {
+    id: "europe",
+    label: "Europe",
+    flag: "🇪🇺",
+    receiveTitle: "Europe (SEPA)",
+    localCurrency: "EUR",
+    localAccountTitle: "EUR account",
+    localAccountSubtitle: "SEPA transfers for clients in the Eurozone.",
+    paymentMethodLocal: "SEPA",
+    available: 18420,
+    pending: 0,
+    fxRateToInr: 90.2,
+    fxUpdatedAt: "2026-03-17T09:50:00",
+    estimatedSettlementDays: "1–2 business days",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "IBAN", value: "DE89370400440532013000" },
+      { label: "BIC / SWIFT", value: "COBADEFFXXX" },
+      { label: "Bank name", value: "Commerzbank AG" },
+      { label: "Account type", value: "Business" },
+      { label: "Beneficiary address", value: "Frankfurt am Main, Germany" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "EUR, USD, GBP, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 71200,
+      outstanding: 9600,
+      changeRevenue: 3.9,
+      sparkRevenue: [48, 51, 50, 55, 53, 58, 56, 61, 59, 64, 62, 67],
+      outstandingContext: "SEPA SCT — majority of credits land in 1–2 business days",
+      savingsThisMonthInr: 42118.65,
+      savingsVsBankPct: 4.1,
+    },
+  },
+  {
+    id: "canada",
+    label: "Canada",
+    flag: "🇨🇦",
+    receiveTitle: "Canada",
+    localCurrency: "CAD",
+    localAccountTitle: "CAD account",
+    localAccountSubtitle: "EFT and other payment rails for Canadian payers.",
+    paymentMethodLocal: "EFT",
+    available: 0,
+    pending: 4890,
+    fxRateToInr: 61.05,
+    fxUpdatedAt: "2026-03-17T09:45:00",
+    estimatedSettlementDays: "2–4 business days",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Account number", value: "00345678912" },
+      { label: "Institution number", value: "003" },
+      { label: "Transit number", value: "45678" },
+      { label: "Bank name", value: "Royal Bank of Canada" },
+      { label: "Beneficiary address", value: "Toronto, ON, Canada" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "CAD, USD, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 22400,
+      outstanding: 6120,
+      changeRevenue: -2.2,
+      sparkRevenue: [42, 40, 41, 38, 39, 36, 37, 35, 36, 34, 35, 33],
+      outstandingContext: "EFT batch cutoffs apply · expect 2–4 business days to clear",
+      savingsThisMonthInr: 12890.5,
+      savingsVsBankPct: 3.8,
+    },
+  },
+  {
+    id: "australia",
+    label: "Australia",
+    flag: "🇦🇺",
+    receiveTitle: "Australia",
+    localCurrency: "AUD",
+    localAccountTitle: "AUD account",
+    localAccountSubtitle: "BECS, NPP, or Osko for Australian payers.",
+    paymentMethodLocal: "BECS / NPP / Osko",
+    available: 0,
+    pending: 12450.75,
+    fxRateToInr: 55.22,
+    fxUpdatedAt: "2026-03-17T10:42:00",
+    estimatedSettlementDays: "2–4 business days",
+    preferredRibbon: "Preferred by payers in Australia",
+    payerNote: "Some Australian banks may ask your client to verify beneficiary details — share your invoice and this page if needed.",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Account number", value: "051472898" },
+      { label: "BSB", value: "252-000" },
+      { label: "Bank name", value: "Commonwealth Bank of Australia" },
+      { label: "Account type", value: "Business checking" },
+      { label: "Beneficiary address", value: "Sydney, NSW, Australia" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "AUD, USD, GBP, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Beneficiary bank country", value: "United Kingdom" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 198800,
+      outstanding: 24800,
+      changeRevenue: 9.6,
+      sparkRevenue: [60, 64, 62, 70, 67, 74, 72, 79, 76, 84, 81, 88],
+      outstandingContext: "BECS/NPP/OSKO · many receipts same day, some overnight",
+      savingsThisMonthInr: 58920.1,
+      savingsVsBankPct: 4.4,
+    },
+  },
+  {
+    id: "singapore",
+    label: "Singapore",
+    flag: "🇸🇬",
+    receiveTitle: "Singapore",
+    localCurrency: "SGD",
+    localAccountTitle: "SGD account",
+    localAccountSubtitle: "FAST and GIRO for Singapore-based payers.",
+    paymentMethodLocal: "FAST / GIRO",
+    available: 12800,
+    pending: 0,
+    fxRateToInr: 62.1,
+    fxUpdatedAt: "2026-03-16T16:00:00",
+    estimatedSettlementDays: "Same day – 1 business day",
+    localRows: [
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Account number", value: "8855123456" },
+      { label: "Bank / branch code", value: "7375" },
+      { label: "Bank name", value: "DBS Bank Ltd" },
+      { label: "Account type", value: "Business" },
+      { label: "Beneficiary address", value: "Marina Bay, Singapore" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "SGD, USD, and 25+ more",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 84200,
+      outstanding: 11200,
+      changeRevenue: 6.3,
+      sparkRevenue: [54, 57, 56, 61, 59, 64, 62, 67, 65, 70, 68, 73],
+      outstandingContext: "FAST/GIRO — most inflows same day to 1 business day",
+      savingsThisMonthInr: 24100.0,
+      savingsVsBankPct: 3.2,
+    },
+  },
+  {
+    id: "rest-of-world",
+    label: "Rest of the world",
+    flag: "🌍",
+    receiveTitle: "rest of the world",
+    localCurrency: "USD",
+    localAccountTitle: "SWIFT (USD and more)",
+    localAccountSubtitle: "When your client is outside supported collection rails, use this international account.",
+    paymentMethodLocal: "SWIFT",
+    available: 3200,
+    pending: 0,
+    fxRateToInr: 83.25,
+    fxUpdatedAt: "2026-03-17T10:00:00",
+    estimatedSettlementDays: "3–7 business days",
+    swiftWarning: "SWIFT charges may apply on the sender or intermediary banks.",
+    localRows: [
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    swiftAccountTitle: "International SWIFT account",
+    swiftCurrenciesNote: "USD, GBP, EUR, and 25+ more",
+    swiftRows: [
+      { label: "Payment method", value: "SWIFT (international wire)" },
+      { label: "IBAN (account number)", value: "GB10TCCL04140480893347" },
+      { label: "BIC / SWIFT", value: "TCCLGB3L" },
+      { label: "Bank name", value: "The Currency Cloud Limited" },
+      { label: "Account holder", value: "Acme Exports Pvt Ltd" },
+      { label: "Beneficiary address", value: "12 Steward Street, London, E1 6FQ, GB" },
+    ],
+    corridorAnalytics: {
+      totalRevenue: 58200,
+      outstanding: 15400,
+      changeRevenue: 4.1,
+      sparkRevenue: [50, 53, 51, 56, 54, 59, 57, 62, 60, 65, 63, 68],
+      outstandingContext: "SWIFT path varies by sender & correspondent banks (3–7 days)",
+      savingsThisMonthInr: 31880.22,
+      savingsVsBankPct: 6.1,
+    },
   },
 ];
+
+export type InboundStageStatus = "complete" | "current" | "upcoming";
+
+export type InboundPaymentStage = {
+  id: string;
+  label: string;
+  detail?: string;
+  status: InboundStageStatus;
+};
+
+export type InboundPaymentExample = {
+  id: string;
+  locationId: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  counterparty?: string;
+  initiatedAt: string;
+  stages: InboundPaymentStage[];
+};
+
+/** Sample inbound payments — illustrates a status trail per payment (mock). */
+export const inboundPaymentExamples: InboundPaymentExample[] = [
+  {
+    id: "inb_001",
+    locationId: "usa",
+    reference: "INV-2026-0142",
+    amount: 4200,
+    currency: "USD",
+    counterparty: "Northwind LLC",
+    initiatedAt: "2026-03-18T09:12:00",
+    stages: [
+      { id: "s1", label: "Received at collection account", detail: "USD 4,200.00", status: "complete" },
+      { id: "s2", label: "Compliance & FX", detail: "In progress", status: "current" },
+      { id: "s3", label: "Settlement to India", detail: "Expected by 21 Mar", status: "upcoming" },
+      { id: "s4", label: "Credited to partner bank", detail: "—", status: "upcoming" },
+    ],
+  },
+  {
+    id: "inb_002",
+    locationId: "australia",
+    reference: "INV-2026-0098",
+    amount: 12450.75,
+    currency: "AUD",
+    counterparty: "Koala Design Pty Ltd",
+    initiatedAt: "2026-03-17T08:15:00",
+    stages: [
+      { id: "s1", label: "Received at collection account", detail: "AUD 12,450.75", status: "complete" },
+      { id: "s2", label: "Compliance & FX", detail: "Completed", status: "complete" },
+      { id: "s3", label: "Settlement to India", detail: "In transit", status: "current" },
+      { id: "s4", label: "Credited to partner bank", detail: "Typically 1–2 business days", status: "upcoming" },
+    ],
+  },
+];
+
+export function getClientReceivingLocation(
+  id: string
+): ClientReceivingLocation | undefined {
+  return clientReceivingLocations.find((l) => l.id === id);
+}
+
+export function inboundPaymentsForLocation(
+  locationId: string
+): InboundPaymentExample[] {
+  return inboundPaymentExamples.filter((p) => p.locationId === locationId);
+}
+
+/** Recent inbounds to a virtual account (mock ledger — no country column in UI). */
+export type McaRecentInbound = {
+  id: string;
+  locationId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  remitterName: string;
+  date: string;
+};
+
+export const mcaRecentInbounds: McaRecentInbound[] = [
+  {
+    id: "mca_tx_usa_01",
+    locationId: "usa",
+    amount: 4200,
+    currency: "USD",
+    status: "sent_for_settlement",
+    remitterName: "Northwind LLC",
+    date: "2026-03-24T12:50:00",
+  },
+  {
+    id: "mca_tx_usa_02",
+    locationId: "usa",
+    amount: 1890.5,
+    currency: "USD",
+    status: "sent_for_review",
+    remitterName: "Amazon",
+    date: "2026-03-23T16:22:00",
+  },
+  {
+    id: "mca_tx_usa_03",
+    locationId: "usa",
+    amount: 975,
+    currency: "USD",
+    status: "success",
+    remitterName: "Stripe Payouts",
+    date: "2026-03-22T09:10:00",
+  },
+  {
+    id: "mca_tx_usa_04",
+    locationId: "usa",
+    amount: 12000,
+    currency: "USD",
+    status: "in_progress",
+    remitterName: "Contoso Ltd",
+    date: "2026-03-21T14:33:00",
+  },
+  {
+    id: "mca_tx_usa_05",
+    locationId: "usa",
+    amount: 640,
+    currency: "USD",
+    status: "sent_for_review",
+    remitterName: "Amazon",
+    date: "2026-03-20T11:05:00",
+  },
+  {
+    id: "mca_tx_usa_06",
+    locationId: "usa",
+    amount: 250,
+    currency: "USD",
+    status: "success",
+    remitterName: "Shopify Capital",
+    date: "2026-03-18T08:40:00",
+  },
+  {
+    id: "mca_tx_uk_01",
+    locationId: "uk",
+    amount: 3200,
+    currency: "GBP",
+    status: "sent_for_settlement",
+    remitterName: "Fabrikam UK Ltd",
+    date: "2026-03-24T10:15:00",
+  },
+  {
+    id: "mca_tx_uk_02",
+    locationId: "uk",
+    amount: 890.25,
+    currency: "GBP",
+    status: "sent_for_review",
+    remitterName: "Amazon",
+    date: "2026-03-23T13:00:00",
+  },
+  {
+    id: "mca_tx_uk_03",
+    locationId: "uk",
+    amount: 450,
+    currency: "GBP",
+    status: "success",
+    remitterName: "Adyen BV",
+    date: "2026-03-22T15:20:00",
+  },
+  {
+    id: "mca_tx_uk_04",
+    locationId: "uk",
+    amount: 2100,
+    currency: "GBP",
+    status: "in_progress",
+    remitterName: "Tailwind Traders",
+    date: "2026-03-19T09:45:00",
+  },
+  {
+    id: "mca_tx_uk_05",
+    locationId: "uk",
+    amount: 175.5,
+    currency: "GBP",
+    status: "success",
+    remitterName: "Wise Ltd",
+    date: "2026-03-17T12:00:00",
+  },
+  {
+    id: "mca_tx_au_01",
+    locationId: "australia",
+    amount: 5600,
+    currency: "AUD",
+    status: "sent_for_review",
+    remitterName: "Koala Design Pty Ltd",
+    date: "2026-03-24T08:30:00",
+  },
+  {
+    id: "mca_tx_au_02",
+    locationId: "australia",
+    amount: 12450.75,
+    currency: "AUD",
+    status: "in_progress",
+    remitterName: "BigCommerce AU",
+    date: "2026-03-21T11:00:00",
+  },
+  {
+    id: "mca_tx_au_03",
+    locationId: "australia",
+    amount: 980,
+    currency: "AUD",
+    status: "success",
+    remitterName: "Afterpay",
+    date: "2026-03-19T16:40:00",
+  },
+  {
+    id: "mca_tx_au_04",
+    locationId: "australia",
+    amount: 2200,
+    currency: "AUD",
+    status: "sent_for_settlement",
+    remitterName: "Canva Pty Ltd",
+    date: "2026-03-18T10:10:00",
+  },
+  {
+    id: "mca_tx_au_05",
+    locationId: "australia",
+    amount: 415,
+    currency: "AUD",
+    status: "success",
+    remitterName: "eBay Commerce",
+    date: "2026-03-15T14:25:00",
+  },
+  {
+    id: "mca_tx_sg_01",
+    locationId: "singapore",
+    amount: 12800,
+    currency: "SGD",
+    status: "success",
+    remitterName: "Grab Financial",
+    date: "2026-03-23T09:00:00",
+  },
+  {
+    id: "mca_tx_sg_02",
+    locationId: "singapore",
+    amount: 2400,
+    currency: "SGD",
+    status: "sent_for_review",
+    remitterName: "Shopee Pte Ltd",
+    date: "2026-03-22T11:30:00",
+  },
+  {
+    id: "mca_tx_sg_03",
+    locationId: "singapore",
+    amount: 890,
+    currency: "SGD",
+    status: "in_progress",
+    remitterName: "Lazada SG",
+    date: "2026-03-20T15:00:00",
+  },
+  {
+    id: "mca_tx_sg_04",
+    locationId: "singapore",
+    amount: 3100,
+    currency: "SGD",
+    status: "sent_for_settlement",
+    remitterName: "Sea Ltd",
+    date: "2026-03-19T08:15:00",
+  },
+  {
+    id: "mca_tx_sg_05",
+    locationId: "singapore",
+    amount: 650,
+    currency: "SGD",
+    status: "success",
+    remitterName: "PayPal Pte",
+    date: "2026-03-16T12:45:00",
+  },
+  {
+    id: "mca_tx_row_01",
+    locationId: "rest-of-world",
+    amount: 3200,
+    currency: "USD",
+    status: "sent_for_review",
+    remitterName: "Global Freight Co",
+    date: "2026-03-24T07:00:00",
+  },
+  {
+    id: "mca_tx_row_02",
+    locationId: "rest-of-world",
+    amount: 15000,
+    currency: "USD",
+    status: "in_progress",
+    remitterName: "Swiss Pharma AG",
+    date: "2026-03-22T13:20:00",
+  },
+  {
+    id: "mca_tx_row_03",
+    locationId: "rest-of-world",
+    amount: 780,
+    currency: "USD",
+    status: "success",
+    remitterName: "Remote.com Inc",
+    date: "2026-03-20T10:00:00",
+  },
+  {
+    id: "mca_tx_row_04",
+    locationId: "rest-of-world",
+    amount: 4250,
+    currency: "USD",
+    status: "sent_for_settlement",
+    remitterName: "Deel Inc",
+    date: "2026-03-18T09:30:00",
+  },
+  {
+    id: "mca_tx_row_05",
+    locationId: "rest-of-world",
+    amount: 199.99,
+    currency: "USD",
+    status: "success",
+    remitterName: "Paddle.com",
+    date: "2026-03-14T17:00:00",
+  },
+  {
+    id: "mca_tx_uae_01",
+    locationId: "uae",
+    amount: 45000,
+    currency: "AED",
+    status: "sent_for_settlement",
+    remitterName: "Emirates Trading LLC",
+    date: "2026-03-23T14:00:00",
+  },
+  {
+    id: "mca_tx_uae_02",
+    locationId: "uae",
+    amount: 12000,
+    currency: "AED",
+    status: "success",
+    remitterName: "Noon E-commerce",
+    date: "2026-03-21T10:30:00",
+  },
+  {
+    id: "mca_tx_uae_03",
+    locationId: "uae",
+    amount: 8800,
+    currency: "AED",
+    status: "sent_for_review",
+    remitterName: "Amazon.ae",
+    date: "2026-03-20T09:00:00",
+  },
+  {
+    id: "mca_tx_uae_04",
+    locationId: "uae",
+    amount: 22000,
+    currency: "AED",
+    status: "in_progress",
+    remitterName: "ADNOC Supply",
+    date: "2026-03-19T11:45:00",
+  },
+  {
+    id: "mca_tx_uae_05",
+    locationId: "uae",
+    amount: 3400,
+    currency: "AED",
+    status: "success",
+    remitterName: "Careem Pay",
+    date: "2026-03-17T16:00:00",
+  },
+  {
+    id: "mca_tx_eu_01",
+    locationId: "europe",
+    amount: 9200,
+    currency: "EUR",
+    status: "sent_for_review",
+    remitterName: "Zalando SE",
+    date: "2026-03-24T06:45:00",
+  },
+  {
+    id: "mca_tx_eu_02",
+    locationId: "europe",
+    amount: 15400,
+    currency: "EUR",
+    status: "sent_for_settlement",
+    remitterName: "SAP SE",
+    date: "2026-03-22T12:00:00",
+  },
+  {
+    id: "mca_tx_eu_03",
+    locationId: "europe",
+    amount: 2100,
+    currency: "EUR",
+    status: "success",
+    remitterName: "Klarna Bank",
+    date: "2026-03-21T08:20:00",
+  },
+  {
+    id: "mca_tx_eu_04",
+    locationId: "europe",
+    amount: 6750,
+    currency: "EUR",
+    status: "in_progress",
+    remitterName: "Booking.com BV",
+    date: "2026-03-19T14:10:00",
+  },
+  {
+    id: "mca_tx_eu_05",
+    locationId: "europe",
+    amount: 890,
+    currency: "EUR",
+    status: "success",
+    remitterName: "Adyen NV",
+    date: "2026-03-16T11:00:00",
+  },
+  {
+    id: "mca_tx_ca_01",
+    locationId: "canada",
+    amount: 4890,
+    currency: "CAD",
+    status: "in_progress",
+    remitterName: "Shopify Inc",
+    date: "2026-03-23T15:30:00",
+  },
+  {
+    id: "mca_tx_ca_02",
+    locationId: "canada",
+    amount: 1200,
+    currency: "CAD",
+    status: "sent_for_review",
+    remitterName: "Amazon.ca",
+    date: "2026-03-22T10:00:00",
+  },
+  {
+    id: "mca_tx_ca_03",
+    locationId: "canada",
+    amount: 560,
+    currency: "CAD",
+    status: "success",
+    remitterName: "Stripe Canada",
+    date: "2026-03-20T13:15:00",
+  },
+  {
+    id: "mca_tx_ca_04",
+    locationId: "canada",
+    amount: 3300,
+    currency: "CAD",
+    status: "sent_for_settlement",
+    remitterName: "Lightspeed POS",
+    date: "2026-03-18T09:00:00",
+  },
+  {
+    id: "mca_tx_ca_05",
+    locationId: "canada",
+    amount: 275.5,
+    currency: "CAD",
+    status: "success",
+    remitterName: "PayPal Canada",
+    date: "2026-03-15T12:30:00",
+  },
+];
+
+export function recentInboundsForLocation(
+  locationId: string,
+  limit = 5
+): McaRecentInbound[] {
+  return mcaRecentInbounds
+    .filter((r) => r.locationId === locationId)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, limit);
+}
+
+// ─── Platform withdrawals (marketplace / payroll payouts) ───────────────────────
+
+export type PlatformPayoutRegion = {
+  id: string;
+  label: string;
+  flag: string;
+  currencyLabel: string;
+  detailRows: BankDetailRow[];
+};
+
+export type PlatformPayoutGuide = {
+  id: string;
+  name: string;
+  category: string;
+  /** Sidebar / header visual (emoji). */
+  navIcon: string;
+  /** Currency suffix for earning & outstanding stats. */
+  statsCurrency: string;
+  /** Same shape as MCA corridor strip — illustrative. */
+  payoutAnalytics: McaCorridorAnalyticsStrip;
+  connected: boolean;
+  headline: string;
+  steps: { title: string; body: string }[];
+  helpHint?: string;
+  videoGuideTitle?: string;
+  regions: PlatformPayoutRegion[];
+};
+
+export type PlatformRecentPayout = {
+  id: string;
+  platformId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  reference: string;
+  date: string;
+};
+
+export const platformRecentPayouts: PlatformRecentPayout[] = [
+  {
+    id: "pp_amz_01",
+    platformId: "amazon",
+    amount: 8420.5,
+    currency: "USD",
+    status: "success",
+    reference: "US marketplace settlement",
+    date: "2026-03-22T09:00:00",
+  },
+  {
+    id: "pp_amz_02",
+    platformId: "amazon",
+    amount: 3120.0,
+    currency: "USD",
+    status: "sent_for_settlement",
+    reference: "US accrual (pending)",
+    date: "2026-03-21T14:20:00",
+  },
+  {
+    id: "pp_amz_03",
+    platformId: "amazon",
+    amount: 1890.25,
+    currency: "GBP",
+    status: "success",
+    reference: "UK marketplace",
+    date: "2026-03-19T11:15:00",
+  },
+  {
+    id: "pp_deel_01",
+    platformId: "deel",
+    amount: 12400.0,
+    currency: "USD",
+    status: "success",
+    reference: "Payroll batch Mar 15",
+    date: "2026-03-15T08:30:00",
+  },
+  {
+    id: "pp_deel_02",
+    platformId: "deel",
+    amount: 5600.0,
+    currency: "USD",
+    status: "in_progress",
+    reference: "Contractor payouts",
+    date: "2026-03-14T16:00:00",
+  },
+  {
+    id: "pp_up_01",
+    platformId: "upwork",
+    amount: 4250.75,
+    currency: "USD",
+    status: "success",
+    reference: "Weekly withdrawal",
+    date: "2026-03-20T10:00:00",
+  },
+  {
+    id: "pp_up_02",
+    platformId: "upwork",
+    amount: 980.0,
+    currency: "USD",
+    status: "success",
+    reference: "Weekly withdrawal",
+    date: "2026-03-13T09:45:00",
+  },
+];
+
+export function recentPayoutsForPlatform(platformId: string, limit = 5): PlatformRecentPayout[] {
+  return platformRecentPayouts
+    .filter((p) => p.platformId === platformId)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, limit);
+}
+
+export const platformPayoutGuides: PlatformPayoutGuide[] = [
+  {
+    id: "amazon",
+    name: "Amazon",
+    category: "Marketplace",
+    navIcon: "🛒",
+    statsCurrency: "USD",
+    payoutAnalytics: {
+      totalRevenue: 98650,
+      outstanding: 4200,
+      changeRevenue: 7.2,
+      sparkRevenue: [55, 58, 56, 62, 60, 65, 63, 68, 66, 71, 69, 74],
+      outstandingContext: "Settlement batch in flight · usually 3–5 business days to credit",
+      savingsThisMonthInr: 9120.5,
+      savingsVsBankPct: 4,
+    },
+    connected: true,
+    headline:
+      "Link this account in Seller Central so marketplace disbursements settle into your PayGlocal balance.",
+    steps: [
+      {
+        title: "Add your payout account in Amazon",
+        body: "In Seller Central, open Settings → Account Info → Deposit methods and add the bank details shown here.",
+      },
+      {
+        title: "Withdraw to PayGlocal",
+        body: "When Amazon pays out, funds arrive in this virtual account. You’ll get FIRA and ledger entries automatically where enabled.",
+      },
+      {
+        title: "Upload supporting documents",
+        body: "Attach your invoice or settlement note in the dashboard so compliance can match the inbound amount.",
+      },
+    ],
+    helpHint: "Need help? Our team can walk through Seller Central screens with you.",
+    videoGuideTitle: "Link your account on Amazon Seller Central",
+    regions: [
+      {
+        id: "amazon-com",
+        label: "amazon.com (United States)",
+        flag: "🇺🇸",
+        currencyLabel: "USD · ACH",
+        detailRows: [
+          { label: "Payment method", value: "ACH" },
+          { label: "ACH routing number", value: "026073150" },
+          { label: "Account number", value: "8336019414" },
+          { label: "Account type", value: "Business checking account" },
+          { label: "Bank name", value: "Community Federal Savings Bank" },
+          { label: "Beneficiary address", value: "5 Penn Plaza, 14th Floor, New York, NY 10001, US" },
+          { label: "Account holder name", value: "Acme Exports Pvt Ltd" },
+        ],
+      },
+      {
+        id: "amazon-co-uk",
+        label: "amazon.co.uk (United Kingdom)",
+        flag: "🇬🇧",
+        currencyLabel: "GBP · FPS / BACS",
+        detailRows: [
+          { label: "Payment method", value: "FPS / BACS" },
+          { label: "Sort code", value: "20-00-00" },
+          { label: "Account number", value: "80273629" },
+          { label: "Account type", value: "Business checking account" },
+          { label: "Bank name", value: "Barclays Bank UK" },
+          { label: "Beneficiary address", value: "1 Churchill Place, London, E14 5HP, GB" },
+          { label: "Account holder name", value: "Acme Exports Pvt Ltd" },
+        ],
+      },
+      {
+        id: "amazon-ca",
+        label: "amazon.ca (Canada)",
+        flag: "🇨🇦",
+        currencyLabel: "CAD · EFT",
+        detailRows: [
+          { label: "Payment method", value: "EFT" },
+          { label: "Institution number", value: "003" },
+          { label: "Transit number", value: "45678" },
+          { label: "Account number", value: "00345678912" },
+          { label: "Bank name", value: "Royal Bank of Canada" },
+          { label: "Beneficiary address", value: "Toronto, ON, Canada" },
+          { label: "Account holder name", value: "Acme Exports Pvt Ltd" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "deel",
+    name: "Deel",
+    category: "Payroll",
+    navIcon: "🌐",
+    statsCurrency: "USD",
+    payoutAnalytics: {
+      totalRevenue: 45200,
+      outstanding: 11800,
+      changeRevenue: 4.8,
+      sparkRevenue: [48, 50, 49, 52, 51, 54, 53, 56, 55, 58, 57, 60],
+      outstandingContext: "Payroll + contractor runs · clears as Deel releases each batch",
+      savingsThisMonthInr: 6840.0,
+      savingsVsBankPct: 3.5,
+    },
+    connected: false,
+    headline:
+      "Use these details where Deel asks for a bank account to send contractor or employer-of-record payouts.",
+    steps: [
+      {
+        title: "Open payout settings in Deel",
+        body: "Navigate to your wallet or payout method settings and choose to add a bank transfer account.",
+      },
+      {
+        title: "Enter the USD account below",
+        body: "Copy each field exactly — mismatched names are the most common reason for failed payouts.",
+      },
+      {
+        title: "Confirm test deposit if required",
+        body: "Deel may send a small verification credit; acknowledge it in Deel and in PayGlocal when it arrives.",
+      },
+    ],
+    regions: [
+      {
+        id: "deel-usd",
+        label: "Global USD",
+        flag: "🇺🇸",
+        currencyLabel: "USD · ACH",
+        detailRows: [
+          { label: "Payment method", value: "ACH" },
+          { label: "Routing number", value: "021000021" },
+          { label: "Account number", value: "9876543210" },
+          { label: "Account type", value: "Business checking" },
+          { label: "Bank name", value: "JPMorgan Chase Bank N.A." },
+          { label: "Beneficiary address", value: "5 Penn Plaza, 14th Floor, New York, NY 10001, US" },
+          { label: "Account holder name", value: "Acme Exports Pvt Ltd" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "upwork",
+    name: "Upwork",
+    category: "Freelance",
+    navIcon: "💼",
+    statsCurrency: "USD",
+    payoutAnalytics: {
+      totalRevenue: 28400,
+      outstanding: 2100,
+      changeRevenue: 2.4,
+      sparkRevenue: [42, 44, 43, 45, 44, 46, 45, 47, 46, 48, 47, 49],
+      outstandingContext: "Weekly withdrawal cycle · funds leave Upwork then post here",
+      savingsThisMonthInr: 3210.75,
+      savingsVsBankPct: 3.8,
+    },
+    connected: false,
+    headline:
+      "Add this account as your Get Paid method so Upwork withdrawals land in your PayGlocal collection balance.",
+    steps: [
+      {
+        title: "Go to Upwork payment settings",
+        body: "Settings → Get Paid → Add payment method → Direct to local bank.",
+      },
+      {
+        title: "Choose United States / USD",
+        body: "Select the region that matches the routing and account number shown for your active marketplace.",
+      },
+      {
+        title: "Save and set as default",
+        body: "Set as primary if you want all future withdrawals to use PayGlocal automatically.",
+      },
+    ],
+    regions: [
+      {
+        id: "upwork-usd",
+        label: "United States (USD)",
+        flag: "🇺🇸",
+        currencyLabel: "USD · ACH",
+        detailRows: [
+          { label: "Payment method", value: "ACH" },
+          { label: "Routing number", value: "026073150" },
+          { label: "Account number", value: "8336019414" },
+          { label: "Account type", value: "Business checking account" },
+          { label: "Bank name", value: "Community Federal Savings Bank" },
+          { label: "Beneficiary address", value: "5 Penn Plaza, 14th Floor, New York, NY 10001, US" },
+          { label: "Account holder name", value: "Acme Exports Pvt Ltd" },
+        ],
+      },
+    ],
+  },
+];
+
+export function getPlatformPayoutGuide(id: string): PlatformPayoutGuide | undefined {
+  return platformPayoutGuides.find((p) => p.id === id);
+}
 
 // ─── Invoices ──────────────────────────────────────────────────────────────────
 
