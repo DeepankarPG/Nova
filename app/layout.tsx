@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { AppToaster } from "@/components/theme/AppToaster";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,27 +26,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         {process.env.NODE_ENV === "development" && (
           <Script
             src="https://mcp.figma.com/mcp/html-to-design/capture.js"
             strategy="afterInteractive"
           />
         )}
-        {children}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: "white",
-              border: "1px solid #e2e8f0",
-              borderRadius: "10px",
-              fontSize: "13px",
-              color: "#0f172a",
-            },
-          }}
-        />
+        <ThemeProvider>
+          {children}
+          <AppToaster />
+        </ThemeProvider>
       </body>
     </html>
   );

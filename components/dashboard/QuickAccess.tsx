@@ -1,41 +1,91 @@
 "use client";
 
-import { UserPlus, KeyRound, Link2, User } from "lucide-react";
+import {
+  CircleDollarSign,
+  Globe2,
+  Link2,
+  Receipt,
+  Settings,
+  UserPlus,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { QuickActionId } from "@/components/dashboard/quick-actions/types";
 
-const quickLinks = [
-  { label: "Add Teammate",          icon: UserPlus, href: "/client-management", accent: false },
-  { label: "My Account",            icon: User,     href: "/configure",          accent: false },
-  { label: "API Keys",              icon: KeyRound, href: "/configure",          accent: false },
-  { label: "+ Create Payment Link", icon: Link2,    href: "/payment-products",   accent: true  },
+type QuickActionItem = {
+  id: QuickActionId;
+  label: string;
+  icon: LucideIcon;
+};
+
+const quickActions: QuickActionItem[] = [
+  { id: "payment-link", label: "Create payment link", icon: Link2 },
+  { id: "invoice", label: "Create invoice", icon: Receipt },
+  { id: "invite-teammate", label: "Invite teammate", icon: UserPlus },
+  { id: "fx-calculator", label: "FX calculator", icon: CircleDollarSign },
+  { id: "international-accounts", label: "International accounts", icon: Globe2 },
 ];
 
-export function QuickAccess() {
+const quickAccessCardClass = cn(
+  "group flex shrink-0 flex-col items-start gap-2 rounded-xl border border-border bg-card text-left",
+  "px-3.5 pb-2.5 pt-3.5 shadow-sm transition-shadow duration-150",
+  "hover:bg-muted/40 hover:shadow",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "w-[9rem] sm:w-[9.25rem]"
+);
+
+export function QuickAccess({
+  onAction,
+  onEditDashboard,
+  editMode = false,
+}: {
+  onAction: (id: QuickActionId) => void;
+  onEditDashboard?: () => void;
+  editMode?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mr-1 leading-none">Quick Access</span>
-      {quickLinks.map((item) => {
-        const Icon = item.icon;
-        return (
-          <a key={item.label} href={item.href}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150"
-            style={item.accent
-              ? { background: "#0061E3", color: "#fff", border: "1px solid #0061E3", boxShadow: "0 1px 3px rgba(0,97,227,0.25)" }
-              : { background: "#fff", color: "#374151", border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }
-            }
-            onMouseEnter={(e) => {
-              if (item.accent) e.currentTarget.style.background = "#0055c8";
-              else e.currentTarget.style.background = "#f9fafb";
-            }}
-            onMouseLeave={(e) => {
-              if (item.accent) e.currentTarget.style.background = "#0061E3";
-              else e.currentTarget.style.background = "#fff";
-            }}
-          >
-            <Icon className="w-3 h-3" />
-            {item.label}
-          </a>
-        );
-      })}
+    <div className="w-full">
+      <h2 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-foreground sm:text-base">
+        Quick access
+      </h2>
+
+      <div className="w-fit max-w-full">
+        <div className="flex flex-wrap gap-2.5">
+          {quickActions.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onAction(item.id)}
+                className={quickAccessCardClass}
+              >
+                <Icon className="h-4 w-4 shrink-0 text-primary" strokeWidth={2} aria-hidden />
+                <span className="text-left text-[11px] font-medium leading-snug text-foreground sm:text-xs">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {onEditDashboard != null && !editMode && (
+            <button
+              type="button"
+              onClick={onEditDashboard}
+              className={cn(
+                quickAccessCardClass,
+                "w-[9.25rem] cursor-pointer sm:w-[9.75rem]"
+              )}
+              aria-label="Customise your dashboard layout"
+            >
+              <Settings className="h-4 w-4 shrink-0 text-primary" strokeWidth={2} aria-hidden />
+              <span className="text-left text-[11px] font-medium leading-snug text-foreground sm:text-xs">
+                Customise dashboard
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

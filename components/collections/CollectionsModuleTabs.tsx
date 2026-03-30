@@ -22,8 +22,7 @@ export function CollectionsModuleTabs() {
   return (
     <div className="mb-5">
       <div
-        className="inline-flex w-full sm:w-auto flex-col sm:flex-row gap-1.5 p-1 rounded-xl bg-gray-100"
-        style={{ border: "1px solid #e5e7eb" }}
+        className="inline-flex w-full sm:w-auto flex-col sm:flex-row gap-1.5 p-1 rounded-xl bg-muted border border-border/70 dark:border-border"
         role="tablist"
       >
         <Link
@@ -33,10 +32,9 @@ export function CollectionsModuleTabs() {
           className={cn(
             "flex items-center justify-center min-h-10 px-5 rounded-lg text-sm font-medium transition-all duration-150",
             isMca
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+              ? "bg-card text-foreground shadow-sm dark:bg-muted dark:border dark:border-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
           )}
-          style={isMca ? { border: "1px solid #e5e7eb" } : undefined}
         >
           Multi-currency accounts
         </Link>
@@ -47,10 +45,9 @@ export function CollectionsModuleTabs() {
           className={cn(
             "flex items-center justify-center min-h-10 px-5 rounded-lg text-sm font-medium transition-all duration-150",
             isPlatform
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+              ? "bg-card text-foreground shadow-sm dark:bg-muted dark:border dark:border-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
           )}
-          style={isPlatform ? { border: "1px solid #e5e7eb" } : undefined}
         >
           Platform withdrawals
         </Link>

@@ -132,7 +132,7 @@ export default function ClientManagementPage() {
       />
 
       {/* Invite card */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div className="bg-card text-card-foreground rounded-2xl border border-border p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-900 mb-1">Invite Teammate</h3>
         <p className="text-xs text-slate-500 mb-4">Send an invite link to add a new team member</p>
         <div className="flex items-start gap-3">
@@ -161,7 +161,7 @@ export default function ClientManagementPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <select className="h-9 px-3 text-sm bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-gray-500/10 focus:border-gray-500 transition-all">
+            <select className="h-9 px-3 text-sm bg-card border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring/25 focus:border-muted-foreground/40 transition-all">
               <option>Viewer</option>
               <option>Developer</option>
               <option>Manager</option>
@@ -189,7 +189,7 @@ export default function ClientManagementPage() {
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 shadow-sm flex items-center gap-3">
+            <div key={s.label} className="bg-card text-card-foreground rounded-xl border border-border px-4 py-3.5 shadow-sm flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
                 <Icon className="w-4 h-4 text-slate-500" />
               </div>

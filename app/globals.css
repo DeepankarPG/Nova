@@ -1,23 +1,113 @@
 @import "tailwindcss";
 
+/* Manual theme toggle (next-themes) — default v4 `dark:` uses prefers-color-scheme only */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-hover: var(--primary-hover);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-header: var(--header);
+  --color-header-border: var(--header-border);
+  --color-input: var(--input);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-tick: var(--chart-tick);
+  --color-chart-cursor: var(--chart-cursor);
+  --color-chart-bar-track: var(--chart-bar-track);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
+  color-scheme: light;
   --background: #f6f8fa;
   --foreground: #111827;
   --card: #ffffff;
+  --card-foreground: #111827;
   --border: #e5e7eb;
-  --ring: #0061E3;
-  --primary: #0061E3;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #0061e3;
+  --primary-foreground: #ffffff;
+  --ring: #0061e3;
   --primary-hover: #0055c8;
   --primary-light: #eff4ff;
   --primary-border: #c7d9fb;
   --primary-text: #0047b0;
+  --accent: #f3f4f6;
+  --accent-foreground: #111827;
+  --sidebar: #e8eaee;
+  --sidebar-border: #d8dce3;
+  --sidebar-foreground: #374151;
+  --header: #ffffff;
+  --header-border: #e2e5ea;
+  --input: #e5e7eb;
+  --chart-grid: #f3f4f6;
+  --chart-tick: #9ca3af;
+  --chart-cursor: rgba(249, 250, 251, 0.95);
+  --chart-bar-track: #f3f4f6;
+  /* PayGlocal dashboard widget system */
+  --pg-blue: #1a56db;
+  --pg-blue-light: #ebf3ff;
+  --pg-navy: #1e2a3b;
+  --pg-border: #e5e9f0;
+  --pg-surface: #f7f9fc;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0b0f14;
+  --foreground: #f3f4f6;
+  --card: #141a22;
+  --card-foreground: #f3f4f6;
+  --border: #2a3441;
+  --muted: #1e2630;
+  --muted-foreground: #b4bcc8;
+  --popover: #1a222d;
+  --popover-foreground: #f3f4f6;
+  --primary: #0061e3;
+  --primary-foreground: #ffffff;
+  --ring: #3b82f6;
+  --primary-hover: #3b82f6;
+  --primary-light: rgba(0, 97, 227, 0.18);
+  --primary-border: #2563eb;
+  --primary-text: #93c5fd;
+  --accent: #1e2630;
+  --accent-foreground: #f3f4f6;
+  --sidebar: #10151c;
+  --sidebar-border: #2a3441;
+  --sidebar-foreground: #d1d5db;
+  --header: #0f1419;
+  --header-border: #2a3441;
+  --input: #2a3441;
+  --chart-grid: #2d3748;
+  --chart-tick: #c4cad4;
+  --chart-cursor: rgba(255, 255, 255, 0.06);
+  /* Subtle bar “track” behind filled bars — must stay dark (not light gray) in dark mode */
+  --chart-bar-track: rgba(255, 255, 255, 0.07);
+  --pg-blue: #0061e3;
+  --pg-blue-light: rgba(0, 97, 227, 0.15);
+  --pg-navy: #e5e7eb;
+  --pg-border: #2a3441;
+  --pg-surface: #141a22;
 }
 
 * { box-sizing: border-box; }
@@ -35,6 +125,8 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 /* ─── Shimmer ────────────────────────────────────────────────────────────── */
 @keyframes shimmer {
@@ -45,6 +137,10 @@ body {
   background: linear-gradient(90deg, #ebebeb 25%, #d8d8d8 50%, #ebebeb 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
+}
+.dark .shimmer {
+  background: linear-gradient(90deg, #1e2630 25%, #2a3441 50%, #1e2630 75%);
+  background-size: 200% 100%;
 }
 
 /* ─── Counter reveal ────────────────────────────────────────────────────── */
@@ -69,14 +165,50 @@ body {
 }
 .page-enter { animation: pageFade 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 
+@keyframes widgetDndOverlayIn {
+  from { transform: scale(0.94) translateY(10px); opacity: 0.88; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.widget-dnd-overlay {
+  animation: widgetDndOverlayIn 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── PayGlocal advantage banner: auto-advance strip ───────────────────────── */
+@keyframes pg-advantage-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.pg-advantage-progress {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation-name: pg-advantage-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.pg-advantage-progress--paused {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-advantage-progress {
+    animation: none !important;
+    transform: scaleX(1) !important;
+  }
+}
+
 /* ─── Focus ──────────────────────────────────────────────────────────────── */
-/* Blue ring only for keyboard-navigable interactive elements, not form controls */
 a:focus-visible,
 button:focus-visible,
 [role="button"]:focus-visible,
-[role="tab"]:focus-visible { outline: 2px solid #0061E3; outline-offset: 2px; }
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
 
-/* Form controls use their own inline border/shadow styles */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible { outline: none; }

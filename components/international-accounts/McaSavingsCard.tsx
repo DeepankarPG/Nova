@@ -37,19 +37,18 @@ export function McaSavingsCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -1, transition: { duration: 0.12 } }}
-      className="bg-white rounded-xl p-5 flex flex-col"
-      style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
+      className="bg-card text-card-foreground rounded-xl p-5 flex flex-col border border-border shadow-sm"
     >
       <div className="flex items-center gap-2">
-        <PiggyBank className="w-4 h-4 text-emerald-600 shrink-0 opacity-85" aria-hidden />
-        <span className="text-[13px] font-normal text-gray-500">Amount saved</span>
+        <PiggyBank className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 opacity-85" aria-hidden />
+        <span className="text-[13px] font-normal text-muted-foreground">Amount saved</span>
         <div
           className="relative flex items-center"
           onMouseEnter={() => setTipVisible(true)}
           onMouseLeave={() => setTipVisible(false)}
         >
           <Info
-            className="w-[13px] h-[13px] text-gray-300 hover:text-gray-400 transition-colors cursor-default shrink-0"
+            className="w-[13px] h-[13px] text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-default shrink-0"
             aria-hidden
           />
           <AnimatePresence>
@@ -61,21 +60,10 @@ export function McaSavingsCard({
                 transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 max-w-[calc(100vw-2rem)] pointer-events-none"
               >
-                <div
-                  className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 rounded-sm"
-                  style={{ background: "#1a1f2e" }}
-                />
-                <div
-                  className="relative rounded-xl px-3.5 py-3 text-left"
-                  style={{
-                    background: "#1a1f2e",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.12)",
-                  }}
-                >
-                  <p className="text-[11px] font-semibold text-white mb-1 tracking-wide">Amount saved</p>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "#a8b3c8" }}>
-                    {tooltip}
-                  </p>
+                <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 rounded-sm bg-popover border-r border-b border-border" />
+                <div className="relative rounded-xl px-3.5 py-3 text-left bg-popover text-popover-foreground border border-border shadow-lg">
+                  <p className="text-[11px] font-semibold mb-1 tracking-wide">Amount saved</p>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">{tooltip}</p>
                 </div>
               </motion.div>
             )}
@@ -84,16 +72,16 @@ export function McaSavingsCard({
       </div>
 
       <div className="mt-3 flex items-baseline gap-0.5 flex-wrap">
-        <span className="text-lg font-semibold text-gray-900 tabular-nums">₹</span>
-        <span className="text-[1.5rem] sm:text-[1.9rem] font-bold text-gray-900 leading-none tracking-tight tabular-nums">
+        <span className="text-lg font-semibold text-foreground tabular-nums">₹</span>
+        <span className="text-[1.5rem] sm:text-[1.9rem] font-bold text-foreground leading-none tracking-tight tabular-nums">
           {intFormatted}
         </span>
-        <span className="text-base sm:text-lg font-semibold text-gray-900 tabular-nums leading-none">
+        <span className="text-base sm:text-lg font-semibold text-foreground tabular-nums leading-none">
           .{dec}
         </span>
       </div>
 
-      <p className="mt-3 text-[13px] font-medium text-emerald-700 leading-snug">
+      <p className="mt-3 text-[13px] font-medium text-emerald-700 dark:text-emerald-400 leading-snug">
         You’ve saved <span className="font-semibold">{pctLabel}%</span> on fees vs typical bank pricing this month.
       </p>
     </motion.div>

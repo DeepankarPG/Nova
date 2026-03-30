@@ -12,16 +12,13 @@ type Props = {
 export function InboundPaymentTimeline({ payment, layout = "responsive" }: Props) {
   if (layout === "vertical") {
     return (
-      <VerticalTimelineBlock payment={payment} className="rounded-xl bg-white p-6 sm:p-7" referenceLayout />
+      <VerticalTimelineBlock payment={payment} className="rounded-xl bg-card text-card-foreground p-6 sm:p-7" referenceLayout />
     );
   }
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-xl bg-white p-5 sm:p-6 hidden md:block"
-        style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
-      >
+      <div className="rounded-xl bg-card text-card-foreground p-5 sm:p-6 hidden md:block border border-border shadow-sm">
         <TimelineHeader payment={payment} />
         <ol className="mt-5 flex items-start w-full">
           {payment.stages.map((stage, i) => {
@@ -35,31 +32,31 @@ export function InboundPaymentTimeline({ payment, layout = "responsive" }: Props
                     <div
                       className={cn(
                         "h-0.5 flex-1 -mr-px rounded-full",
-                        payment.stages[i - 1]?.status === "complete" ? "bg-emerald-400" : "bg-gray-200"
+                        payment.stages[i - 1]?.status === "complete" ? "bg-emerald-400" : "bg-border"
                       )}
                     />
                   )}
                   <div
                     className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 z-[1] bg-white",
-                      complete && "bg-emerald-50 border-emerald-500 text-emerald-700",
-                      current && "border-[#0061E3] bg-[#eff4ff]",
-                      !complete && !current && "border-gray-200"
+                      "w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 z-[1] bg-card",
+                      complete && "bg-emerald-50 dark:bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300",
+                      current && "border-primary bg-primary-light",
+                      !complete && !current && "border-border"
                     )}
                   >
                     {complete ? (
                       <Check className="w-4 h-4 stroke-[2.5]" />
                     ) : current ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#0061E3]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                     ) : (
-                      <span className="w-2 h-2 rounded-full bg-gray-200" />
+                      <span className="w-2 h-2 rounded-full bg-border" />
                     )}
                   </div>
                   {!isLast && (
                     <div
                       className={cn(
                         "h-0.5 flex-1 -ml-px rounded-full",
-                        complete ? "bg-emerald-400" : "bg-gray-200"
+                        complete ? "bg-emerald-400" : "bg-border"
                       )}
                     />
                   )}
@@ -67,13 +64,13 @@ export function InboundPaymentTimeline({ payment, layout = "responsive" }: Props
                 <p
                   className={cn(
                     "text-[13px] font-medium text-center mt-3 px-1 leading-snug",
-                    complete || current ? "text-gray-900" : "text-gray-400"
+                    complete || current ? "text-foreground" : "text-muted-foreground"
                   )}
                 >
                   {stage.label}
                 </p>
                 {stage.detail ? (
-                  <p className="text-[12px] text-gray-500 text-center mt-1 px-1 leading-snug line-clamp-2">
+                  <p className="text-[12px] text-muted-foreground text-center mt-1 px-1 leading-snug line-clamp-2">
                     {stage.detail}
                   </p>
                 ) : null}
@@ -83,7 +80,7 @@ export function InboundPaymentTimeline({ payment, layout = "responsive" }: Props
         </ol>
       </div>
 
-      <VerticalTimelineBlock payment={payment} className="rounded-xl bg-white p-5 sm:p-6 md:hidden" />
+      <VerticalTimelineBlock payment={payment} className="rounded-xl bg-card text-card-foreground p-5 sm:p-6 md:hidden" />
     </div>
   );
 }
@@ -98,7 +95,7 @@ function VerticalTimelineBlock({
   referenceLayout?: boolean;
 }) {
   return (
-    <div className={className} style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+    <div className={cn(className, "border border-border shadow-sm")}>
       <TimelineHeader payment={payment} spacious={referenceLayout} />
       <ol className={cn("space-y-0", referenceLayout ? "mt-6" : "mt-4")}>
         {payment.stages.map((stage, i) => {
@@ -111,25 +108,25 @@ function VerticalTimelineBlock({
               <div className="flex flex-col items-center w-10 shrink-0">
                 <div
                   className={cn(
-                    "w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 bg-white",
-                    complete && "bg-emerald-50 border-emerald-500 text-emerald-700",
-                    current && "border-[#0061E3] bg-[#eff4ff] shadow-sm",
-                    upcoming && "border-gray-200"
+                    "w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 bg-card",
+                    complete && "bg-emerald-50 dark:bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300",
+                    current && "border-primary bg-primary-light shadow-sm",
+                    upcoming && "border-border"
                   )}
                 >
                   {complete ? (
                     <Check className="w-[18px] h-[18px] stroke-[2.5]" />
                   ) : current ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#0061E3]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                   ) : (
-                    <span className="w-2 h-2 rounded-full bg-gray-300" />
+                    <span className="w-2 h-2 rounded-full bg-border" />
                   )}
                 </div>
                 {!isLast && (
                   <div
                     className={cn(
                       "w-0.5 flex-1 min-h-[18px] my-1 rounded-full",
-                      complete ? "bg-emerald-400" : "bg-gray-200"
+                      complete ? "bg-emerald-400" : "bg-border"
                     )}
                   />
                 )}
@@ -139,9 +136,9 @@ function VerticalTimelineBlock({
                   className={cn(
                     "leading-snug",
                     referenceLayout ? "text-[15px]" : "text-[14px]",
-                    complete && "font-semibold text-gray-900",
-                    current && "font-semibold text-gray-900",
-                    upcoming && "font-medium text-gray-400"
+                    complete && "font-semibold text-foreground",
+                    current && "font-semibold text-foreground",
+                    upcoming && "font-medium text-muted-foreground"
                   )}
                 >
                   {stage.label}
@@ -149,7 +146,7 @@ function VerticalTimelineBlock({
                 {stage.detail ? (
                   <p
                     className={cn(
-                      "text-gray-500 mt-1.5 leading-relaxed",
+                      "text-muted-foreground mt-1.5 leading-relaxed",
                       referenceLayout ? "text-[13px]" : "text-[12px]"
                     )}
                   >
@@ -167,34 +164,34 @@ function VerticalTimelineBlock({
 
 function TimelineHeader({ payment, spacious }: { payment: InboundPaymentExample; spacious?: boolean }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-5">
+    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
       <div className="min-w-0">
-        <p className="text-[13px] font-medium text-gray-500 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#0061E3] shrink-0" aria-hidden />
+        <p className="text-[13px] font-medium text-muted-foreground flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-primary shrink-0" aria-hidden />
           Inbound status
         </p>
         <p
           className={cn(
-            "font-semibold text-gray-900 mt-2 leading-snug",
+            "font-semibold text-foreground mt-2 leading-snug",
             spacious ? "text-[16px]" : "text-[15px]"
           )}
         >
           {payment.reference}
           {payment.counterparty ? (
-            <span className="text-gray-500 font-medium"> · {payment.counterparty}</span>
+            <span className="text-muted-foreground font-medium"> · {payment.counterparty}</span>
           ) : null}
         </p>
       </div>
       <div className="text-left sm:text-right shrink-0">
         <p
           className={cn(
-            "font-bold tabular-nums text-gray-900 leading-none tracking-tight",
+            "font-bold tabular-nums text-foreground leading-none tracking-tight",
             spacious ? "text-[1.65rem]" : "text-[1.35rem]"
           )}
         >
           {formatCurrency(payment.amount, payment.currency)}
         </p>
-        <p className="text-[12px] text-gray-400 mt-2">Updated {formatDate(payment.initiatedAt)}</p>
+        <p className="text-[12px] text-muted-foreground mt-2">Updated {formatDate(payment.initiatedAt)}</p>
       </div>
     </div>
   );

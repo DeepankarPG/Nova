@@ -10,8 +10,7 @@ import { useCounterAnimation } from "@/hooks/useCounterAnimation";
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl p-5 flex flex-col gap-3"
-      style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+    <div className="bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm">
       <div className="flex items-center justify-between">
         <div className="shimmer h-3 w-28 rounded" />
         <div className="shimmer h-9 w-9 rounded-full" />
@@ -63,12 +62,12 @@ export interface DrillDownData {
   cta?:     string;
 }
 
-const BADGE_STYLES: Record<string, { bg: string; color: string }> = {
-  red:   { bg: "#fff1f2", color: "#e11d48" },
-  amber: { bg: "#fffbeb", color: "#d97706" },
-  blue:  { bg: "#eff6ff", color: "#2563eb" },
-  green: { bg: "#f0fdf4", color: "#16a34a" },
-  gray:  { bg: "#f3f4f6", color: "#6b7280" },
+const BADGE_CLASSNAMES: Record<string, string> = {
+  red:   "bg-red-500/10 text-red-600 dark:text-red-400",
+  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  blue:  "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  gray:  "bg-muted text-muted-foreground",
 };
 
 /* ─── Drill-down floating panel ─────────────────────────────────────────── */
@@ -123,28 +122,25 @@ function DrillDownPanel({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 6 }}
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-white rounded-2xl z-[200]"
+        className="bg-popover text-popover-foreground rounded-2xl z-[200] border border-border shadow-lg"
         style={{
           position: "fixed",
           top,
           left,
           right: left === undefined ? right : undefined,
           width: panelW,
-          boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)",
-          border: "1px solid #e5e7eb",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3"
-          style={{ borderBottom: "1px solid #f0f0f0" }}>
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
           <div>
-            <p className="text-[13.5px] font-semibold text-gray-900">{data.heading}</p>
+            <p className="text-[13.5px] font-semibold text-foreground">{data.heading}</p>
             {data.period && (
-              <p className="text-[11px] text-gray-400 mt-0.5">{data.period}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{data.period}</p>
             )}
           </div>
           <button onClick={onClose}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+            className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -158,20 +154,20 @@ function DrillDownPanel({
                   {item.color && !item.pct && (
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color }} />
                   )}
-                  <span className="text-[12.5px] text-gray-600 truncate">{item.label}</span>
+                  <span className="text-[12.5px] text-muted-foreground truncate">{item.label}</span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                   {item.badge && (
-                    <span className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md"
-                      style={BADGE_STYLES[item.badgeVariant ?? "gray"]}>
+                    <span className={cn("text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md",
+                      BADGE_CLASSNAMES[item.badgeVariant ?? "gray"])}>
                       {item.badge}
                     </span>
                   )}
-                  <span className="text-[12.5px] font-semibold text-gray-900 tabular-nums">{item.value}</span>
+                  <span className="text-[12.5px] font-semibold text-foreground tabular-nums">{item.value}</span>
                 </div>
               </div>
               {item.pct !== undefined && (
-                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                   <motion.div
                     className="h-full rounded-full"
                     style={{ background: item.color ?? lineColor }}
@@ -187,12 +183,12 @@ function DrillDownPanel({
 
         {/* Stats row */}
         {data.stats && data.stats.length > 0 && (
-          <div className="mx-4 mb-3 grid gap-px rounded-xl overflow-hidden"
-            style={{ gridTemplateColumns: `repeat(${data.stats.length}, 1fr)`, background: "#f0f0f0" }}>
+          <div className="mx-4 mb-3 grid gap-px rounded-xl overflow-hidden bg-border"
+            style={{ gridTemplateColumns: `repeat(${data.stats.length}, 1fr)` }}>
             {data.stats.map((s, i) => (
-              <div key={i} className="bg-white px-3 py-2.5 text-center">
-                <p className="text-[13px] font-bold text-gray-900">{s.value}</p>
-                <p className="text-[10.5px] text-gray-400 mt-0.5">{s.label}</p>
+              <div key={i} className="bg-card px-3 py-2.5 text-center">
+                <p className="text-[13px] font-bold text-foreground">{s.value}</p>
+                <p className="text-[10.5px] text-muted-foreground mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
@@ -202,7 +198,7 @@ function DrillDownPanel({
         {(data.note || data.cta) && (
           <div className="px-4 pb-4 space-y-2.5">
             {data.note && (
-              <p className="text-[11px] text-gray-400 leading-relaxed">{data.note}</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{data.note}</p>
             )}
             {data.cta && (
               <button
@@ -275,19 +271,18 @@ export function StatCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
         whileHover={{ y: -1, transition: { duration: 0.12 } }}
-        className="bg-white rounded-xl p-5 flex flex-col gap-2 cursor-default"
-        style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
+        className="bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-2 cursor-default border border-border shadow-sm"
       >
         {/* ── Row 1: icon + title + info ── */}
         <div className="flex items-center gap-2">
           <Icon className={iconColor} style={{ width: 16, height: 16, opacity: 0.7 }} />
-          <span className="text-[13px] font-normal text-gray-500">{title}</span>
+          <span className="text-[13px] font-normal text-muted-foreground">{title}</span>
           {tooltip && (
             <div className="relative flex items-center ml-0.5"
               onMouseEnter={() => setTipVisible(true)}
               onMouseLeave={() => setTipVisible(false)}
             >
-              <Info style={{ width: 13, height: 13 }} className="text-gray-300 hover:text-gray-400 transition-colors cursor-default flex-shrink-0" />
+              <Info style={{ width: 13, height: 13 }} className="text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-default flex-shrink-0" />
               <AnimatePresence>
                 {tipVisible && (
                   <motion.div
@@ -297,12 +292,10 @@ export function StatCard({
                     transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 max-w-[calc(100vw-2rem)] pointer-events-none"
                   >
-                    <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 rounded-sm"
-                      style={{ background: "#1a1f2e" }} />
-                    <div className="relative rounded-xl px-3.5 py-3 text-left"
-                      style={{ background: "#1a1f2e", boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.12)" }}>
-                      <p className="text-[11px] font-semibold text-white mb-1 tracking-wide">{title}</p>
-                      <p className="text-[11px] leading-relaxed" style={{ color: "#a8b3c8" }}>{tooltip}</p>
+                    <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 rounded-sm bg-popover border-r border-b border-border" />
+                    <div className="relative rounded-xl px-3.5 py-3 text-left bg-popover text-popover-foreground border border-border shadow-lg">
+                      <p className="text-[11px] font-semibold mb-1 tracking-wide">{title}</p>
+                      <p className="text-[11px] leading-relaxed text-muted-foreground">{tooltip}</p>
                     </div>
                   </motion.div>
                 )}
@@ -312,7 +305,7 @@ export function StatCard({
         </div>
 
         {/* ── Row 2: full-width number ── */}
-        <div className="text-[1.5rem] sm:text-[1.9rem] font-bold text-gray-900 leading-none tracking-tight tabular-nums mt-3">
+        <div className="text-[1.5rem] sm:text-[1.9rem] font-bold text-foreground leading-none tracking-tight tabular-nums mt-3">
           {formatDisplayValue(animated, currency, suffix)}
         </div>
 
@@ -328,17 +321,14 @@ export function StatCard({
                   ? <TrendingUp  style={{ width: 13, height: 13 }} />
                   : <TrendingDown style={{ width: 13, height: 13 }} />}
                 <span>{isPositive ? "+" : ""}{change}%</span>
-                <span className="text-gray-400 font-normal text-[11px]">{changeLabel}</span>
+                <span className="text-muted-foreground font-normal text-[11px]">{changeLabel}</span>
               </div>
             ) : (
-              <span className="text-[11px] text-gray-400">{subtitle}</span>
+              <span className="text-[11px] text-muted-foreground">{subtitle}</span>
             )}
             {action && (
               <button onClick={action.onClick}
-                className="text-[11px] font-medium text-left transition-colors"
-                style={{ color: "#0061E3" }}
-                onMouseEnter={(e) => e.currentTarget.style.color = "#0049ad"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "#0061E3"}>
+                className="text-[11px] font-medium text-left text-primary hover:text-primary/80 transition-colors">
                 {action.label} →
               </button>
             )}

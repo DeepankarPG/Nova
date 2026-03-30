@@ -92,7 +92,7 @@ export function ForexCalculatorModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100%-1.5rem)] sm:max-w-lg p-0 gap-0 overflow-hidden">
-        <div className="px-5 pt-6 pb-4 border-b border-gray-100">
+        <div className="px-5 pt-6 pb-4 border-b border-border">
           <DialogTitle>Forex calculator</DialogTitle>
           <DialogDescription className="mt-1.5">
             What you’d keep in INR after PayGlocal fee and GST — reference rate only.
@@ -100,19 +100,16 @@ export function ForexCalculatorModal({
         </div>
 
         <div className="px-5 py-5 space-y-4">
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-muted-foreground">
             1 {localCurrency} ≈ ₹{inrPerUnit.toFixed(2)} (reference)
           </p>
 
           <div>
-            <label htmlFor="fx-modal-amt" className="text-[12px] font-semibold text-gray-800 block mb-2">
+            <label htmlFor="fx-modal-amt" className="text-[12px] font-semibold text-foreground block mb-2">
               Client pays
             </label>
-            <div
-              className="flex rounded-xl overflow-hidden min-h-[52px]"
-              style={{ border: "1px solid #e5e7eb" }}
-            >
-              <span className="flex items-center gap-2 px-3 bg-gray-50 border-r border-gray-200 text-[13px] font-medium text-gray-700">
+            <div className="flex rounded-xl overflow-hidden min-h-[52px] border border-border">
+              <span className="flex items-center gap-2 px-3 bg-muted border-r border-border text-[13px] font-medium text-foreground">
                 <span className="text-lg" aria-hidden>
                   {flag ?? "·"}
                 </span>
@@ -124,18 +121,15 @@ export function ForexCalculatorModal({
                 inputMode="decimal"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
-                className="flex-1 min-w-0 px-4 py-3 text-xl font-bold text-gray-900 tabular-nums outline-none bg-white"
+                className="flex-1 min-w-0 px-4 py-3 text-xl font-bold text-foreground tabular-nums outline-none bg-card"
               />
             </div>
           </div>
 
-          <div
-            className="flex items-center gap-2 rounded-xl px-3 py-3 text-[13px] text-gray-700"
-            style={{ border: "1px solid #e5e7eb", background: "#fafafa" }}
-          >
-            <Landmark className="w-4 h-4 text-gray-500 shrink-0" aria-hidden />
+          <div className="flex items-center gap-2 rounded-xl px-3 py-3 text-[13px] text-foreground border border-border bg-muted/40">
+            <Landmark className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
             <span>
-              Settles to <span className="font-semibold text-gray-900">INR</span> on PayGlocal · transparent fee + GST
+              Settles to <span className="font-semibold text-foreground">INR</span> on PayGlocal · transparent fee + GST
             </span>
           </div>
 
@@ -160,13 +154,13 @@ export function ForexCalculatorModal({
           <div className="grid grid-cols-2 gap-3">
             <div
               className="rounded-xl p-3 flex flex-col gap-2"
-              style={{ border: "1px solid #e5e7eb", background: "#fff" }}
+              style={{ border: "1px solid var(--border)", background: "var(--card)" }}
             >
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 <Building2 className="w-3.5 h-3.5" aria-hidden />
                 Typical bank*
               </div>
-              <p className="text-[15px] font-bold text-gray-900 tabular-nums leading-tight">
+              <p className="text-[15px] font-bold text-foreground tabular-nums leading-tight">
                 {formatCurrency(bankIllustrativeNet, "INR")}
               </p>
               <p className="text-[11px] text-red-600 font-medium leading-snug">
@@ -198,21 +192,21 @@ export function ForexCalculatorModal({
             </span>
             <Sparkles className="w-4 h-4 shrink-0 text-emerald-600 hidden sm:inline" aria-hidden />
           </div>
-          <p className="text-center text-[12px] text-gray-600 tabular-nums">
-            ≈ <span className="font-semibold text-gray-900">{formatCurrency(rollAnnual, "INR")}</span>
-            <span className="text-gray-500"> / year if monthly*</span>
+          <p className="text-center text-[12px] text-muted-foreground tabular-nums">
+            ≈ <span className="font-semibold text-foreground">{formatCurrency(rollAnnual, "INR")}</span>
+            <span className="text-muted-foreground"> / year if monthly*</span>
           </p>
 
-          <div className="flex justify-between text-[11px] text-gray-500 pt-1 border-t border-gray-100 gap-3">
+          <div className="flex justify-between text-[11px] text-muted-foreground pt-1 border-t border-border gap-3">
             <span>Gross INR</span>
-            <span className="font-medium text-gray-700 tabular-nums">{formatCurrency(tConverted, "INR")}</span>
+            <span className="font-medium text-foreground tabular-nums">{formatCurrency(tConverted, "INR")}</span>
           </div>
-          <div className="flex justify-between text-[11px] text-gray-500">
+          <div className="flex justify-between text-[11px] text-muted-foreground">
             <span>Fees incl. GST</span>
-            <span className="font-medium text-gray-700 tabular-nums">− {formatCurrency(tFees, "INR")}</span>
+            <span className="font-medium text-foreground tabular-nums">− {formatCurrency(tFees, "INR")}</span>
           </div>
 
-          <p id="fx-modal-foot" className="text-[10px] text-gray-400 leading-relaxed pt-1">
+          <p id="fx-modal-foot" className="text-[10px] text-muted-foreground leading-relaxed pt-1">
             *Illustrative bank comparison (~1.8% worse effective spread on gross INR). Not a guarantee. Settlement rate
             may differ. Annual = 12 similar months. Fees per your agreement.
           </p>
@@ -227,13 +221,10 @@ export function ForexCalculatorBanner({ onOpen }: { onOpen: () => void }) {
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-xl",
-        "border border-[#c7d9fb] shadow-sm transition-shadow duration-300 hover:shadow-md"
+        "border border-primary-border shadow-sm transition-shadow duration-300 hover:shadow-md",
+        "bg-gradient-to-br from-background via-primary-light/30 to-primary-light/50",
+        "dark:from-card dark:via-card dark:to-muted dark:border-border"
       )}
-      style={{
-        background:
-          "linear-gradient(125deg, #fafbfc 0%, #f4f8ff 28%, #eff4ff 55%, #e8f0fe 82%, #dce9fc 100%)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.85)",
-      }}
       role="region"
       aria-label="Forex calculator"
     >
@@ -246,10 +237,10 @@ export function ForexCalculatorBanner({ onOpen }: { onOpen: () => void }) {
       />
       <div className="relative flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5 sm:py-4">
         <div className="min-w-0 flex-1 space-y-1.5">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight leading-snug">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight leading-snug">
             Forex Calculator
           </h3>
-          <p className="text-sm text-gray-600 leading-relaxed max-w-xl">
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
             Know exactly how much you will receive
           </p>
         </div>
@@ -257,7 +248,7 @@ export function ForexCalculatorBanner({ onOpen }: { onOpen: () => void }) {
           type="button"
           variant="outline"
           size="lg"
-          className="shrink-0 !text-[#0061E3] sm:self-center"
+          className="shrink-0 !text-primary sm:self-center"
           onClick={onOpen}
           aria-haspopup="dialog"
         >

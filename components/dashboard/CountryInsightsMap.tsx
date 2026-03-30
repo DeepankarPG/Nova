@@ -14,6 +14,8 @@ interface CountryInsightsMapProps {
   data: CountryData[];
   isLoading?: boolean;
   className?: string;
+  /** Non-interactive period label (e.g. widget library) — avoids nested buttons */
+  staticPeriodControl?: boolean;
 }
 
 function fmt(n: number): string {
@@ -26,11 +28,42 @@ const flagEmoji: Record<string, string> = {
   US: "🇺🇸", IE: "🇮🇪", GB: "🇬🇧", CA: "🇨🇦", QA: "🇶🇦", SG: "🇸🇬", DE: "🇩🇪",
 };
 
-export function CountryInsightsMap({ data, isLoading, className }: CountryInsightsMapProps) {
+function PeriodChrome({ static: isStatic }: { static?: boolean }) {
+  const className =
+    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted border border-border";
+  const inner = (
+    <>
+      Last 30 days
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden className="text-muted-foreground">
+        <path
+          d="M2.5 3.75L5 6.25L7.5 3.75"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </>
+  );
+  if (isStatic) {
+    return <span className={className}>{inner}</span>;
+  }
+  return (
+    <button type="button" className={cn(className, "transition-colors hover:bg-muted/80")}>
+      {inner}
+    </button>
+  );
+}
+
+export function CountryInsightsMap({
+  data,
+  isLoading,
+  className,
+  staticPeriodControl,
+}: CountryInsightsMapProps) {
   if (isLoading) {
     return (
-      <div className={cn("bg-white rounded-xl p-5", className)}
-        style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+      <div className={cn("bg-card text-card-foreground rounded-xl p-5 border border-border shadow-sm", className)}>
         <div className="flex items-center justify-between mb-5">
           <Shimmer className="h-4 w-36" />
           <Shimmer className="h-7 w-28 rounded-lg" />
@@ -51,23 +84,14 @@ export function CountryInsightsMap({ data, isLoading, className }: CountryInsigh
   const maxAmount = Math.max(...data.map((d) => d.amount));
 
   return (
-    <div className={cn("bg-white rounded-xl p-5", className)}
-      style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+    <div className={cn("bg-card text-card-foreground rounded-xl p-5 border border-border shadow-sm", className)}>
 
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Country Insights</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Revenue by geography</p>
+          <h3 className="text-sm font-semibold text-foreground">Country Insights</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Revenue by geography</p>
         </div>
-        <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 transition-colors"
-          style={{ background: "#f2f4f7", border: "1px solid rgba(0,0,0,0.08)" }}
-        >
-          Last 30 days
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        <PeriodChrome static={staticPeriodControl} />
       </div>
 
       <div className="space-y-3">
@@ -78,12 +102,12 @@ export function CountryInsightsMap({ data, isLoading, className }: CountryInsigh
               {/* Flag + name */}
               <div className="flex items-center gap-1.5 w-28 flex-shrink-0">
                 <span className="text-sm leading-none">{flagEmoji[item.code] ?? "🌍"}</span>
-                <span className="text-xs text-gray-600 font-medium truncate">{item.country}</span>
+                <span className="text-xs text-muted-foreground font-medium truncate">{item.country}</span>
               </div>
 
               {/* Bar */}
               <div className="flex-1 relative h-6 flex items-center">
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -101,7 +125,7 @@ export function CountryInsightsMap({ data, isLoading, className }: CountryInsigh
 
               {/* Amount */}
               <div className="w-16 text-right flex-shrink-0">
-                <span className="text-xs font-semibold text-gray-700">{fmt(item.amount)}</span>
+                <span className="text-xs font-semibold text-foreground">{fmt(item.amount)}</span>
               </div>
             </div>
           );

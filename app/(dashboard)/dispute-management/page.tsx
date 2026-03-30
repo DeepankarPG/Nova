@@ -31,7 +31,7 @@ const columns: Column<Dispute>[] = [
       const symbol = row.currency === "EUR" ? "€" : row.currency === "GBP" ? "£" : "₹";
       return (
         <div>
-          <span className="text-[13px] font-semibold text-gray-900 tabular-nums">
+          <span className="text-[13px] font-semibold text-foreground tabular-nums">
             {symbol}{row.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </span>
           <span className="ml-1 text-[11px] text-gray-400">{row.currency}</span>
@@ -135,7 +135,7 @@ export default function DisputeManagementPage() {
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 shadow-sm">
+            <div key={s.label} className="bg-card text-card-foreground rounded-xl border border-border px-4 py-3.5 shadow-sm">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", s.iconBg)}>
                   <Icon className={cn("w-3.5 h-3.5", s.iconColor)} />
@@ -169,8 +169,8 @@ export default function DisputeManagementPage() {
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
               activeFilter === f
-                ? "bg-slate-900 text-white border-slate-900"
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card text-muted-foreground border-border hover:border-muted-foreground/50 hover:bg-muted"
             )}
           >
             {f === "All" ? "All Disputes" : f === "under_review" ? "Under Review" : f.charAt(0).toUpperCase() + f.slice(1)}

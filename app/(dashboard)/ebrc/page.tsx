@@ -131,7 +131,7 @@ export default function EbrcPage() {
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 shadow-sm">
+            <div key={s.label} className="bg-card text-card-foreground rounded-xl border border-border px-4 py-3.5 shadow-sm">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", s.iconBg)}>
                   <Icon className={cn("w-3.5 h-3.5", s.iconColor)} />

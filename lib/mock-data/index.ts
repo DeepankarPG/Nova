@@ -27,6 +27,92 @@ export const monthlyVolume = [
   { month: "Mar", volume: 1020000, settlements: 960000 },
 ];
 
+/** Dashboard widget zone — hourly line chart */
+export const hourlyTraffic = [
+  { t: "00", v: 8 }, { t: "04", v: 12 }, { t: "08", v: 42 }, { t: "12", v: 68 },
+  { t: "16", v: 55 }, { t: "20", v: 38 }, { t: "23", v: 22 },
+];
+
+/** Donut / legend for payment method split widget (matches dashboard chart blues) */
+export const paymentMethodSplit = [
+  { key: "card", label: "Card", value: 52, color: "#0061E3" },
+  { key: "upi", label: "UPI", value: 31, color: "#60a5fa" },
+  { key: "netbanking", label: "Net banking", value: 12, color: "#0891b2" },
+  { key: "other", label: "Other", value: 5, color: "#94a3b8" },
+];
+
+/** Weekly UPI vs card volume — SMB India rail mix */
+export const weeklyUpiVsCard = [
+  { week: "W1", upi: 420000, card: 280000 },
+  { week: "W2", upi: 465000, card: 265000 },
+  { week: "W3", upi: 510000, card: 248000 },
+  { week: "W4", upi: 548000, card: 239000 },
+];
+
+/** Settlement speed buckets (T+N working days) — cash-flow planning */
+export const settlementSpeedBuckets = [
+  { bucket: "T+0", pct: 28 },
+  { bucket: "T+1", pct: 54 },
+  { bucket: "T+2", pct: 14 },
+  { bucket: "T+3+", pct: 4 },
+];
+
+/** Top decline / failure reasons (issuer + customer behaviour) */
+export const paymentFailureReasons = [
+  { reason: "Insufficient funds", count: 38 },
+  { reason: "OTP / 3DS timeout", count: 24 },
+  { reason: "Issuer declined", count: 19 },
+  { reason: "Incorrect CVV", count: 12 },
+  { reason: "Limit exceeded", count: 9 },
+];
+
+/** India state-wise domestic volume (GST / regional view) */
+export const indiaStateInsights = [
+  { state: "Maharashtra", code: "MH", amount: 312000, transactions: 118 },
+  { state: "Karnataka", code: "KA", amount: 241500, transactions: 96 },
+  { state: "Delhi NCR", code: "DL", amount: 198200, transactions: 82 },
+  { state: "Tamil Nadu", code: "TN", amount: 156400, transactions: 61 },
+  { state: "Telangana", code: "TG", amount: 124800, transactions: 48 },
+  { state: "Gujarat", code: "GJ", amount: 98200, transactions: 39 },
+];
+
+/** INR settlements vs cross-border FX — export / SaaS SMBs */
+export const inrVsFxSplit = [
+  { key: "inr", label: "INR settlements", value: 72, color: "#0061E3" },
+  { key: "fx", label: "FX / multi-currency", value: 28, color: "#93c5fd" },
+];
+
+/** Gross captured vs net after fees (MDR + tax) */
+export const netVsGrossWeekly = [
+  { label: "W1", gross: 720000, net: 698400 },
+  { label: "W2", gross: 758000, net: 735260 },
+  { label: "W3", gross: 802000, net: 777940 },
+  { label: "W4", gross: 834000, net: 808980 },
+];
+
+export const topCustomersBySpend = [
+  { name: "Sarah Mitchell", email: "sarah.m@example.com", total: 284_500 },
+  { name: "Rohan Sharma", email: "rohan.s@techcorp.io", total: 198_200 },
+  { name: "Yajat Gupta", email: "yajat.g@payglocal.in", total: 142_800 },
+  { name: "Priya Patel", email: "priya.p@startup.co", total: 96_400 },
+  { name: "James O'Brien", email: "james.ob@gmail.com", total: 72_150 },
+];
+
+export const dashboardWidgetKpis = {
+  paymentAttempts: { value: 364, change: 4.8 },
+  successRate: { value: 94.2, change: 1.1 },
+  avgTicket: { value: 2473, currency: "INR" as const },
+  refunds: { value: 18_420, currency: "INR" as const, change: -2.3 },
+  failedPayments: { value: 22, change: -8 },
+  settledToday: { value: 412_300, currency: "INR" as const },
+  nextSettlementLabel: "Mar 21, 2026 · 11:00 AM IST",
+  activeCustomers: { value: 1284, change: 6.2 },
+  newCustomers: { value: 42, change: 12 },
+  repeatRate: { value: 38.5, change: 0.4 },
+  disputeRate: { value: 0.82, change: -0.15 },
+  blockedTx: { value: 7, change: 0 },
+};
+
 export const recentTransactions = [
   {
     id: "gl_o-9d...sj0l7X2",

@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, Bell, HelpCircle, Menu, Plus, FileText, Link2, CreditCard, Repeat2 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { MerchantSelector } from "./MerchantSelector";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,13 +62,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
   ];
 
   return (
-    <header className="h-[57px] flex items-center gap-2 px-4 md:px-5 flex-shrink-0 bg-white"
-      style={{ borderBottom: "1px solid #e2e5ea" }}>
+    <header className="h-[57px] flex items-center gap-2 px-4 md:px-5 flex-shrink-0 bg-header border-b border-header-border">
 
       {/* ── Hamburger (mobile only) ── */}
       <button
         onClick={onMenuClick}
-        className="md:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+        className="md:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors flex-shrink-0"
         aria-label="Open navigation"
       >
         <Menu className="w-5 h-5" />
@@ -84,7 +84,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         {/* Search with animated placeholder */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
 
           {/* Animated hint — only when unfocused & empty */}
           {!focused && !value && (
@@ -96,7 +96,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   animate={{ y: 0,  opacity: 1 }}
                   exit={{ y: -10,   opacity: 0 }}
                   transition={{ duration: 0.28, ease: "easeInOut" }}
-                  className="absolute text-[13px] text-gray-400 whitespace-nowrap"
+                  className="absolute text-[13px] text-muted-foreground whitespace-nowrap"
                 >
                   {SEARCH_HINTS[hintIdx]}
                 </motion.span>
@@ -109,22 +109,20 @@ export default function Header({ onMenuClick }: HeaderProps) {
             value={value}
             onChange={e => setValue(e.target.value)}
             placeholder=""
-            className="w-52 sm:w-64 md:w-72 pl-9 pr-9 py-1.5 text-[13px] rounded-lg bg-gray-50 border border-gray-200 text-gray-600 transition-all focus:outline-none"
-            onFocus={e  => { setFocused(true);  e.currentTarget.style.borderColor = "#6b7280"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(75,85,99,0.10)"; }}
-            onBlur={e   => { setFocused(false); e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "none"; }}
+            className="w-52 sm:w-64 md:w-72 pl-9 pr-9 py-1.5 text-[13px] rounded-lg bg-muted border border-border text-foreground transition-all focus:outline-none focus:ring-2 focus:ring-ring/30"
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 hidden sm:block pointer-events-none select-none">⌘K</kbd>
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground hidden sm:block pointer-events-none select-none">⌘K</kbd>
         </div>
 
         {/* Notification bell */}
         <div ref={notifRef} className="relative">
           <button
             onClick={() => setNotifOpen(o => !o)}
-            className="relative w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="relative w-9 h-9 rounded-lg bg-muted border border-border hover:bg-accent flex items-center justify-center transition-colors"
           >
-            <Bell className="w-[17px] h-[17px] text-gray-500" />
+            <Bell className="w-[17px] h-[17px] text-muted-foreground" />
             {/* Unread dot */}
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-header" />
           </button>
 
           <AnimatePresence>
@@ -134,29 +132,28 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: -6 }}
                 transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-0 top-11 z-50 w-[340px] bg-white rounded-2xl shadow-xl overflow-hidden"
-                style={{ border: "1px solid #e5e7eb" }}
+                className="absolute right-0 top-11 z-50 w-[340px] bg-popover text-popover-foreground rounded-2xl shadow-xl overflow-hidden border border-border"
               >
-                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #f0f0f0" }}>
-                  <p className="text-[14px] font-semibold text-gray-900">Notifications</p>
-                  <button className="text-[12px] text-[#0061E3] font-medium hover:text-[#0049ad] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <p className="text-[14px] font-semibold text-foreground">Notifications</p>
+                  <button type="button" className="text-[12px] text-primary font-medium hover:opacity-80 transition-opacity">
                     Mark all read
                   </button>
                 </div>
-                <div className="divide-y divide-gray-50 max-h-[320px] overflow-y-auto">
+                <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
                   {MOCK_NOTIFS.map(n => (
-                    <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
                       <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${n.dot}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-gray-800">{n.title}</p>
-                        <p className="text-[12px] text-gray-400 truncate mt-0.5">{n.body}</p>
+                        <p className="text-[13px] font-medium text-foreground">{n.title}</p>
+                        <p className="text-[12px] text-muted-foreground truncate mt-0.5">{n.body}</p>
                       </div>
-                      <span className="text-[11px] text-gray-400 flex-shrink-0 mt-0.5">{n.time}</span>
+                      <span className="text-[11px] text-muted-foreground flex-shrink-0 mt-0.5">{n.time}</span>
                     </div>
                   ))}
                 </div>
-                <div className="px-4 py-2.5 text-center" style={{ borderTop: "1px solid #f0f0f0" }}>
-                  <button className="text-[12px] text-gray-400 hover:text-gray-600 transition-colors">
+                <div className="px-4 py-2.5 text-center border-t border-border bg-muted/30">
+                  <button type="button" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">
                     View all notifications →
                   </button>
                 </div>
@@ -165,9 +162,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </AnimatePresence>
         </div>
 
+        <ThemeToggle />
+
         {/* Help */}
-        <button className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center transition-colors">
-          <HelpCircle className="w-[17px] h-[17px] text-gray-500" />
+        <button
+          type="button"
+          className="w-9 h-9 rounded-lg bg-muted border border-border hover:bg-accent flex items-center justify-center transition-colors"
+        >
+          <HelpCircle className="w-[17px] h-[17px] text-muted-foreground" />
         </button>
 
         {/* ── Create button ── */}
@@ -208,24 +210,27 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -6 }}
                 transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-0 top-11 z-50 bg-white rounded-2xl overflow-hidden"
-                style={{ border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)", minWidth: 200 }}
+                className="absolute right-0 top-11 z-50 bg-popover text-popover-foreground rounded-2xl overflow-hidden border border-border min-w-[200px]"
+                style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)" }}
               >
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-4 pt-3.5 pb-2">Create new</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-4 pt-3.5 pb-2">
+                  Create new
+                </p>
                 <div className="pb-2">
                   {CREATE_ITEMS.map((item, i) => {
                     const Icon = item.icon;
                     return (
                       <button
                         key={i}
+                        type="button"
                         onClick={() => { setCreateOpen(false); router.push(item.href); }}
-                        className="w-full flex items-center gap-3 px-3 mx-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors group"
+                        className="w-full flex items-center gap-3 px-3 mx-2 py-2.5 rounded-xl hover:bg-muted/80 transition-colors group"
                         style={{ width: "calc(100% - 16px)" }}
                       >
-                        <div className="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center flex-shrink-0 transition-colors">
-                          <Icon className="w-[15px] h-[15px] text-gray-500" />
+                        <div className="w-8 h-8 rounded-xl bg-muted group-hover:bg-accent flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Icon className="w-[15px] h-[15px] text-muted-foreground" />
                         </div>
-                        <span className="text-[13.5px] font-medium text-gray-700">{item.label}</span>
+                        <span className="text-[13.5px] font-medium text-foreground">{item.label}</span>
                       </button>
                     );
                   })}

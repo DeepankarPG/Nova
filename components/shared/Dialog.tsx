@@ -35,19 +35,18 @@ function DialogContent({
       <DialogPrimitive.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-[101] w-[calc(100%-1.5rem)] max-w-[min(100%,26rem)] -translate-x-1/2 -translate-y-1/2",
-          "rounded-2xl bg-white shadow-2xl outline-none",
+          "rounded-2xl bg-card text-card-foreground border border-border shadow-2xl outline-none",
           "max-h-[min(90vh,720px)] overflow-y-auto",
           "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=closed]:scale-[0.98]",
           "transition-[opacity,transform] duration-200 ease-out",
           className
         )}
-        style={{ border: "1px solid #e5e7eb" }}
         {...props}
       >
         {children}
         {showClose && (
           <DialogPrimitive.Close
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -61,7 +60,7 @@ function DialogContent({
 function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-lg font-semibold text-gray-900 tracking-tight pr-10", className)}
+      className={cn("text-lg font-semibold text-foreground tracking-tight pr-10", className)}
       {...props}
     />
   );
@@ -69,7 +68,7 @@ function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimit
 
 function DialogDescription({ className, ...props }: ComponentProps<typeof DialogPrimitive.Description>) {
   return (
-    <DialogPrimitive.Description className={cn("text-[13px] text-gray-500 mt-1", className)} {...props} />
+    <DialogPrimitive.Description className={cn("text-[13px] text-muted-foreground mt-1", className)} {...props} />
   );
 }
 

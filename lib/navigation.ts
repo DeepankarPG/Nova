@@ -4,7 +4,6 @@ import {
   ShoppingCart,
   FileText,
   AlertTriangle,
-  Settings,
   Users,
   Receipt,
   BadgeCheck,
@@ -64,9 +63,6 @@ export const navigation: NavGroup[] = [
   },
   {
     label: "Settings",
-    items: [
-      { label: "Configure",          href: "/configure",          icon: Settings },
-      { label: "Client Management",  href: "/client-management",  icon: Users    },
-    ],
+    items: [{ label: "Client Management", href: "/client-management", icon: Users }],
   },
 ];

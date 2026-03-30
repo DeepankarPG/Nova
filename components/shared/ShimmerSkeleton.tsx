@@ -12,8 +12,7 @@ export function Shimmer({ className, rounded = "md" }: ShimmerProps) {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl p-5 flex flex-col gap-3"
-      style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+    <div className="bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm">
       <div className="flex items-center justify-between">
         <Shimmer className="h-3 w-28" />
         <Shimmer className="h-10 w-10" rounded="full" />
@@ -26,7 +25,7 @@ export function StatCardSkeleton() {
 
 export function TableRowSkeleton({ cols = 6 }: { cols?: number }) {
   return (
-    <tr className="border-b border-gray-50">
+    <tr className="border-b border-border/60">
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3.5">
           <Shimmer className={cn("h-3.5", i === 0 ? "w-20" : i === cols - 1 ? "w-14" : "w-28")} />

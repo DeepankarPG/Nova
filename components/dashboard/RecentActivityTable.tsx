@@ -19,26 +19,24 @@ type Settlement = {
   bankAccount: string; transactionCount: number; date: string;
 };
 
-const HEADER_BG = "#f0f2f5";
-
 /* ── Card brand mini-badge ─────────────────────────────────────────────── */
 function CardBrand({ brand }: { brand: string | null | undefined }) {
   if (brand === "visa") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/visa.png" alt="Visa" width={26} height={12} style={{ objectFit: "contain" }} />
     </span>
   );
   if (brand === "mastercard") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/mastercard.png" alt="Mastercard" width={28} height={18} style={{ objectFit: "contain" }} />
     </span>
   );
   if (brand === "jcb") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/jcb.png" alt="JCB" width={28} height={18} style={{ objectFit: "contain" }} />
     </span>
   );
-  return <CreditCard className="w-4 h-4 text-gray-400" />;
+  return <CreditCard className="w-4 h-4 text-muted-foreground" />;
 }
 
 function PaymentMethod({ method, cardBrand, cardLast4 }: {
@@ -48,20 +46,19 @@ function PaymentMethod({ method, cardBrand, cardLast4 }: {
     return (
       <div className="flex items-center gap-1.5">
         <CardBrand brand={cardBrand} />
-        <span className="text-[13px] text-gray-600 font-mono">•••• {cardLast4 ?? "—"}</span>
+        <span className="text-[13px] text-muted-foreground font-mono">•••• {cardLast4 ?? "—"}</span>
       </div>
     );
   }
   if (method === "upi") return (
     <div className="flex items-center gap-1.5">
-      <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black"
-        style={{ background: "#f0f0f0", color: "#5f259f" }}>UPI</span>
+      <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black bg-muted text-[#5f259f] dark:text-violet-300">UPI</span>
     </div>
   );
   return (
     <div className="flex items-center gap-1.5">
-      <Building2 className="w-3.5 h-3.5 text-gray-400" />
-      <span className="text-[13px] text-gray-600">Netbanking</span>
+      <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+      <span className="text-[13px] text-muted-foreground">Netbanking</span>
     </div>
   );
 }
@@ -73,7 +70,12 @@ function fmtAmt(amount: number, currency: string) {
 
 /* ── Column header ─────────────────────────────────────────────────────── */
 const TH = ({ children, hideOnMobile }: { children: React.ReactNode; hideOnMobile?: boolean }) => (
-  <th className={cn("px-4 py-3 text-left text-[11px] font-semibold text-gray-500 whitespace-nowrap", hideOnMobile && "hidden md:table-cell")}>
+  <th
+    className={cn(
+      "px-4 py-3 text-left text-[11px] font-semibold text-foreground/75 dark:text-foreground/85 whitespace-nowrap",
+      hideOnMobile && "hidden md:table-cell"
+    )}
+  >
     {children}
   </th>
 );
@@ -84,30 +86,28 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
   const [tab, setTab] = useState<"transactions" | "settlements">("transactions");
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #e5e7eb" }}>
+    <div className="bg-card text-card-foreground rounded-xl overflow-hidden border border-border">
 
       {/* ── Card header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-6 pt-5 pb-0">
-        <h3 className="text-[15px] font-semibold text-gray-900">Recent Activity</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Recent Activity</h3>
         <Link href={tab === "transactions" ? "/transactions" : "/settlement-reports"}
-          className="flex items-center gap-1 text-[12px] font-medium transition-colors"
-          style={{ color: "#0061E3" }}>
+          className="flex items-center gap-1 text-[12px] font-medium text-primary hover:text-primary/80 transition-colors">
           View all <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
       {/* ── Tabs ─────────────────────────────────────────────────── */}
-      <div className="flex items-center px-6 pt-4" style={{ borderBottom: "1px solid #f0f0f0" }}>
+      <div className="flex items-center px-6 pt-4 border-b border-border">
         {(["transactions", "settlements"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={cn("relative pb-3 px-1 mr-6 text-[13px] font-medium transition-colors capitalize",
-              tab === t ? "text-gray-900" : "text-gray-400 hover:text-gray-600"
+              tab === t ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}>
             {t}
             {tab === t && (
               <motion.div layoutId="act-tab"
-                className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                style={{ background: "#0061E3" }}
+                className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary"
                 transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }} />
             )}
           </button>
@@ -132,7 +132,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 <col style={{ width: 160 }} />{/* CTA */}
               </colgroup>
               <thead>
-                <tr style={{ background: HEADER_BG, borderBottom: "1px solid #e8eaed" }}>
+                <tr className="bg-muted border-b border-border">
                   <TH>Amount</TH>
                   <TH>Status</TH>
                   <TH hideOnMobile>Payment method</TH>
@@ -149,23 +149,15 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 ) : (
                   transactions.slice(0, 7).map((tx, i) => (
                     <tr key={tx.id}
-                      style={{ borderBottom: i < Math.min(transactions.length, 7) - 1 ? "1px solid #f0f0f0" : "none" }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f5f7ff";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)";
-                        e.currentTarget.style.position = "relative";
-                        e.currentTarget.style.zIndex = "1";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.boxShadow = "none";
-                        e.currentTarget.style.zIndex = "auto";
-                      }}
-                      className="group transition-all duration-150">
+                      className={cn(
+                        "group transition-all duration-150 border-b border-border/70 last:border-b-0",
+                        "hover:bg-primary/5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:hover:bg-primary/[0.14] dark:hover:shadow-none",
+                        "hover:relative hover:z-10"
+                      )}>
                       {/* Amount */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="font-semibold text-gray-900 tabular-nums text-[13px]">{fmtAmt(tx.amount, tx.currency)}</span>
-                        <span className="ml-1.5 text-[11px] text-gray-600 font-medium">{tx.currency}</span>
+                        <span className="font-semibold text-foreground tabular-nums text-[13px]">{fmtAmt(tx.amount, tx.currency)}</span>
+                        <span className="ml-1.5 text-[11px] text-muted-foreground font-medium">{tx.currency}</span>
                       </td>
                       {/* Status */}
                       <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={tx.status} size="sm" /></td>
@@ -175,26 +167,25 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                       </td>
                       {/* Customer name */}
                       <td className="px-4 py-3 whitespace-nowrap overflow-hidden">
-                        <span className="text-[13px] font-medium text-gray-800">{tx.customerName}</span>
+                        <span className="text-[13px] font-medium text-foreground">{tx.customerName}</span>
                       </td>
                       {/* Email */}
                       <td className="px-4 py-3 whitespace-nowrap overflow-hidden hidden md:table-cell">
-                        <span className="text-[13px] text-gray-700">{tx.email}</span>
+                        <span className="text-[13px] text-muted-foreground">{tx.email}</span>
                       </td>
                       {/* Transaction ID */}
                       <td className="px-4 py-3 whitespace-nowrap overflow-hidden hidden md:table-cell">
-                        <span className="text-[13px] font-mono text-[#0061E3]/70 hover:text-[#0061E3] transition-colors cursor-pointer">
+                        <span className="text-[13px] font-mono text-primary/70 hover:text-primary transition-colors cursor-pointer">
                           {tx.id}
                         </span>
                       </td>
                       {/* Date */}
-                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700 hidden md:table-cell">
+                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-muted-foreground hidden md:table-cell">
                         {formatDate(tx.date)}
                       </td>
                       {/* Hover CTA */}
                       <td className="pl-3 pr-5 text-left align-middle">
-                        <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white rounded-lg border border-gray-200 hover:border-gray-400 hover:text-gray-900 whitespace-nowrap"
-                          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+                        <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center px-3 py-1.5 text-[12px] font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm">
                           View details
                         </button>
                       </td>
@@ -217,7 +208,7 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 <col style={{ width: 140 }} />{/* CTA */}
               </colgroup>
               <thead>
-                <tr style={{ background: HEADER_BG, borderBottom: "1px solid #e8eaed" }}>
+                <tr className="bg-muted border-b border-border">
                   <TH>Settlement ID</TH>
                   <TH>Amount</TH>
                   <TH>Status</TH>
@@ -233,37 +224,28 @@ export function RecentActivityTable({ transactions, settlements, isLoading }: {
                 ) : (
                   settlements.map((s, i) => (
                     <tr key={s.id}
-                      style={{ borderBottom: i < settlements.length - 1 ? "1px solid #f0f0f0" : "none" }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f5f7ff";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)";
-                        e.currentTarget.style.position = "relative";
-                        e.currentTarget.style.zIndex = "1";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.boxShadow = "none";
-                        e.currentTarget.style.zIndex = "auto";
-                      }}
-                      className="group transition-all duration-150">
+                      className={cn(
+                        "group transition-all duration-150 border-b border-border/70 last:border-b-0",
+                        "hover:bg-primary/5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:hover:bg-primary/[0.14] dark:hover:shadow-none",
+                        "hover:relative hover:z-10"
+                      )}>
                       <td className="px-4 py-3 whitespace-nowrap overflow-hidden">
-                        <span className="text-[13px] font-mono text-[#0061E3]/70 hover:text-[#0061E3] transition-colors cursor-pointer">
+                        <span className="text-[13px] font-mono text-primary/70 hover:text-primary transition-colors cursor-pointer">
                           {truncate(s.id, 16)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap font-semibold text-gray-900 tabular-nums text-[13px]">
+                      <td className="px-4 py-3 whitespace-nowrap font-semibold text-foreground tabular-nums text-[13px]">
                         ₹{s.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={s.status} size="sm" /></td>
-                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700">{s.bankAccount}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700">{s.transactionCount} txns</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-gray-700">
+                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-muted-foreground">{s.bankAccount}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-muted-foreground">{s.transactionCount} txns</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-[13px] text-muted-foreground">
                         {formatDate(s.date, { year: "2-digit", month: "short", day: "2-digit" })}
                       </td>
                       {/* Hover CTA */}
                       <td className="pl-3 pr-5 text-left align-middle">
-                        <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white rounded-lg border border-gray-200 hover:border-gray-400 hover:text-gray-900 whitespace-nowrap"
-                          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+                        <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center px-3 py-1.5 text-[12px] font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm">
                           View report
                         </button>
                       </td>

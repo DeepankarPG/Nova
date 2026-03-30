@@ -18,9 +18,9 @@ const statusOptions = ["All", "success", "in_progress", "failed", "refunded"];
 const methodOptions = ["All", "card", "upi", "netbanking"];
 
 const methodIcons: Record<string, React.ReactNode> = {
-  card:       <CreditCard  className="w-3.5 h-3.5 text-gray-400" />,
-  upi:        <Smartphone  className="w-3.5 h-3.5 text-gray-400" />,
-  netbanking: <Building2   className="w-3.5 h-3.5 text-gray-400" />,
+  card:       <CreditCard  className="w-3.5 h-3.5 text-muted-foreground" />,
+  upi:        <Smartphone  className="w-3.5 h-3.5 text-muted-foreground" />,
+  netbanking: <Building2   className="w-3.5 h-3.5 text-muted-foreground" />,
 };
 
 function fmtAmt(amount: number, currency: string) {
@@ -30,38 +30,37 @@ function fmtAmt(amount: number, currency: string) {
 
 function CardBrand({ brand }: { brand: string | null | undefined }) {
   if (brand === "visa") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/visa.png" alt="Visa" width={26} height={12} style={{ objectFit: "contain" }} />
     </span>
   );
   if (brand === "mastercard") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/mastercard.png" alt="Mastercard" width={28} height={18} style={{ objectFit: "contain" }} />
     </span>
   );
   if (brand === "jcb") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-white" style={{ border: "1px solid #e5e7eb" }}>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded overflow-hidden bg-card border border-border">
       <Image src="/jcb.png" alt="JCB" width={28} height={18} style={{ objectFit: "contain" }} />
     </span>
   );
-  return <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-bold text-gray-500" style={{ background: "#f0f0f0" }}>CARD</span>;
+  return <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-bold text-muted-foreground bg-muted">CARD</span>;
 }
 
 function PaymentMethod({ row }: { row: Transaction }) {
   if (row.method === "card") return (
     <div className="flex items-center gap-1.5">
       <CardBrand brand={row.cardBrand} />
-      <span className="text-[13px] text-gray-600 font-mono">•••• {row.cardLast4 ?? "—"}</span>
+      <span className="text-[13px] text-muted-foreground font-mono">•••• {row.cardLast4 ?? "—"}</span>
     </div>
   );
   if (row.method === "upi") return (
-    <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black"
-      style={{ background: "#f0f0f0", color: "#5f259f" }}>UPI</span>
+    <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black bg-muted text-[#5f259f] dark:text-violet-300">UPI</span>
   );
   return (
     <div className="flex items-center gap-1.5">
-      <Building2 className="w-3.5 h-3.5 text-gray-400" />
-      <span className="text-[13px] text-gray-600">Netbanking</span>
+      <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+      <span className="text-[13px] text-muted-foreground">Netbanking</span>
     </div>
   );
 }
@@ -73,8 +72,8 @@ const columns: Column<Transaction>[] = [
     minWidth: 125,
     render: (row) => (
       <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-        <span className="font-semibold text-gray-900 tabular-nums text-[13px]">{fmtAmt(row.amount, row.currency)}</span>
-        <span className="text-[11px] text-gray-600 font-medium">{row.currency}</span>
+        <span className="font-semibold text-foreground tabular-nums text-[13px]">{fmtAmt(row.amount, row.currency)}</span>
+        <span className="text-[11px] text-muted-foreground font-medium">{row.currency}</span>
       </div>
     ),
   },
@@ -95,7 +94,7 @@ const columns: Column<Transaction>[] = [
     header: "Customer name",
     minWidth: 145,
     render: (row) => (
-      <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{row.customerName}</span>
+      <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{row.customerName}</span>
     ),
   },
   {
@@ -103,7 +102,7 @@ const columns: Column<Transaction>[] = [
     header: "Email",
     minWidth: 185,
     render: (row) => (
-      <span className="text-[13px] text-gray-700 whitespace-nowrap">{row.email}</span>
+      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{row.email}</span>
     ),
   },
   {
@@ -111,7 +110,7 @@ const columns: Column<Transaction>[] = [
     header: "Transaction ID",
     minWidth: 155,
     render: (row) => (
-      <span className="text-[13px] font-mono text-[#0061E3]/70 hover:text-[#0061E3] transition-colors cursor-pointer whitespace-nowrap">
+      <span className="text-[13px] font-mono text-primary/70 hover:text-primary transition-colors cursor-pointer whitespace-nowrap">
         {row.id}
       </span>
     ),
@@ -121,7 +120,7 @@ const columns: Column<Transaction>[] = [
     header: "Date and time",
     minWidth: 150,
     render: (row) => (
-      <span className="text-[13px] text-gray-700 whitespace-nowrap">{formatDate(row.date)}</span>
+      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{formatDate(row.date)}</span>
     ),
   },
 ];
@@ -221,21 +220,18 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white rounded-xl px-4 py-2.5 flex items-center gap-2.5 flex-wrap"
-        style={{ border: "1px solid #e5e7eb" }}>
+      <div className="bg-card text-card-foreground rounded-xl px-4 py-2.5 flex items-center gap-2.5 flex-wrap border border-border">
 
         {/* Search */}
         <div className="relative min-w-[160px] max-w-xs flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input type="text" placeholder="Search customer, email, ID…" value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-600 placeholder:text-gray-400 focus:outline-none transition-all"
-            onFocus={(e) => { e.currentTarget.style.borderColor = "#6b7280"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(75,85,99,0.10)"; }}
-            onBlur={(e)  => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "none"; }}
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-muted/50 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-muted-foreground/50 focus:ring-2 focus:ring-ring/20 transition-all"
           />
         </div>
 
-        <div className="hidden sm:block h-4 w-px bg-gray-200" />
+        <div className="hidden sm:block h-4 w-px bg-border" />
 
         {/* Status pills */}
         <div className="flex items-center gap-1 flex-wrap">
@@ -244,15 +240,15 @@ export default function TransactionsPage() {
               className={cn(
                 "px-2.5 py-1 rounded-full text-xs font-medium border transition-all",
                 statusFilter === s
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
               )}>
               {s === "All" ? "All" : s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
 
-        <div className="hidden sm:block h-4 w-px bg-gray-200" />
+        <div className="hidden sm:block h-4 w-px bg-border" />
 
         {/* Method pills */}
         <div className="flex items-center gap-1 flex-wrap">
@@ -261,8 +257,8 @@ export default function TransactionsPage() {
               className={cn(
                 "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all",
                 methodFilter === m
-                  ? "bg-[#0061E3] text-white border-[#0061E3]"
-                  : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
               )}>
               {m !== "All" && methodIcons[m]}
               {m === "All" ? "All Methods" : m === "netbanking" ? "Net Banking" : m.charAt(0).toUpperCase() + m.slice(1)}
@@ -272,7 +268,7 @@ export default function TransactionsPage() {
 
         {hasActive && (
           <button onClick={() => { setSearch(""); setStatusFilter("All"); setMethodFilter("All"); }}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 ml-auto transition-colors">
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground ml-auto transition-colors">
             <X className="w-3 h-3" /> Clear
           </button>
         )}

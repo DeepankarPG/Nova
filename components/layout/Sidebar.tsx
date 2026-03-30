@@ -2,9 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Settings, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { navigation, type NavItem } from "@/lib/navigation";
@@ -30,21 +39,18 @@ function ExpandableItem({
         className={cn(
           "w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-all duration-100 text-left",
           isParentActive
-            ? "bg-white text-gray-900"
-            : "text-gray-600 hover:bg-black/5 hover:text-gray-900"
+            ? "bg-card text-foreground border border-border shadow-sm"
+            : "text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
         )}
-        style={isParentActive
-          ? { border: "1px solid #d0d4db", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }
-          : {}}
       >
         <Icon
-          className={cn("flex-shrink-0", !isParentActive && "text-gray-400")}
-          style={{ width: 16, height: 16, color: isParentActive ? "#0061E3" : undefined }}
+          className={cn("flex-shrink-0", !isParentActive && "text-muted-foreground", isParentActive && "text-primary")}
+          style={{ width: 16, height: 16 }}
         />
         {!collapsed && (
           <>
             <span className="flex-1 truncate">{item.label}</span>
-            <span className="text-gray-400 flex-shrink-0">
+            <span className="text-muted-foreground flex-shrink-0">
               {open
                 ? <ChevronUp  style={{ width: 13, height: 13 }} />
                 : <ChevronDown style={{ width: 13, height: 13 }} />
@@ -64,8 +70,7 @@ function ExpandableItem({
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <div className="ml-[18px] mt-0.5 mb-1 pl-3 border-l-2"
-              style={{ borderColor: "#c8ccd4" }}>
+            <div className="ml-[18px] mt-0.5 mb-1 pl-3 border-l-2 border-border">
               {item.children!.map((child) => {
                 const isChildActive = pathname === child.href || pathname.startsWith(child.href + "/");
                 return (
@@ -76,14 +81,11 @@ function ExpandableItem({
                     className={cn(
                       "relative flex items-center py-1.5 pl-1 pr-2 text-[13px] rounded-md transition-colors duration-100",
                       isChildActive
-                        ? "text-gray-900 font-semibold"
-                        : "text-gray-500 font-normal hover:text-gray-800 hover:bg-black/5"
+                        ? "text-foreground font-semibold"
+                        : "text-muted-foreground font-normal hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
                     )}
                   >
-                    <span
-                      className="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-px"
-                      style={{ background: "#c8ccd4" }}
-                    />
+                    <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-px bg-border" />
                     {child.label}
                   </Link>
                 );
@@ -100,17 +102,19 @@ function ExpandableItem({
 function SidebarBody({
   collapsed, pathname, onNavClick,
 }: { collapsed: boolean; pathname: string; onNavClick?: () => void }) {
+  const router = useRouter();
+
   return (
     <>
       <nav className="flex-1 overflow-y-auto py-3 px-2.5">
         {navigation.map((group) => (
           <div key={group.label} className="mb-4">
             {!collapsed ? (
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-gray-400 px-2 mb-1.5">
+              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground px-2 mb-1.5">
                 {group.label}
               </p>
             ) : (
-              <div className="h-px bg-gray-200 my-2 mx-1" />
+              <div className="h-px bg-sidebar-border my-2 mx-1" />
             )}
 
             <div className="space-y-0.5">
@@ -139,21 +143,24 @@ function SidebarBody({
                     className={cn(
                       "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-all duration-100",
                       isActive
-                        ? "bg-white text-gray-900"
-                        : "text-gray-600 hover:bg-black/5 hover:text-gray-900"
+                        ? "bg-card text-foreground border border-border shadow-sm"
+                        : "text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
                     )}
-                    style={isActive
-                      ? { border: "1px solid #d0d4db", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }
-                      : {}}
                   >
                     <Icon
-                      className={cn("flex-shrink-0", !isActive && "text-gray-400")}
-                      style={{ width: 16, height: 16, color: isActive ? "#0061E3" : undefined }}
+                      className={cn(
+                        "flex-shrink-0",
+                        !isActive && "text-muted-foreground",
+                        isActive && "text-primary"
+                      )}
+                      style={{ width: 16, height: 16 }}
                     />
                     {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                     {!collapsed && item.badge && (
-                      <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full tracking-widest text-white"
-                        style={{ background: "#0061E3", letterSpacing: "0.06em" }}>
+                      <span
+                        className="text-[9.5px] font-bold px-2 py-0.5 rounded-full tracking-widest text-primary-foreground bg-primary"
+                        style={{ letterSpacing: "0.06em" }}
+                      >
                         {item.badge}
                       </span>
                     )}
@@ -166,23 +173,69 @@ function SidebarBody({
       </nav>
 
       {/* Profile */}
-      <div className="px-2.5 py-2.5 flex-shrink-0" style={{ borderTop: "1px solid #d8dce3" }}>
-        <div className={cn(
-          "flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-200/60 transition-colors cursor-pointer",
-          collapsed && "justify-center"
-        )}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "#374151" }}>
-            <span className="text-white text-[11px] font-bold">N</span>
+      <div className="px-2.5 py-2.5 flex-shrink-0 border-t border-sidebar-border">
+        <div
+          className={cn(
+            "flex gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-black/5 dark:hover:bg-white/5",
+            collapsed ? "flex-col items-center justify-center gap-1" : "cursor-pointer items-center"
+          )}
+        >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted-foreground">
+            <span className="text-background text-[11px] font-bold">N</span>
           </div>
-          {!collapsed && (
+          {!collapsed ? (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-gray-800 text-[13px] font-medium truncate leading-tight">Deepankar Raj</p>
-                <p className="text-gray-400 text-[11px]">Admin</p>
+                <p className="text-foreground text-[13px] font-medium truncate leading-tight">Deepankar Raj</p>
+                <p className="text-muted-foreground text-[11px]">Admin</p>
               </div>
-              <button className="w-7 h-7 rounded-md flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors flex-shrink-0">
-                <Settings style={{ width: 16, height: 16 }} />
+              <div className="flex items-center gap-0.5 flex-shrink-0">
+                <Link
+                  href="/settings"
+                  onClick={onNavClick}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Settings"
+                  title="Settings"
+                >
+                  <Settings style={{ width: 16, height: 16 }} strokeWidth={2} />
+                </Link>
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Log out"
+                  onClick={() => {
+                    onNavClick?.();
+                    toast.success("Signed out");
+                    router.push("/");
+                  }}
+                >
+                  <LogOut style={{ width: 16, height: 16 }} strokeWidth={2} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/settings"
+                onClick={onNavClick}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Settings"
+                title="Settings"
+              >
+                <Settings style={{ width: 16, height: 16 }} strokeWidth={2} />
+              </Link>
+              <button
+                type="button"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Log out"
+                title="Log out"
+                onClick={() => {
+                  onNavClick?.();
+                  toast.success("Signed out");
+                  router.push("/");
+                }}
+              >
+                <LogOut style={{ width: 16, height: 16 }} strokeWidth={2} />
               </button>
             </>
           )}
@@ -202,41 +255,59 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const pathname  = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  const sidebarStyle = { background: "#e8eaee", borderRight: "1px solid #d8dce3" } as const;
-
   return (
     <>
       {/* ── Desktop sidebar (hidden on mobile) ── */}
       <motion.aside
         animate={{ width: collapsed ? 60 : 232 }}
         transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-        className="relative hidden md:flex flex-col h-screen flex-shrink-0 z-20 overflow-hidden"
-        style={sidebarStyle}
+        className="relative hidden md:flex flex-col h-screen flex-shrink-0 z-20 overflow-hidden bg-sidebar border-r border-sidebar-border"
       >
-        {/* Logo + collapse toggle */}
-        <div className="flex items-center justify-between px-3.5 h-[57px] flex-shrink-0"
-          style={{ borderBottom: "1px solid #d8dce3" }}>
+        {/* Logo (expanded only) + collapse toggle */}
+        <div
+          className={cn(
+            "flex h-[57px] flex-shrink-0 items-center border-b border-sidebar-border",
+            collapsed ? "justify-center px-2" : "justify-between px-3.5"
+          )}
+        >
           <AnimatePresence mode="wait">
-            {!collapsed ? (
-              <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.1 }} className="flex items-center">
-                <Image src="/payglocal-logo.png" alt="PayGlocal"
-                  width={120} height={28} className="object-contain" priority />
-              </motion.div>
-            ) : (
-              <motion.div key="icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            {!collapsed && (
+              <motion.div
+                key="full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.1 }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
-                style={{ background: "#0061E3" }}>
-                <Image src="/payglocal-logo.png" alt="P"
-                  width={20} height={20}
-                  className="object-contain brightness-0 invert scale-[2] translate-x-[-6px]" priority />
+                className="flex min-w-0 items-center"
+              >
+                <Image
+                  src="/payglocal-logo.png"
+                  alt="PayGlocal"
+                  width={120}
+                  height={28}
+                  className="object-contain"
+                  priority
+                />
               </motion.div>
             )}
           </AnimatePresence>
-          <button onClick={() => setCollapsed(!collapsed)}
-            className="w-6 h-6 rounded-md flex items-center justify-center transition-colors flex-shrink-0 text-gray-400 hover:text-gray-600 hover:bg-gray-200">
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "flex flex-shrink-0 items-center justify-center rounded-lg transition-colors",
+              "text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10",
+              collapsed ? "h-9 w-9" : "h-8 w-8"
+            )}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+            ) : (
+              <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+            )}
           </button>
         </div>
 
@@ -267,16 +338,17 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: -260 }}
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed left-0 top-0 flex flex-col h-screen w-[232px] z-40 overflow-hidden md:hidden"
-            style={sidebarStyle}
+            className="fixed left-0 top-0 flex flex-col h-screen w-[232px] z-40 overflow-hidden md:hidden bg-sidebar border-r border-sidebar-border"
           >
             {/* Logo + close button */}
-            <div className="flex items-center justify-between px-3.5 h-[57px] flex-shrink-0"
-              style={{ borderBottom: "1px solid #d8dce3" }}>
+            <div className="flex items-center justify-between px-3.5 h-[57px] flex-shrink-0 border-b border-sidebar-border">
               <Image src="/payglocal-logo.png" alt="PayGlocal"
                 width={120} height={28} className="object-contain" priority />
-              <button onClick={onClose}
-                className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>

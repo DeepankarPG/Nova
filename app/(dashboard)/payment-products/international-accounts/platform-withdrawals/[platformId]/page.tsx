@@ -60,10 +60,10 @@ const payoutColumns: Column<PlatformRecentPayout>[] = [
     minWidth: 120,
     render: (row) => (
       <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-        <span className="font-semibold text-gray-900 tabular-nums text-[13px]">
+        <span className="font-semibold text-foreground tabular-nums text-[13px]">
           {fmtPayoutAmt(row.amount, row.currency)}
         </span>
-        <span className="text-[11px] text-gray-600 font-medium">{row.currency}</span>
+        <span className="text-[11px] text-muted-foreground font-medium">{row.currency}</span>
       </div>
     ),
   },
@@ -78,7 +78,7 @@ const payoutColumns: Column<PlatformRecentPayout>[] = [
     header: "Reference",
     minWidth: 160,
     render: (row) => (
-      <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{row.reference}</span>
+      <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{row.reference}</span>
     ),
   },
   {
@@ -86,7 +86,7 @@ const payoutColumns: Column<PlatformRecentPayout>[] = [
     header: "Date and time",
     minWidth: 148,
     render: (row) => (
-      <span className="text-[13px] text-gray-700 whitespace-nowrap">{formatDate(row.date)}</span>
+      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{formatDate(row.date)}</span>
     ),
   },
 ];
@@ -116,12 +116,9 @@ export default function PlatformWithdrawalDetailPage() {
   if (!platform) {
     return (
       <div className="space-y-6">
-        <div
-          className="rounded-xl bg-white p-10 text-center"
-          style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.06)" }}
-        >
-          <p className="text-base font-semibold text-gray-900">Platform not found</p>
-          <p className="text-sm text-gray-500 mt-2">Choose a platform from the list.</p>
+        <div className="rounded-xl bg-card text-card-foreground p-10 text-center border border-border shadow-sm">
+          <p className="text-base font-semibold text-foreground">Platform not found</p>
+          <p className="text-sm text-muted-foreground mt-2">Choose a platform from the list.</p>
           <Link
             href={`/payment-products/international-accounts/platform-withdrawals/${platformPayoutGuides[0]?.id ?? "amazon"}`}
             className="inline-block mt-6"
@@ -140,11 +137,8 @@ export default function PlatformWithdrawalDetailPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
       <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-4 space-y-3">
-        <p className="text-[13px] font-medium text-gray-500">Your platform</p>
-        <div
-          className="rounded-xl overflow-hidden bg-white"
-          style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
-        >
+        <p className="text-[13px] font-medium text-muted-foreground">Your platform</p>
+        <div className="rounded-xl overflow-hidden bg-card text-card-foreground border border-border shadow-sm">
           <nav aria-label="Platforms">
             {platformPayoutGuides.map((p) => {
               const active = p.id === platform.id;
@@ -153,10 +147,10 @@ export default function PlatformWithdrawalDetailPage() {
                   key={p.id}
                   href={`/payment-products/international-accounts/platform-withdrawals/${p.id}`}
                   className={cn(
-                    "flex items-center gap-3 min-h-11 px-4 py-2.5 text-[14px] transition-colors border-b border-gray-100",
+                    "flex items-center gap-3 min-h-11 px-4 py-2.5 text-[14px] transition-colors border-b border-border",
                     active
-                      ? "font-semibold text-gray-900 bg-[#eff4ff]"
-                      : "font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "font-semibold text-foreground bg-primary-light"
+                      : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <span className="text-lg leading-none shrink-0" aria-hidden>
@@ -164,18 +158,18 @@ export default function PlatformWithdrawalDetailPage() {
                   </span>
                   <span className="flex-1 text-left leading-snug">
                     <span className="block">{p.name}</span>
-                    <span className="block text-[11px] font-normal text-gray-500">{p.category}</span>
+                    <span className="block text-[11px] font-normal text-muted-foreground">{p.category}</span>
                   </span>
-                  {active && <ChevronRight className="w-4 h-4 text-[#0061E3] shrink-0" aria-hidden />}
+                  {active && <ChevronRight className="w-4 h-4 text-primary shrink-0" aria-hidden />}
                 </Link>
               );
             })}
           </nav>
-          <div className="border-t border-gray-100 p-3 bg-gray-50/50">
+          <div className="border-t border-border p-3 bg-muted/40">
             <button
               type="button"
               onClick={requestAnotherPlatform}
-              className="w-full flex items-center justify-start gap-2 min-h-10 px-3 py-2 rounded-lg text-[13px] font-semibold text-[#0061E3] hover:bg-white/90 transition-colors text-left"
+              className="w-full flex items-center justify-start gap-2 min-h-10 px-3 py-2 rounded-lg text-[13px] font-semibold text-primary hover:bg-muted transition-colors text-left"
             >
               <Plus className="w-4 h-4 shrink-0" aria-hidden />
               <span>Connect another platform</span>
@@ -252,8 +246,7 @@ export default function PlatformWithdrawalDetailPage() {
         {platform.regions.length > 1 && (
           <div className="flex flex-wrap items-center gap-3">
             <div
-              className="inline-flex p-0.5 rounded-lg bg-gray-100 flex-wrap gap-0.5"
-              style={{ border: "1px solid #e5e7eb" }}
+              className="inline-flex p-0.5 rounded-lg bg-muted border border-border/70 dark:border-border flex-wrap gap-0.5"
               role="tablist"
               aria-label="Payout region"
             >
@@ -267,10 +260,9 @@ export default function PlatformWithdrawalDetailPage() {
                   className={cn(
                     "min-h-10 px-3 rounded-md text-[12px] font-semibold transition-all max-w-[220px] text-left leading-snug",
                     regionId === r.id
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-card text-foreground shadow-sm dark:bg-muted dark:border dark:border-border"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                  style={regionId === r.id ? { border: "1px solid #e5e7eb" } : undefined}
                 >
                   <span className="mr-1" aria-hidden>
                     {r.flag}
@@ -284,11 +276,8 @@ export default function PlatformWithdrawalDetailPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 pt-1">
           <div className="xl:col-span-7 min-w-0 space-y-4 order-2 xl:order-1">
-            <div
-              className="rounded-xl bg-white p-4 sm:p-5"
-              style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
-            >
-              <h3 className="text-[14px] font-semibold text-gray-900 mb-4">How to receive your payout</h3>
+            <div className="rounded-xl bg-card text-card-foreground p-4 sm:p-5 border border-border shadow-sm">
+              <h3 className="text-[14px] font-semibold text-foreground mb-4">How to receive your payout</h3>
               <ol className="space-y-5">
                 {platform.steps.map((step, i) => (
                   <li key={step.title} className="flex gap-3">
@@ -299,31 +288,28 @@ export default function PlatformWithdrawalDetailPage() {
                       {i + 1}
                     </span>
                     <div className="min-w-0 pt-0.5">
-                      <p className="text-[13px] font-semibold text-gray-900 leading-snug">{step.title}</p>
-                      <p className="text-[12px] text-gray-600 mt-1.5 leading-relaxed">{step.body}</p>
+                      <p className="text-[13px] font-semibold text-foreground leading-snug">{step.title}</p>
+                      <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">{step.body}</p>
                     </div>
                   </li>
                 ))}
               </ol>
               {platform.helpHint && (
-                <p className="text-[12px] text-gray-500 mt-5 pt-4 border-t border-gray-100 leading-relaxed">
+                <p className="text-[12px] text-muted-foreground mt-5 pt-4 border-t border-border leading-relaxed">
                   {platform.helpHint}
                 </p>
               )}
             </div>
 
             {region && (
-              <div
-                className="rounded-xl bg-white p-4 sm:p-5 relative overflow-hidden"
-                style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
-              >
+              <div className="rounded-xl bg-card text-card-foreground p-4 sm:p-5 relative overflow-hidden border border-border shadow-sm">
                 <div className="mb-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Virtual account</p>
-                  <p className="text-[13px] font-semibold text-gray-900 mt-1">{region.currencyLabel}</p>
-                  <p className="text-[13px] text-gray-600 mt-1 leading-snug">{region.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Virtual account</p>
+                  <p className="text-[13px] font-semibold text-foreground mt-1">{region.currencyLabel}</p>
+                  <p className="text-[13px] text-muted-foreground mt-1 leading-snug">{region.label}</p>
                 </div>
 
-                <dl className="border-t border-gray-100 pt-1">
+                <dl className="border-t border-border pt-1">
                   {region.detailRows.map((row) => (
                     <BankDetailRow
                       key={row.label}
@@ -337,12 +323,12 @@ export default function PlatformWithdrawalDetailPage() {
                   ))}
                 </dl>
 
-                <p className="text-[11px] text-gray-400 mt-3 leading-snug">
+                <p className="text-[11px] text-muted-foreground mt-3 leading-snug">
                   Use exactly these details in {platform.name}&apos;s payout settings for this region.
                 </p>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-[11px] text-gray-500 leading-snug mb-3">
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-[11px] text-muted-foreground leading-snug mb-3">
                     Share instructions or copy all fields for your finance team.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -377,8 +363,7 @@ export default function PlatformWithdrawalDetailPage() {
                     description: "Tutorial playback will be available in your live environment.",
                   })
                 }
-                className="w-full flex items-center gap-4 min-h-[68px] px-4 py-3 rounded-xl text-left transition-colors hover:bg-gray-50 bg-white"
-                style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
+                className="w-full flex items-center gap-4 min-h-[68px] px-4 py-3 rounded-xl text-left transition-colors hover:bg-muted bg-card text-card-foreground border border-border shadow-sm"
               >
                 <span
                   className="flex h-11 w-11 items-center justify-center rounded-xl shrink-0"
@@ -387,15 +372,15 @@ export default function PlatformWithdrawalDetailPage() {
                   <PlayCircle className="w-6 h-6 text-red-600" />
                 </span>
                 <div>
-                  <p className="text-[13px] font-semibold text-gray-900">{platform.videoGuideTitle}</p>
-                  <p className="text-[12px] text-gray-500 mt-0.5">Watch walkthrough</p>
+                  <p className="text-[13px] font-semibold text-foreground">{platform.videoGuideTitle}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">Watch walkthrough</p>
                 </div>
               </button>
             )}
           </div>
 
           <div className="xl:col-span-5 min-w-0 space-y-3 order-1 xl:order-2">
-            <h3 className="text-[14px] font-semibold text-gray-900 tracking-tight px-0.5">
+            <h3 className="text-[14px] font-semibold text-foreground tracking-tight px-0.5">
               Recent payouts from {platform.name}
             </h3>
             <DataTable<PlatformRecentPayout>

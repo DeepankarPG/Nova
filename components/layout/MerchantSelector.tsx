@@ -78,35 +78,35 @@ export function MerchantSelector() {
         onClick={() => setOpen(!open)}
         className={cn(
           "flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-lg transition-colors",
-          open ? "bg-gray-100" : "hover:bg-gray-100"
+          open ? "bg-muted" : "hover:bg-muted"
         )}
       >
         <MerchantAvatar name={activeMerchant.name} />
-        <span className="text-[13px] font-semibold text-gray-800 max-w-[100px] truncate">
+        <span className="text-[13px] font-semibold text-foreground max-w-[100px] truncate">
           {activeMerchant.name}
         </span>
-        <ChevronDown className={cn("w-3.5 h-3.5 text-gray-400 transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
       {/* ── Dropdown ── */}
       {open && (
         <div
-          className="absolute top-full left-0 mt-2 rounded-2xl bg-white z-50 overflow-hidden"
-          style={{ minWidth: 480, boxShadow: "0 12px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)", border: "1px solid #e5e7eb" }}
+          className="absolute top-full left-0 mt-2 rounded-2xl bg-popover text-popover-foreground z-50 overflow-hidden border border-border min-w-[480px]"
+          style={{ boxShadow: "0 12px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
           {/* ── Merchant identity header ── */}
-          <div className="px-4 pt-4 pb-3.5" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <div className="px-4 pt-4 pb-3.5 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <MerchantAvatar name={activeMerchant.name} size="md" />
                 <div>
-                  <p className="text-[13px] font-semibold text-gray-900 leading-tight">{activeMerchant.name}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Merchant ID · {activeMerchant.id}</p>
+                  <p className="text-[13px] font-semibold text-foreground leading-tight">{activeMerchant.name}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Merchant ID · {activeMerchant.id}</p>
                 </div>
               </div>
               {merchants.length > 1 && (
                 <select
-                  className="text-[12px] text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-gray-400 transition-colors cursor-pointer"
+                  className="text-[12px] text-foreground bg-muted border border-border rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-ring/30 transition-colors cursor-pointer"
                   value={activeMerchant.id}
                   onChange={(e) => {
                     const m = merchants.find((x) => x.id === e.target.value);
@@ -122,27 +122,29 @@ export function MerchantSelector() {
           </div>
 
           {/* ── Two-column body ── */}
-          <div className="grid grid-cols-2 divide-x divide-gray-100">
+          <div className="grid grid-cols-2 divide-x divide-border">
             {/* Active products */}
             <div className="px-3 py-3">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-2 mb-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-1.5">
                 Active Products
               </p>
               <div className="space-y-0.5">
                 {activeMerchant.activeProducts.map((p) => (
-                  <button key={p.name}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors text-left group"
+                  <button
+                    key={p.name}
+                    type="button"
+                    className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/80 transition-colors text-left group"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                    <div className="w-7 h-7 rounded-lg bg-muted group-hover:bg-accent flex items-center justify-center flex-shrink-0 transition-colors">
                       {p.icon === "db"
-                        ? <Database className="w-3.5 h-3.5 text-gray-500" />
-                        : <CreditCard className="w-3.5 h-3.5 text-gray-500" />}
+                        ? <Database className="w-3.5 h-3.5 text-muted-foreground" />
+                        : <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />}
                     </div>
-                    <span className="flex-1 text-[12.5px] font-medium text-gray-700 leading-tight whitespace-nowrap">
+                    <span className="flex-1 text-[12.5px] font-medium text-foreground leading-tight whitespace-nowrap">
                       {p.name}
-                      <span className="text-gray-400 font-normal ml-1 text-[11.5px]">({p.count})</span>
+                      <span className="text-muted-foreground font-normal ml-1 text-[11.5px]">({p.count})</span>
                     </span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 flex-shrink-0 transition-colors" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground flex-shrink-0 transition-colors" />
                   </button>
                 ))}
               </div>
@@ -150,17 +152,20 @@ export function MerchantSelector() {
 
             {/* Accounts */}
             <div className="px-3 py-3">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-2 mb-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-1.5">
                 Accounts
               </p>
               <div className="space-y-0.5">
                 {activeMerchant.accounts.map((a) => (
-                  <div key={a.id}
-                    className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/80 transition-colors cursor-pointer"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ background: a.status === "active" ? "#22c55e" : "#d1d5db" }} />
-                    <span className="flex-1 text-[12.5px] font-medium text-gray-800">{a.name}</span>
+                    <div
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ background: a.status === "active" ? "#22c55e" : "var(--muted-foreground)" }}
+                    />
+                    <span className="flex-1 text-[12.5px] font-medium text-foreground">{a.name}</span>
                     <span
                       className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
                       style={a.status === "active"
@@ -176,11 +181,11 @@ export function MerchantSelector() {
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-4 py-2.5 flex items-center justify-between"
-            style={{ borderTop: "1px solid #f3f4f6", background: "#fafafa" }}>
-            <span className="text-[11px] text-gray-400">{merchants.length} merchants available</span>
+          <div className="px-4 py-2.5 flex items-center justify-between border-t border-border bg-muted/40">
+            <span className="text-[11px] text-muted-foreground">{merchants.length} merchants available</span>
             <button
-              className="text-[12px] font-medium text-[#0061E3] hover:text-[#0049ad] transition-colors"
+              type="button"
+              className="text-[12px] font-medium text-primary hover:opacity-80 transition-opacity"
               onClick={() => setOpen(false)}
             >
               View all →

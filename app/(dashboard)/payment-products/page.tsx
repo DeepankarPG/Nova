@@ -53,14 +53,14 @@ export default function PaymentProductsPage() {
           { label: "Total Volume", value: isLoading ? null : "₹78.5L", sub: "this month" },
           { label: "Avg. Success Rate", value: isLoading ? null : "94.8%", sub: "across all methods" },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 shadow-sm">
-            <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">{s.label}</p>
+          <div key={s.label} className="bg-card text-card-foreground rounded-xl border border-border px-4 py-3.5 shadow-sm">
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{s.label}</p>
             {isLoading ? (
               <Shimmer className="h-6 w-16 mt-1.5" />
             ) : (
-              <p className="text-xl font-bold text-slate-900 mt-0.5">{s.value}</p>
+              <p className="text-xl font-bold text-foreground mt-0.5">{s.value}</p>
             )}
-            <p className="text-[11px] text-slate-400 mt-0.5">{s.sub}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{s.sub}</p>
           </div>
         ))}
       </div>
@@ -69,7 +69,7 @@ export default function PaymentProductsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div key={i} className="bg-card text-card-foreground rounded-2xl border border-border p-5 shadow-sm">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Shimmer className="w-10 h-10 rounded-xl" />
@@ -95,21 +95,21 @@ export default function PaymentProductsPage() {
               <div
                 key={product.id}
                 className={cn(
-                  "bg-white rounded-2xl border shadow-sm p-5 transition-all",
-                  isActive ? "border-slate-200" : "border-slate-100 opacity-75"
+                  "bg-card text-card-foreground rounded-2xl border border-border shadow-sm p-5 transition-all",
+                  isActive ? "" : "opacity-75"
                 )}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center",
-                      isActive ? "bg-[#eff4ff]" : "bg-slate-100"
+                      isActive ? "bg-primary-light" : "bg-muted"
                     )}>
-                      <Icon className={cn("w-5 h-5", isActive ? "text-[#0061E3]" : "text-slate-400")} />
+                      <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground")} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-900">{product.name}</h3>
-                      <p className="text-xs text-slate-500">{product.description}</p>
+                      <h3 className="text-sm font-semibold text-foreground">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground">{product.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export default function PaymentProductsPage() {
                       onClick={() => toggleProduct(product.id)}
                       className={cn(
                         "transition-colors",
-                        isActive ? "text-[#0061E3] hover:text-[#0049ad]" : "text-slate-300 hover:text-slate-400"
+                        isActive ? "text-primary hover:text-primary/80" : "text-muted-foreground/40 hover:text-muted-foreground"
                       )}
                     >
                       {isActive ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
@@ -128,14 +128,14 @@ export default function PaymentProductsPage() {
 
                 {isActive && (
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Transactions</p>
-                      <p className="text-lg font-bold text-slate-900 mt-0.5">{product.transactions.toLocaleString()}</p>
+                    <div className="bg-muted/60 rounded-xl p-3 border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Transactions</p>
+                      <p className="text-lg font-bold text-foreground mt-0.5">{product.transactions.toLocaleString()}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <div className="bg-muted/60 rounded-xl p-3 border border-border">
                       <div className="flex items-center gap-1 mb-0.5">
-                        <Activity className="w-3 h-3 text-slate-400" />
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Success</p>
+                        <Activity className="w-3 h-3 text-muted-foreground" />
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Success</p>
                       </div>
                       <p className={cn(
                         "text-lg font-bold",
@@ -144,12 +144,12 @@ export default function PaymentProductsPage() {
                         {product.successRate}%
                       </p>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <div className="bg-muted/60 rounded-xl p-3 border border-border">
                       <div className="flex items-center gap-1 mb-0.5">
-                        <TrendingUp className="w-3 h-3 text-slate-400" />
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Volume</p>
+                        <TrendingUp className="w-3 h-3 text-muted-foreground" />
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Volume</p>
                       </div>
-                      <p className="text-lg font-bold text-slate-900">
+                      <p className="text-lg font-bold text-foreground">
                         ₹{(product.volume / 100000).toFixed(1)}L
                       </p>
                     </div>
@@ -157,8 +157,8 @@ export default function PaymentProductsPage() {
                 )}
 
                 {!isActive && (
-                  <div className="text-center py-3 border border-dashed border-slate-200 rounded-xl">
-                    <p className="text-xs text-slate-400">Enable to start accepting {product.name} payments</p>
+                  <div className="text-center py-3 border border-dashed border-border rounded-xl">
+                    <p className="text-xs text-muted-foreground">Enable to start accepting {product.name} payments</p>
                   </div>
                 )}
               </div>
