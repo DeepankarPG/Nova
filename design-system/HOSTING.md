@@ -53,6 +53,15 @@ npm run build:atlas
 - **Wrong links in OG / sitemap** — Set **`NEXT_PUBLIC_ATLAS_SITE_URL`** on Atlas after you attach a custom domain.
 - **Two projects** — Keep **Atlas** and the **dashboard** as separate Vercel projects from the same repo (different Root Directory). Same pattern as running multiple apps from one monorepo.
 
+### Vercel shows `404: NOT_FOUND` (plain Vercel page, not your Next.js UI)
+
+That usually means **this project is not serving a Next app from the path Vercel expects**. Check in order:
+
+1. **Root Directory** (Project → Settings → General): for **Atlas only**, set **`apps/atlas-docs`**. If it is **`.`** (repo root), you get the **dashboard** app — `/` should work; use **`/design`** only if you did **not** remove those routes (this repo serves Atlas from **`apps/atlas-docs`** only).
+2. **Clear overrides** (Settings → General → Build & Development): **Build Command** and **Output Directory** should be **empty** so Vercel uses **`apps/atlas-docs/vercel.json`**. If someone set Build to `npm run build:atlas` while Root is **`.`**, the output lands in the wrong place → **NOT_FOUND**.
+3. **Redeploy** after fixing Root Directory / build settings.
+4. Monorepo tracing: **`apps/atlas-docs/next.config.ts`** sets **`outputFileTracingRoot`** to the repo root so `packages/payglocal-ui` is included on Vercel.
+
 ## Where the code lives
 
 | Path | Role |
