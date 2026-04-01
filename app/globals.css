@@ -191,9 +191,14 @@ body {
 }
 
 /* ─── Page enter ─────────────────────────────────────────────────────────── */
+/* Opacity only — avoid transform so descendants with position:fixed aren’t clipped to this box */
 @keyframes pageFade {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .page-enter { animation: pageFade 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 

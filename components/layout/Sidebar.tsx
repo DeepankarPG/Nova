@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { ViewPortal } from "@/components/layout/ViewPortal";
 import { navigation, type NavItem } from "@/lib/navigation";
 import { useProfileAvatar } from "@/hooks/useProfileAvatar";
 
@@ -92,7 +93,7 @@ function ExpandableItem({
                     className={cn(
                       "relative flex items-center py-1.5 pl-1 pr-2 text-[13px] rounded-md transition-colors duration-100",
                       isChildActive
-                        ? "bg-card text-foreground font-semibold shadow-sm ring-1 ring-border/70"
+                        ? "text-primary font-semibold"
                         : "text-sidebar-foreground/95 font-medium hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
                     )}
                   >
@@ -356,49 +357,53 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         <SidebarBody collapsed={collapsed} pathname={pathname} />
       </motion.aside>
 
-      {/* ── Mobile overlay backdrop ── */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/40 z-30 md:hidden"
-            onClick={onClose}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ── Mobile drawer ── */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.aside
-            key="mobile-drawer"
-            initial={{ x: -260 }}
-            animate={{ x: 0 }}
-            exit={{ x: -260 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed left-0 top-0 flex flex-col h-screen w-[232px] z-40 overflow-hidden md:hidden bg-sidebar border-r border-sidebar-border"
-          >
-            {/* Logo + close button */}
-            <div className="flex items-center justify-between px-3.5 h-[57px] flex-shrink-0 border-b border-sidebar-border">
-              <Image src="/payglocal-logo.png" alt="PayGlocal"
-                width={120} height={28} className="object-contain" priority />
-              <button
-                type="button"
+      {/* ── Mobile nav: portaled so fixed layers cover full viewport (no transform ancestors) ── */}
+      <ViewPortal>
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div
+                key="backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-30 min-h-[100dvh] w-full bg-black/40 md:hidden"
                 onClick={onClose}
-                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              />
+              <motion.aside
+                key="mobile-drawer"
+                initial={{ x: -260 }}
+                animate={{ x: 0 }}
+                exit={{ x: -260 }}
+                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                className="fixed left-0 top-0 z-40 flex h-screen min-h-[100dvh] w-[232px] flex-col overflow-hidden border-r border-sidebar-border bg-sidebar md:hidden"
               >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+                {/* Logo + close button */}
+                <div className="flex h-[57px] flex-shrink-0 items-center justify-between border-b border-sidebar-border px-3.5">
+                  <Image
+                    src="/payglocal-logo.png"
+                    alt="PayGlocal"
+                    width={120}
+                    height={28}
+                    className="object-contain"
+                    priority
+                  />
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-            <SidebarBody collapsed={false} pathname={pathname} onNavClick={onClose} />
-          </motion.aside>
-        )}
-      </AnimatePresence>
+                <SidebarBody collapsed={false} pathname={pathname} onNavClick={onClose} />
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+      </ViewPortal>
     </>
   );
 }

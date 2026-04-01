@@ -9,6 +9,7 @@ import {
   ChevronDown, Calendar, ExternalLink, MoreHorizontal,
   Facebook, Send, AlertCircle, CheckCircle2, Clock, Ban,
 } from "lucide-react";
+import { ViewPortal } from "@/components/layout/ViewPortal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -124,10 +125,11 @@ function DetailDrawer({ link, onClose }: { link: PaymentLink; onClose: () => voi
   const isInactive    = isExpired || isDeactivated;
 
   return (
+    <ViewPortal>
     <>
       {/* Overlay — fades in independently */}
       <motion.div
-        className="fixed inset-0 z-50"
+        className="fixed inset-0 z-50 min-h-[100dvh] w-full"
         style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -138,7 +140,7 @@ function DetailDrawer({ link, onClose }: { link: PaymentLink; onClose: () => voi
 
       {/* Drawer — slides in from right with spring */}
       <motion.div
-        className="fixed inset-y-0 right-0 z-50 h-full w-full sm:max-w-[520px] bg-white flex flex-col"
+        className="fixed inset-y-0 right-0 z-50 min-h-[100dvh] h-full w-full sm:max-w-[520px] bg-white flex flex-col"
         style={{ borderLeft: "1px solid #e5e7eb", boxShadow: "-16px 0 60px rgba(0,0,0,0.16)" }}
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
@@ -338,6 +340,7 @@ function DetailDrawer({ link, onClose }: { link: PaymentLink; onClose: () => voi
         </div>
       </motion.div>
     </>
+    </ViewPortal>
   );
 }
 

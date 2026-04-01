@@ -13,6 +13,7 @@ import {
   Facebook,
 } from "lucide-react";
 import { CurrencyAmountInput } from "@/components/ui/currency-amount-input";
+import { ViewPortal } from "@/components/layout/ViewPortal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { PaymentLink } from "./types";
@@ -78,8 +79,11 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}>
+    <ViewPortal>
+    <div
+      className="fixed inset-0 z-[110] flex min-h-[100dvh] w-full items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.97, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -291,6 +295,7 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
         </div>
       </motion.div>
     </div>
+    </ViewPortal>
   );
 }
 
@@ -311,8 +316,11 @@ export function PaymentLinkSuccessModal({ link, onClose }: { link: PaymentLink; 
   const expiryStr  = link.expiresAt ? link.expiresAt : null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)" }}>
+    <ViewPortal>
+    <div
+      className="fixed inset-0 z-[110] flex min-h-[100dvh] w-full items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)" }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -431,5 +439,6 @@ export function PaymentLinkSuccessModal({ link, onClose }: { link: PaymentLink; 
         </div>
       </motion.div>
     </div>
+    </ViewPortal>
   );
 }

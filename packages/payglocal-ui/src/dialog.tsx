@@ -14,7 +14,7 @@ function DialogOverlay({ className, ...props }: ComponentProps<typeof DialogPrim
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-[100] bg-black/50 backdrop-blur-[2px]",
+        "fixed inset-0 z-[100] min-h-[100dvh] w-full bg-black/50 backdrop-blur-[2px]",
         "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200",
         className
       )}

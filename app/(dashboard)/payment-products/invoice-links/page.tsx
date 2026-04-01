@@ -10,6 +10,7 @@ import {
   PenLine, Mail, Link2, MessageSquare, AlertCircle, Users,
   Receipt, User, GripVertical, Pencil, Tag,
 } from "lucide-react";
+import { ViewPortal } from "@/components/layout/ViewPortal";
 import { cn, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
@@ -667,7 +668,13 @@ function CreateInvoiceView({ onBack }: { onBack: () => void }) {
                 </button>
                 {templateMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setTemplateMenuOpen(false)} aria-hidden />
+                    <ViewPortal>
+                      <div
+                        className="fixed inset-0 z-40 min-h-[100dvh] w-full"
+                        onClick={() => setTemplateMenuOpen(false)}
+                        aria-hidden
+                      />
+                    </ViewPortal>
                     <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] py-1 rounded-lg bg-white border border-gray-200 shadow-lg" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
                       <button
                         onClick={() => {
@@ -2394,27 +2401,29 @@ function SaveAsTemplateModal({ initialName, isUpdate, onClose, onSaved }: {
 /* ─── Modal primitives ──────────────────────────────────────────────────── */
 function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
-      onClick={onClose}
-    >
+    <ViewPortal>
       <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 14 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 14 }}
-        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-        onClick={e => e.stopPropagation()}
-        className="w-full"
-        style={{ maxWidth: "100%" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-50 flex min-h-[100dvh] w-full items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+        onClick={onClose}
       >
-        {children}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 14 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full"
+          style={{ maxWidth: "100%" }}
+        >
+          {children}
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </ViewPortal>
   );
 }
 
