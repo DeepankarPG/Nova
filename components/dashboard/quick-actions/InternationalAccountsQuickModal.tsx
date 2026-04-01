@@ -7,8 +7,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/components/shared/Dialog";
-import { Button } from "@/components/shared/Button";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { BankDetailRow } from "@/components/international-accounts/BankDetailRow";
 import { clientReceivingLocations } from "@/lib/mock-data";
 import { cn, formatDate } from "@/lib/utils";

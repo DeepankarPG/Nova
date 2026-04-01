@@ -13,9 +13,9 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# next.js (root and nested apps e.g. apps/atlas-docs)
+.next/
+out/
 
 # production
 /build

@@ -1,8 +1,15 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsToggleSection } from "@/components/settings/SettingsToggleSection";
 
 export default function SettingsSecurityPage() {
+  const [accountKey, setAccountKey] = useState(0);
+  const [kycKey, setKycKey] = useState(0);
+
   return (
     <div className="space-y-8">
       <div className="space-y-1">
@@ -10,33 +17,53 @@ export default function SettingsSecurityPage() {
         <p className="text-sm text-muted-foreground">Authentication, sessions, and access controls.</p>
       </div>
 
-      <section className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">Account security</h3>
-        <div className="mt-4">
-          <SettingsToggleSection
-            items={[
-              { label: "Two-factor authentication", description: "Require OTP on every login", on: true },
-              { label: "IP allowlisting", description: "Restrict API access to approved IP addresses", on: false },
-              { label: "Session timeout", description: "Auto-logout after 30 minutes of inactivity", on: true },
-              { label: "Login notifications", description: "Email alert on every new login", on: true },
-            ]}
-          />
-        </div>
-      </section>
+      <SettingsSectionCard
+        title="Account security"
+        footerActions={
+          <>
+            <Button variant="ghost" size="sm" type="button" onClick={() => setAccountKey((k) => k + 1)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Security settings saved")}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <SettingsToggleSection
+          key={accountKey}
+          items={[
+            { label: "Two-factor authentication", description: "Require OTP on every login", on: true },
+            { label: "IP allowlisting", description: "Restrict API access to approved IP addresses", on: false },
+            { label: "Session timeout", description: "Auto-logout after 30 minutes of inactivity", on: true },
+            { label: "Login notifications", description: "Email alert on every new login", on: true },
+          ]}
+        />
+      </SettingsSectionCard>
 
-      <section className="space-y-1 border-t border-border pt-8">
-        <h3 className="text-base font-semibold text-foreground">KYC & compliance</h3>
-        <p className="text-sm text-muted-foreground">Verification documents and compliance toggles. eBRC workflows stay under Finance.</p>
-        <div className="mt-4">
-          <SettingsToggleSection
-            items={[
-              { label: "eBRC auto-generation", description: "Auto-generate export benefit certificates", on: true },
-              { label: "KYC reminders", description: "Notify team when documents are expiring", on: true },
-              { label: "PCI-DSS mode", description: "Strict PCI compliance logging and auditing", on: true },
-            ]}
-          />
-        </div>
-      </section>
+      <SettingsSectionCard
+        title="KYC & compliance"
+        description="Verification documents and compliance toggles. eBRC workflows stay under Finance."
+        footerActions={
+          <>
+            <Button variant="ghost" size="sm" type="button" onClick={() => setKycKey((k) => k + 1)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Compliance settings saved")}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <SettingsToggleSection
+          key={kycKey}
+          items={[
+            { label: "eBRC auto-generation", description: "Auto-generate export benefit certificates", on: true },
+            { label: "KYC reminders", description: "Notify team when documents are expiring", on: true },
+            { label: "PCI-DSS mode", description: "Strict PCI compliance logging and auditing", on: true },
+          ]}
+        />
+      </SettingsSectionCard>
     </div>
   );
 }

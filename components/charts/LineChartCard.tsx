@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { StandardChartTooltip } from "@/components/charts/StandardChartTooltip";
 import { cn } from "@/lib/utils";
-import { ChartSkeleton } from "@/components/shared/ShimmerSkeleton";
+import { ChartSkeleton } from "@/components/ui/skeleton";
 
 interface LineChartCardProps {
   data: { [key: string]: string | number }[];

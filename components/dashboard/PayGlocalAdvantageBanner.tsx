@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Download,
   LineChart,
@@ -12,7 +13,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis } from "recharts";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const AUTO_MS = 6500;
@@ -61,18 +63,72 @@ const DEFAULT_INSIGHTS: PayGlocalInsight[] = [
   },
 ];
 
+function buildInsightDelightContent(headline: string) {
+  if (headline.toLowerCase().includes("success rate")) {
+    return {
+      title: "Your checkout reliability is a growth advantage",
+      subtitle:
+        "High success rates are compounding your business outcomes. PayGlocal routing and retries are reducing avoidable payment drop-offs.",
+      highlights: [
+        { label: "Estimated recovered payments", value: "+7.8%", hint: "vs baseline this month" },
+        { label: "Repeat buyer confidence", value: "+11%", hint: "customers returning after successful payments" },
+        { label: "Support ticket reduction", value: "-16%", hint: "fewer payment-failure complaints" },
+      ],
+      wins: [
+        "Reliable payment performance is improving customer trust at checkout.",
+        "Stable acceptance quality helps your campaigns convert better.",
+        "Operational load is lower, freeing your team for growth initiatives.",
+      ],
+    };
+  }
+  if (headline.toLowerCase().includes("revenue")) {
+    return {
+      title: "International demand is accelerating",
+      subtitle:
+        "Your cross-border payment flows are growing steadily with healthy conversion. You are unlocking new GMV without adding extra operational complexity.",
+      highlights: [
+        { label: "International GMV uplift", value: "+31%", hint: "month-over-month growth" },
+        { label: "High-intent checkout conversion", value: "+9.2%", hint: "from international traffic" },
+        { label: "New market contribution", value: "22%", hint: "share of this month's growth" },
+      ],
+      wins: [
+        "You are expanding to new buyer segments with low friction.",
+        "Higher share of quality transactions improves blended margins.",
+        "Growth velocity signals strong product-market pull in global corridors.",
+      ],
+    };
+  }
+  return {
+    title: "Settlement performance is getting stronger",
+    subtitle:
+      "Cash-flow quality has improved and your funds are arriving faster. This gives your team more working-capital flexibility and predictable planning.",
+    highlights: [
+      { label: "Average settlement speed", value: "-2.1 days", hint: "improvement vs last quarter" },
+      { label: "Cash-flow predictability", value: "+14%", hint: "lower variance in payout timing" },
+      { label: "On-time operational readiness", value: "96%", hint: "planned payouts met schedule" },
+    ],
+    wins: [
+      "Faster access to funds supports smoother inventory and vendor cycles.",
+      "Lower payout uncertainty improves treasury confidence.",
+      "Team bandwidth shifts from follow-ups to strategic planning.",
+    ],
+  };
+}
+
 function AdvantageInsightChart({
   kind,
   values,
   lineColor,
   insightIndex,
   animate,
+  compact = false,
 }: {
   kind: "area" | "bar";
   values: number[];
   lineColor: string;
   insightIndex: number;
   animate: boolean;
+  compact?: boolean;
 }) {
   const gradId = `pg-adv-spark-${insightIndex}`;
 
@@ -84,7 +140,7 @@ function AdvantageInsightChart({
         initial={animate ? { opacity: 0.65, scale: 0.98 } : false}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="h-full w-full min-h-[52px] sm:min-h-[58px]"
+        className={cn("h-full w-full", compact ? "min-h-[56px]" : "min-h-[52px] sm:min-h-[58px]")}
         aria-hidden
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -121,20 +177,25 @@ function AdvantageInsightChart({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "h-full w-full min-h-[52px] sm:min-h-[58px]",
+        "h-full w-full",
+        compact ? "min-h-[56px]" : "min-h-[52px] sm:min-h-[58px]",
         /* Stronger than global --chart-bar-track so tracks read on the banner gradient */
         "[--chart-bar-track:rgba(30,58,95,0.22)] dark:[--chart-bar-track:rgba(255,255,255,0.14)]"
       )}
       aria-hidden
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 2, left: 0, bottom: 0 }} barCategoryGap="20%">
+        <BarChart
+          data={data}
+          margin={{ top: 4, right: compact ? 0 : 2, left: 0, bottom: 0 }}
+          barCategoryGap={compact ? "8%" : "20%"}
+        >
           <XAxis dataKey="i" type="category" hide />
           <Bar
             dataKey="v"
             fill={lineColor}
             radius={[3, 3, 0, 0]}
-            maxBarSize={10}
+            maxBarSize={compact ? 16 : 10}
             isAnimationActive={animate}
             animationDuration={680}
             animationEasing="ease-out"
@@ -223,6 +284,8 @@ export function PayGlocalAdvantageBanner({
   const [dismissed, setDismissed] = useState(false);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [insightModalOpen, setInsightModalOpen] = useState(false);
+  const [modalCardIndex, setModalCardIndex] = useState(0);
   const indexRef = useRef(0);
 
   const goTo = useCallback(
@@ -239,12 +302,25 @@ export function PayGlocalAdvantageBanner({
   }, [index]);
 
   useEffect(() => {
-    if (dismissed || paused || insights.length < 2) return;
+    if (dismissed || paused || insightModalOpen || insights.length < 2) return;
     const id = window.setInterval(() => {
       goTo(indexRef.current + 1);
     }, AUTO_MS);
     return () => window.clearInterval(id);
-  }, [dismissed, paused, goTo, insights.length]);
+  }, [dismissed, paused, insightModalOpen, goTo, insights.length]);
+
+  useEffect(() => {
+    if (!insightModalOpen) return;
+    setModalCardIndex(index);
+  }, [insightModalOpen, index]);
+
+  const goNextModalCard = useCallback(() => {
+    setModalCardIndex((i) => (i + 1) % insights.length);
+  }, [insights.length]);
+
+  const goPrevModalCard = useCallback(() => {
+    setModalCardIndex((i) => (i - 1 + insights.length) % insights.length);
+  }, [insights.length]);
 
   if (dismissed) return null;
 
@@ -253,6 +329,9 @@ export function PayGlocalAdvantageBanner({
   const lineColor = CHART_TONES[current.chartTone];
   const showSegmentProgress = !reduceMotion && insights.length > 1;
   const chartAnimate = !reduceMotion;
+  const modalInsight = insights[modalCardIndex] ?? insights[0];
+  const modalDetailContent = buildInsightDelightContent(modalInsight.headline);
+  const modalLineColor = CHART_TONES[modalInsight.chartTone];
 
   const copyMotion = reduceMotion
     ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 1, y: 0 } }
@@ -263,7 +342,8 @@ export function PayGlocalAdvantageBanner({
       };
 
   return (
-    <motion.div
+    <>
+      <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
@@ -409,7 +489,11 @@ export function PayGlocalAdvantageBanner({
                 size="sm"
                 className="h-8 w-full justify-center whitespace-nowrap px-3"
                 rightIcon={<ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />}
-                onClick={() => onKnowMore?.()}
+                onClick={() => {
+                  setInsightModalOpen(true);
+                  setModalCardIndex(index);
+                  onKnowMore?.();
+                }}
               >
                 Know more insights
               </Button>
@@ -427,5 +511,132 @@ export function PayGlocalAdvantageBanner({
           </div>
         </div>
       </motion.div>
+
+      <Dialog open={insightModalOpen} onOpenChange={setInsightModalOpen}>
+        <DialogContent className="max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden p-0 sm:h-[min(88vh,740px)] sm:max-w-2xl">
+          <div className="relative overflow-hidden border-b border-border/80 bg-gradient-to-r from-primary/[0.12] via-primary/[0.06] to-transparent px-5 pb-4 pt-5 sm:px-6">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/[0.35]" aria-hidden />
+            <div className="relative">
+              <span className="inline-flex rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+                Your monthly insight
+              </span>
+              <DialogTitle className="mt-3 pr-10 text-[22px] leading-tight">{modalDetailContent.title}</DialogTitle>
+              <DialogDescription className="mt-2 max-w-[58ch] text-[13px] leading-relaxed text-muted-foreground">
+                {modalDetailContent.subtitle}
+              </DialogDescription>
+            </div>
+          </div>
+
+          <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={modalInsight.headline}
+                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-3"
+              >
+                <div className="rounded-xl border border-border/80 bg-card p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Current trend</p>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{modalInsight.headline}</p>
+                  <div className="mt-2.5 h-[56px]">
+                    <AdvantageInsightChart
+                      kind={modalInsight.chartKind}
+                      values={modalInsight.sparkline}
+                      lineColor={modalLineColor}
+                      insightIndex={200 + modalCardIndex}
+                      animate={!reduceMotion}
+                      compact
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {modalDetailContent.highlights.map((h) => (
+                    <div key={h.label} className="rounded-xl border border-border bg-muted/35 p-3">
+                      <p className="text-[11px] font-medium text-muted-foreground">{h.label}</p>
+                      <p className="mt-1 text-base font-semibold tracking-tight text-foreground">{h.value}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{h.hint}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    What this means for your business
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {modalDetailContent.wins.map((point) => (
+                      <li key={point} className="flex items-start gap-2 text-[13px] leading-relaxed text-foreground">
+                        <CheckCircle2 className="mt-[1px] h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2.2} aria-hidden />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={goPrevModalCard}
+                aria-label="Previous insight"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" strokeWidth={2} aria-hidden />
+              </button>
+              <div className="flex items-center justify-center gap-1.5">
+                {insights.map((item, i) => {
+                  const active = i === modalCardIndex;
+                  return (
+                    <button
+                      key={item.headline}
+                      type="button"
+                      onClick={() => setModalCardIndex(i)}
+                      aria-label={`View insight card ${i + 1} of ${insights.length}`}
+                      aria-current={active ? "true" : undefined}
+                      className={cn(
+                        "h-2 rounded-full transition-all",
+                        active ? "w-6 bg-primary" : "w-2 bg-muted-foreground/35 hover:bg-muted-foreground/55"
+                      )}
+                    />
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={goNextModalCard}
+                aria-label="Next insight"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ChevronRight className="h-4 w-4" strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-border/80 bg-muted/25 px-5 py-3 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-9 min-w-[7rem]"
+              onClick={() => setInsightModalOpen(false)}
+            >
+              Got it!
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 min-w-[13.5rem]"
+              leftIcon={<Download className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />}
+              onClick={() => onDownloadReport?.()}
+            >
+              Download detailed report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

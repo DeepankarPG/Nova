@@ -16,7 +16,7 @@ import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordi
 import { LayoutGrid } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/ui/button";
 import { DashboardWidgetRenderer } from "@/components/dashboard/widgets/DashboardWidgetRenderer";
 import type { WidgetId } from "@/lib/dashboard-widget-catalog";
 import { SortableDashboardWidget, REMOVE_ANIMATION_MS } from "./SortableDashboardWidget";

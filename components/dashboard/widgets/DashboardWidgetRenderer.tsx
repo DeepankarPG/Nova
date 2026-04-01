@@ -22,7 +22,7 @@ import {
 import { BarChartCard } from "@/components/charts/BarChartCard";
 import { StandardChartTooltip } from "@/components/charts/StandardChartTooltip";
 import { CountryInsightsMap } from "@/components/dashboard/CountryInsightsMap";
-import { ChartSkeleton } from "@/components/shared/ShimmerSkeleton";
+import { ChartSkeleton } from "@/components/ui/skeleton";
 import { useChartBarTrackFill } from "@/hooks/useChartBarTrackFill";
 import { cn } from "@/lib/utils";
 import type { WidgetId } from "@/lib/dashboard-widget-catalog";
@@ -372,6 +372,38 @@ export function DashboardWidgetRenderer({
           className="h-full"
         />
       );
+    case "charts_gross_volume_split": {
+      if (isLoading && !preview) {
+        return (
+          <div className={cn(cardClass, "px-5 pt-4 pb-3 min-h-[260px]")}>
+            <ChartSkeleton />
+          </div>
+        );
+      }
+      const base = preview ? monthlyVolume.map((m) => ({ ...m, volume: m.volume * 0.3 + 100000 })) : monthlyVolume;
+      const splitData = base.map((m, i) => {
+        const internationalShare = 0.22 + (i % 3) * 0.015;
+        const international = Math.round(m.volume * internationalShare);
+        const domestic = Math.max(0, Math.round(m.volume - international));
+        return { month: m.month, domestic, international };
+      });
+      return (
+        <BarChartCard
+          title="Gross volume split"
+          subtitle="International vs domestic capture volume"
+          data={splitData}
+          xKey="month"
+          bars={[
+            { key: "domestic", label: "Domestic", color: BRAND_SOFT },
+            { key: "international", label: "International", color: BRAND },
+          ]}
+          formatValue={(v) => `₹${(v / 100000).toFixed(1)}L`}
+          isLoading={false}
+          height={220}
+          className="h-full"
+        />
+      );
+    }
     case "charts_hourly_traffic":
       if (isLoading && !preview) {
         return (

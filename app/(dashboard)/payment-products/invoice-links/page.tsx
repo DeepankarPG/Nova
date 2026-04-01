@@ -11,9 +11,9 @@ import {
   Receipt, User, GripVertical, Pencil, Tag,
 } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Button } from "@/components/shared/Button";
-import { DatePicker } from "@/components/shared/DatePicker";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { invoiceLinks } from "@/lib/mock-data";
 import { toast } from "sonner";
 

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { CreditCard, Smartphone, Building2, Wallet, TrendingUp, Activity, ToggleLeft, ToggleRight } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Shimmer } from "@/components/shared/ShimmerSkeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Shimmer } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { paymentProducts } from "@/lib/mock-data";
 import { toast } from "sonner";

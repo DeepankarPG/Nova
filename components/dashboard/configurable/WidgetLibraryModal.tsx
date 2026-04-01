@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, SearchX, X } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/shared/Dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   CATEGORY_ORDER,
   MIN_DASHBOARD_WIDGETS,

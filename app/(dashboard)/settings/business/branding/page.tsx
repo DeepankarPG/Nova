@@ -2,10 +2,12 @@ import { BrandingSettingsPanel } from "@/components/settings/BrandingSettingsPan
 
 export default function BusinessBrandingPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">Branding</h3>
-        <p className="text-sm text-muted-foreground">Colours and logos customers see on checkout, links, and receipts.</p>
+        <h2 className="text-xl font-semibold tracking-tight text-foreground md:text-[22px]">Branding</h2>
+        <p className="text-sm text-muted-foreground">
+          Colours, logos, and corner styling customers see on checkout, links, and receipts — with a live payflow preview.
+        </p>
       </div>
       <BrandingSettingsPanel />
     </div>

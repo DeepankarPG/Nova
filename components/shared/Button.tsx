@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | "link";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -23,6 +23,7 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700",
   outline:
     "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
+  link: "border border-transparent bg-transparent text-primary shadow-none hover:underline underline-offset-4 h-auto px-0 py-0 rounded-none font-medium",
 };
 
 const sizes = {
@@ -55,7 +56,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
           variantClasses[variant],
-          sizes[size],
+          variant !== "link" && sizes[size],
           className
         )}
         {...props}

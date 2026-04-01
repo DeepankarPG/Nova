@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Copy, Eye, EyeOff, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/ui/button";
 
 const keys = [
   { id: "lpub", label: "Live Public Key", value: "pk_live_mcatest123_pub_abcde12345", secret: false },
