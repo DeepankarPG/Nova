@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { UserPlus, Users, Shield, Eye, Settings } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable, type Column } from "@/components/shared/DataTable";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Button } from "@/components/shared/Button";
-import { Shimmer } from "@/components/shared/ShimmerSkeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import { Shimmer } from "@/components/ui/skeleton";
 import { cn, formatDate } from "@/lib/utils";
 import { clients } from "@/lib/mock-data";
 import { toast } from "sonner";

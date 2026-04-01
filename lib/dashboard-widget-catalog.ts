@@ -38,6 +38,7 @@ export type WidgetId =
   | "payments_refunds_kpi"
   | "payments_failed_kpi"
   | "charts_monthly_volume"
+  | "charts_gross_volume_split"
   | "charts_hourly_traffic"
   | "charts_payment_split"
   | "charts_upi_vs_card_weekly"
@@ -75,6 +76,13 @@ export const WIDGET_CATALOG: WidgetCatalogEntry[] = [
   { id: "payments_refunds_kpi", name: "Refunds", category: "Payments", icon: RefreshCw, lgColSpan: 4 },
   { id: "payments_failed_kpi", name: "Failed Payments", category: "Payments", icon: ShieldAlert, lgColSpan: 4 },
   { id: "charts_monthly_volume", name: "Monthly Volume", category: "Charts", icon: BarChart3, lgColSpan: 7 },
+  {
+    id: "charts_gross_volume_split",
+    name: "Gross Volume Split (Intl vs Domestic)",
+    category: "India & growth",
+    icon: Globe,
+    lgColSpan: 7,
+  },
   { id: "charts_hourly_traffic", name: "Hourly Traffic", category: "Charts", icon: LineChart, lgColSpan: 6 },
   { id: "charts_payment_split", name: "Payment Method Split", category: "Charts", icon: PieChart, lgColSpan: 6 },
   { id: "charts_upi_vs_card_weekly", name: "UPI vs Card (weekly)", category: "India & growth", icon: CreditCard, lgColSpan: 7 },

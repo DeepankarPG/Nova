@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/ui/button";
 
 export function DeveloperWebhooksPanel() {
   return (

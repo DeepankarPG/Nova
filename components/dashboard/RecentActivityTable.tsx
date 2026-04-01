@@ -6,8 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { CreditCard, Building2, ArrowRight } from "lucide-react";
 import { cn, formatDate, truncate } from "@/lib/utils";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { TableRowSkeleton } from "@/components/shared/ShimmerSkeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { TableRowSkeleton } from "@/components/ui/skeleton";
 
 type Transaction = {
   id: string; amount: number; currency: string; status: string;

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { TableRowSkeleton } from "./ShimmerSkeleton";
 import { EmptyState } from "./EmptyState";
@@ -26,7 +27,7 @@ export type Column<T> = {
   minWidth?: number;
   maxWidth?: number;
   align?: "left" | "right" | "center";
-  render: (row: T, index: number) => React.ReactNode;
+  render: (row: T, index: number) => ReactNode;
 };
 
 interface DataTableProps<T> {

@@ -3,8 +3,8 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Building2, Landmark, Sparkles } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { Button } from "@/components/shared/Button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/shared/Dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 const PAYGLOCAL_FEE_PCT = 0.5;
 const GST_ON_FEE_PCT = 18;

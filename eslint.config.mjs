@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone Atlas app — use `npm run lint -w @payglocal/atlas-docs`
+    "apps/atlas-docs/**",
   ]),
 ]);
 

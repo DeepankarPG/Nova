@@ -12,7 +12,7 @@ import {
   Calendar,
   Facebook,
 } from "lucide-react";
-import { CurrencyAmountInput } from "@/components/shared/CurrencyAmountInput";
+import { CurrencyAmountInput } from "@/components/ui/currency-amount-input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { PaymentLink } from "./types";

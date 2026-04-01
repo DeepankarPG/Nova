@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
-import { CheckCircle2, Clock, PauseCircle, AlertTriangle, Download, RefreshCw } from "lucide-react";
-import { StatCard, type DrillDownData } from "@/components/dashboard/StatCard";
+import { CheckCircle2, Download, RefreshCw } from "lucide-react";
 import { RecentActivityTable } from "@/components/dashboard/RecentActivityTable";
+import { TodaysAnalyticsSection } from "@/components/dashboard/TodaysAnalyticsSection";
 import { PayGlocalAdvantageBanner } from "@/components/dashboard/PayGlocalAdvantageBanner";
 import { QuickAccess } from "@/components/dashboard/QuickAccess";
 import { InviteTeammateModal } from "@/components/dashboard/quick-actions/InviteTeammateModal";
@@ -17,7 +17,7 @@ import {
 } from "@/components/payment-links/CreatePaymentLinkModal";
 import type { PaymentLink } from "@/components/payment-links/types";
 import { ForexCalculatorModal } from "@/components/international-accounts/ForexCalculatorModal";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/ui/button";
 import { DashboardWidgetCustomization } from "@/components/dashboard/configurable/DashboardWidgetCustomization";
 import {
   DEFAULT_DASHBOARD_LAYOUT,
@@ -25,79 +25,13 @@ import {
   writeDashboardLayout,
   type WidgetId,
 } from "@/lib/dashboard-widget-catalog";
-import { dashboardStats, recentTransactions, recentSettlements } from "@/lib/mock-data";
+import { recentTransactions, recentSettlements } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 const ADMIN_NAME = "Deepankar";
 
 /** Illustrative INR per 1 USD for dashboard FX quick action (no MCA context). */
 const QUICK_FX_INR_PER_USD = 88.35;
-
-/* ─── Drill-down breakdown data for each stat card ───────────────────────── */
-const DRILL_DOWNS: Record<number, DrillDownData> = {
-  0: {
-    heading: "Payment breakdown",
-    period:  "Last 30 days",
-    items: [
-      { label: "UPI",             value: "₹3,81,262", pct: 45, color: "#0061E3" },
-      { label: "Debit / Credit",  value: "₹2,96,537", pct: 35, color: "#7c3aed" },
-      { label: "Net Banking",     value: "₹1,69,450", pct: 20, color: "#0891b2" },
-    ],
-    stats: [
-      { label: "Success rate", value: "94.2%" },
-      { label: "Avg. ticket",  value: "₹2,340" },
-      { label: "Transactions", value: "362"    },
-    ],
-    note: "Capture rate is above the industry average of 91%.",
-    cta:  "View all transactions",
-  },
-  1: {
-    heading: "Pending settlements",
-    period:  "Next 3 banking days",
-    items: [
-      { label: "HDFC ****4521",    value: "₹85,000", badge: "Mar 18",   badgeVariant: "blue"  },
-      { label: "Citibank ****2210", value: "$450",    badge: "Mar 19",   badgeVariant: "gray"  },
-      { label: "SBI ****7843",     value: "€280",    badge: "Mar 20",   badgeVariant: "gray"  },
-    ],
-    stats: [
-      { label: "Total pending", value: "₹1.24L" },
-      { label: "Next settle",   value: "Mar 18"  },
-    ],
-    note: "Auto-settles daily at 11:00 AM IST at mid-market FX rates.",
-    cta:  "View settlement schedule",
-  },
-  2: {
-    heading: "Funds on hold",
-    period:  "Current breakdown",
-    items: [
-      { label: "Risk review",    value: "₹24,500", badge: "~3 days",  badgeVariant: "amber" },
-      { label: "Compliance",     value: "₹18,200", badge: "~5 days",  badgeVariant: "amber" },
-      { label: "Active dispute", value: "₹9,640",  badge: "Pending",  badgeVariant: "red"   },
-    ],
-    stats: [
-      { label: "Avg. release", value: "4.1 days" },
-      { label: "Cases open",   value: "3"         },
-    ],
-    note: "Funds are released automatically once each review is resolved.",
-    cta:  "Contact support",
-  },
-  3: {
-    heading: "Dispute status",
-    period:  "Active cases",
-    items: [
-      { label: "Needs your response", value: "2 cases · ₹8,400", badge: "Act now",    badgeVariant: "red"   },
-      { label: "Under review",        value: "1 case  · ₹3,200", badge: "In review",  badgeVariant: "blue"  },
-      { label: "Deadline: Mar 19",    value: "1 case  · ₹2,600", badge: "2 days left",badgeVariant: "amber" },
-    ],
-    stats: [
-      { label: "Win rate",    value: "68%"    },
-      { label: "Avg resolve", value: "4.2d"   },
-      { label: "Total at risk", value: "₹14.2K" },
-    ],
-    note: "Respond before the deadline to maximise your chances of winning.",
-    cta:  "View all disputes",
-  },
-};
 
 function useGreeting() {
   return useMemo(() => {
@@ -209,7 +143,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-5">
+    <div className="max-w-[1400px] mx-auto space-y-4">
 
       {/* ── Page header + tab switcher ──────────────────────────────── */}
       <div className="flex flex-col gap-3">
@@ -269,67 +203,8 @@ export default function DashboardPage() {
 
       <PayGlocalAdvantageBanner />
 
-      {/* ── Stat cards ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard
-          title="Successful Payments"
-          value={dashboardStats.successfulPayments.value}
-          currency="INR"
-          change={dashboardStats.successfulPayments.change}
-          icon={CheckCircle2}
-          iconPreset="green"
-          isLoading={isLoading}
-          index={0}
-          action={{ label: "View All Transactions", onClick: () => {} }}
-          sparkline={[42, 55, 48, 60, 53, 70, 65, 78, 72, 88, 84, 95, 100]}
-          tooltip="Total value of all fully captured and settled payment transactions in the selected period."
-          drillDown={DRILL_DOWNS[0]}
-        />
-        <StatCard
-          title="Settlements Due"
-          value={dashboardStats.settlementsDue.value}
-          currency="INR"
-          change={dashboardStats.settlementsDue.change}
-          subtitle="Auto-settles everyday"
-          icon={Clock}
-          iconPreset="blue"
-          isLoading={isLoading}
-          index={1}
-          action={{ label: "View All Settlements", onClick: () => {} }}
-          sparkline={[80, 75, 82, 70, 74, 68, 72, 65, 70, 63, 68, 60, 58]}
-          tooltip="Funds collected from customers that are pending transfer to your bank account, processed at mid-market FX rates."
-          drillDown={DRILL_DOWNS[1]}
-        />
-        <StatCard
-          title="Funds on Hold"
-          value={dashboardStats.fundsOnHold.value}
-          currency="INR"
-          change={dashboardStats.fundsOnHold.change}
-          subtitle="No funds currently on hold"
-          icon={PauseCircle}
-          iconPreset="amber"
-          isLoading={isLoading}
-          index={2}
-          action={{ label: "Know More", onClick: () => {} }}
-          sparkline={[30, 35, 32, 38, 36, 42, 40, 45, 43, 50, 48, 52, 54]}
-          tooltip="Payments temporarily withheld due to risk reviews, compliance checks, or active dispute investigations."
-          drillDown={DRILL_DOWNS[2]}
-        />
-        <StatCard
-          title="Open Disputes"
-          value={dashboardStats.openDisputes.value}
-          currency="INR"
-          change={dashboardStats.openDisputes.change}
-          icon={AlertTriangle}
-          iconPreset="red"
-          isLoading={isLoading}
-          index={3}
-          action={{ label: "Know More", onClick: () => {} }}
-          sparkline={[10, 14, 12, 18, 15, 20, 16, 22, 18, 16, 14, 12, 10]}
-          tooltip="Total value of transactions currently under chargeback or dispute. Respond before the due date to protect your revenue."
-          drillDown={DRILL_DOWNS[3]}
-        />
-      </div>
+      {/* ── Today's analytics (replaces four KPI cards) ─────────────── */}
+      <TodaysAnalyticsSection isLoading={isLoading} />
 
       {/* ── Quick access + dashboard edit (Stripe-style) ───────────── */}
       <QuickAccess

@@ -1,11 +1,12 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
-  title: React.ReactNode;
+  title: ReactNode;
   /** When title is non-plain text (e.g. includes a flag), set for screen readers. */
   titleAriaLabel?: string;
   subtitle?: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
   className?: string;
 }
 

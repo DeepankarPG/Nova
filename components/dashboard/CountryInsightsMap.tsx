@@ -1,6 +1,6 @@
 "use client";
 
-import { Shimmer } from "@/components/shared/ShimmerSkeleton";
+import { Shimmer } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface CountryData {

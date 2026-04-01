@@ -3,10 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { Download, Search, CreditCard, Smartphone, Building2, X, CheckCircle2, AlertCircle, BarChart2, Receipt } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable, type Column } from "@/components/shared/DataTable";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Button } from "@/components/shared/Button";
+import { PageHeader } from "@/components/ui/page-header";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { cn, formatDate } from "@/lib/utils";
 import { allTransactions } from "@/lib/mock-data";

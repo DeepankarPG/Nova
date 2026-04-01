@@ -7,8 +7,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/components/shared/Dialog";
-import { Button } from "@/components/shared/Button";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 

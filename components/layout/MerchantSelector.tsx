@@ -7,23 +7,24 @@ import { cn } from "@/lib/utils";
 type AccountStatus = "active" | "inactive";
 
 interface MerchantData {
-  id:             string;
-  name:           string;
+  id: string;
+  name: string;
   activeProducts: { name: string; count: number; icon: "db" | "card" }[];
-  accounts:       { id: string; name: string; status: AccountStatus }[];
+  accounts: { id: string; mid: string; productName: string; status: AccountStatus }[];
 }
 
 const merchants: MerchantData[] = [
   {
-    id:   "mcatest123",
-    name: "mcatest123",
+    id: "swiggy",
+    name: "Swiggy",
     activeProducts: [
       { name: "Global Funds Transfer", count: 2, icon: "db"   },
       { name: "Card Payments",         count: 2, icon: "card" },
     ],
     accounts: [
-      { id: "bhavya",  name: "Bhavyaaaaa", status: "active"   },
-      { id: "google",  name: "Google",     status: "inactive" },
+      { id: "mid-instamart", mid: "MID-SWIG-INS-001", productName: "Instamart", status: "active" },
+      { id: "mid-dineout", mid: "MID-SWIG-DIN-002", productName: "Dineout", status: "active" },
+      { id: "mid-genie", mid: "MID-SWIG-GEN-003", productName: "Genie", status: "active" },
     ],
   },
   {
@@ -32,9 +33,7 @@ const merchants: MerchantData[] = [
     activeProducts: [
       { name: "Card Payments", count: 1, icon: "card" },
     ],
-    accounts: [
-      { id: "globetech", name: "GlobeTech", status: "active" },
-    ],
+    accounts: [{ id: "globetech", mid: "MID-GLB-001", productName: "GlobeTech Core", status: "active" }],
   },
 ];
 
@@ -60,8 +59,18 @@ function MerchantAvatar({ name, size = "sm" }: { name: string; size?: "sm" | "md
 
 export function MerchantSelector() {
   const [activeMerchant, setActiveMerchant] = useState(merchants[0]);
+  const [activeAccountId, setActiveAccountId] = useState(merchants[0].accounts[0]?.id ?? "");
   const [open, setOpen]   = useState(false);
   const ref               = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Keep a valid selected MID when merchant changes.
+    const exists = activeMerchant.accounts.some((a) => a.id === activeAccountId);
+    if (!exists) setActiveAccountId(activeMerchant.accounts[0]?.id ?? "");
+  }, [activeMerchant, activeAccountId]);
+
+  const activeAccount =
+    activeMerchant.accounts.find((a) => a.id === activeAccountId) ?? activeMerchant.accounts[0];
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -81,9 +90,9 @@ export function MerchantSelector() {
           open ? "bg-muted" : "hover:bg-muted"
         )}
       >
-        <MerchantAvatar name={activeMerchant.name} />
+        <MerchantAvatar name={activeAccount?.productName ?? activeMerchant.name} />
         <span className="text-[13px] font-semibold text-foreground max-w-[100px] truncate">
-          {activeMerchant.name}
+          {activeAccount?.productName ?? activeMerchant.name}
         </span>
         <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
@@ -100,8 +109,12 @@ export function MerchantSelector() {
               <div className="flex items-center gap-2.5">
                 <MerchantAvatar name={activeMerchant.name} size="md" />
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground leading-tight">{activeMerchant.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Merchant ID · {activeMerchant.id}</p>
+                  <p className="text-[13px] font-semibold text-foreground leading-tight">
+                    {activeAccount?.productName ?? activeMerchant.name}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {activeMerchant.name} · {activeAccount?.mid ?? activeMerchant.id}
+                  </p>
                 </div>
               </div>
               {merchants.length > 1 && (
@@ -150,31 +163,44 @@ export function MerchantSelector() {
               </div>
             </div>
 
-            {/* Accounts */}
+            {/* MID accounts */}
             <div className="px-3 py-3">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-1.5">
-                Accounts
+                MIDs
               </p>
               <div className="space-y-0.5">
                 {activeMerchant.accounts.map((a) => (
-                  <div
+                  <button
                     key={a.id}
-                    className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/80 transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      setActiveAccountId(a.id);
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/80 transition-colors text-left",
+                      activeAccount?.id === a.id && "bg-muted/70"
+                    )}
                   >
                     <div
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ background: a.status === "active" ? "#22c55e" : "var(--muted-foreground)" }}
                     />
-                    <span className="flex-1 text-[12.5px] font-medium text-foreground">{a.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] font-medium text-foreground truncate">{a.productName}</p>
+                      <p className="text-[10.5px] text-muted-foreground truncate">{a.mid}</p>
+                    </div>
                     <span
                       className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
-                      style={a.status === "active"
+                      style={activeAccount?.id === a.id
+                        ? { background: "#e0ecff", color: "#1d4ed8" }
+                        : a.status === "active"
                         ? { background: "#f0fdf4", color: "#16a34a" }
                         : { background: "#f9fafb", color: "#9ca3af" }}
                     >
-                      {a.status === "active" ? "Active" : "Inactive"}
+                      {activeAccount?.id === a.id ? "Selected" : a.status === "active" ? "Active" : "Inactive"}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

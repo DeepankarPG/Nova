@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +17,17 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { navigation, type NavItem } from "@/lib/navigation";
+import { useProfileAvatar } from "@/hooks/useProfileAvatar";
+
+const SIDEBAR_USER_NAME = "Deepankar Raj";
+
+function profileInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0]![0] + parts[parts.length - 1]![0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
 /* ── Expandable nav item with branch-line children ───────────────────────── */
 function ExpandableItem({
@@ -70,7 +81,7 @@ function ExpandableItem({
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <div className="ml-[18px] mt-0.5 mb-1 pl-3 border-l-2 border-border">
+            <div className="ml-[18px] mt-0.5 mb-1 pl-3 border-l-2 border-sidebar-border/90">
               {item.children!.map((child) => {
                 const isChildActive = pathname === child.href || pathname.startsWith(child.href + "/");
                 return (
@@ -81,11 +92,11 @@ function ExpandableItem({
                     className={cn(
                       "relative flex items-center py-1.5 pl-1 pr-2 text-[13px] rounded-md transition-colors duration-100",
                       isChildActive
-                        ? "text-foreground font-semibold"
-                        : "text-muted-foreground font-normal hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "bg-card text-foreground font-semibold shadow-sm ring-1 ring-border/70"
+                        : "text-sidebar-foreground/95 font-medium hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
                     )}
                   >
-                    <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-px bg-border" />
+                    <span className="absolute -left-3 top-1/2 -translate-y-1/2 h-px w-2 bg-sidebar-border/90" />
                     {child.label}
                   </Link>
                 );
@@ -103,6 +114,8 @@ function SidebarBody({
   collapsed, pathname, onNavClick,
 }: { collapsed: boolean; pathname: string; onNavClick?: () => void }) {
   const router = useRouter();
+  const { avatarUrl, setFromFile } = useProfileAvatar();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <>
@@ -174,20 +187,49 @@ function SidebarBody({
 
       {/* Profile */}
       <div className="px-2.5 py-2.5 flex-shrink-0 border-t border-sidebar-border">
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            void setFromFile(file)
+              .then(() => toast.success("Profile photo updated"))
+              .catch(() => toast.error("Could not use that image. Try a JPG or PNG."));
+          }}
+        />
         <div
           className={cn(
             "flex gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-black/5 dark:hover:bg-white/5",
-            collapsed ? "flex-col items-center justify-center gap-1" : "cursor-pointer items-center"
+            collapsed ? "flex-col items-center justify-center gap-1" : "items-center"
           )}
         >
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted-foreground">
-            <span className="text-background text-[11px] font-bold">N</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            className={cn(
+              "relative flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full",
+              "ring-2 ring-transparent transition-[box-shadow] hover:ring-primary/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            )}
+            aria-label="Change profile photo"
+            title="Change profile photo"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile photo" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center bg-muted-foreground text-[11px] font-bold text-background">
+                {profileInitials(SIDEBAR_USER_NAME)}
+              </span>
+            )}
+          </button>
           {!collapsed ? (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-foreground text-[13px] font-medium truncate leading-tight">Deepankar Raj</p>
-                <p className="text-muted-foreground text-[11px]">Admin</p>
+                <p className="text-[13px] font-medium leading-tight text-foreground truncate">{SIDEBAR_USER_NAME}</p>
+                <p className="text-[11px] text-muted-foreground">Admin</p>
               </div>
               <div className="flex items-center gap-0.5 flex-shrink-0">
                 <Link
