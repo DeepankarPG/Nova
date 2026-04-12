@@ -4,6 +4,7 @@ export const QUICK_ACTION_IDS = [
   "invite-teammate",
   "fx-calculator",
   "international-accounts",
+  "manage-dispute",
 ] as const;
 
 export type QuickActionId = (typeof QUICK_ACTION_IDS)[number];

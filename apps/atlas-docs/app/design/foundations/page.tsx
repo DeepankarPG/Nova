@@ -52,6 +52,26 @@ export default function DesignFoundationsPage() {
         </div>
       </section>
 
+      <section id="spacing" className="scroll-mt-20 space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">Spacing</h2>
+        <p className="text-sm text-muted-foreground">
+          Use Tailwind spacing scale for layout rhythm: <code className="font-mono text-xs">p-3</code>–
+          <code className="font-mono text-xs">p-6</code> for card insets, <code className="font-mono text-xs">gap-3</code>/
+          <code className="font-mono text-xs">gap-4</code> for grids and stacks, <code className="font-mono text-xs">space-y-4</code>{" "}
+          for vertical lists. Prefer consistent steps within a screen rather than arbitrary pixel values.
+        </p>
+      </section>
+
+      <section id="elevation" className="scroll-mt-20 space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">Elevation</h2>
+        <p className="text-sm text-muted-foreground">
+          Default surfaces combine <code className="font-mono text-xs">border border-border</code> with{" "}
+          <code className="font-mono text-xs">shadow-sm</code> on cards. Modals and dialogs use stronger shadow (
+          <code className="font-mono text-xs">shadow-lg</code> / <code className="font-mono text-xs">shadow-2xl</code>) and{" "}
+          <code className="font-mono text-xs">bg-card</code> or <code className="font-mono text-xs">bg-popover</code> as appropriate.
+        </p>
+      </section>
+
       <section id="typography" className="scroll-mt-20 space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Typography</h2>
         <div className="rounded-xl border border-border bg-card p-4 text-sm">

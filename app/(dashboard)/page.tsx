@@ -10,6 +10,7 @@ import { PayGlocalAdvantageBanner } from "@/components/dashboard/PayGlocalAdvant
 import { QuickAccess } from "@/components/dashboard/QuickAccess";
 import { InviteTeammateModal } from "@/components/dashboard/quick-actions/InviteTeammateModal";
 import { InternationalAccountsQuickModal } from "@/components/dashboard/quick-actions/InternationalAccountsQuickModal";
+import { DisputeManagementQuickModal } from "@/components/dashboard/quick-actions/DisputeManagementQuickModal";
 import type { QuickActionId } from "@/components/dashboard/quick-actions/types";
 import {
   CreatePaymentLinkModal,
@@ -75,6 +76,7 @@ export default function DashboardPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [fxOpen, setFxOpen] = useState(false);
   const [intlAccountsOpen, setIntlAccountsOpen] = useState(false);
+  const [disputeOverviewOpen, setDisputeOverviewOpen] = useState(false);
   const { greeting } = useGreeting();
   const contextLine = useContextLine();
 
@@ -94,6 +96,9 @@ export default function DashboardPage() {
         break;
       case "international-accounts":
         setIntlAccountsOpen(true);
+        break;
+      case "manage-dispute":
+        setDisputeOverviewOpen(true);
         break;
       default:
         break;
@@ -240,6 +245,7 @@ export default function DashboardPage() {
         flag="🇺🇸"
       />
       <InternationalAccountsQuickModal open={intlAccountsOpen} onOpenChange={setIntlAccountsOpen} />
+      <DisputeManagementQuickModal open={disputeOverviewOpen} onOpenChange={setDisputeOverviewOpen} />
 
       {/* ── Configurable charts & insights ─────────────────────────── */}
       <DashboardWidgetCustomization

@@ -15,8 +15,10 @@ export default function DesignComponentsCatalogPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Atlas</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Components</h1>
         <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
-          Here you can find components that have dedicated doc pages. We are adding more over time. For coverage, status,
-          and gaps vs{" "}
+          Here you can find components that have dedicated doc pages. Inventory items are either{" "}
+          <strong className="font-medium text-foreground">available</strong> (tokens,{" "}
+          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">@payglocal/ui</code>, or documented product
+          patterns) or <strong className="font-medium text-foreground">backlog</strong> (not scheduled). Compare with{" "}
           <a
             href="https://ui.shadcn.com/docs/components"
             className="font-medium text-primary underline-offset-4 hover:underline"

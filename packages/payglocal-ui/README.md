@@ -33,7 +33,7 @@ Copy or align CSS variables with your app. This library expects semantic tokens 
 - `--destructive`, `--destructive-foreground`, `--radius`
 - `--chart-1` … `--chart-5` (for charts)
 
-See the PayGlocal app `app/globals.css` for a full reference.
+See **`design-system/payglocal-theme.css`** in this monorepo (imported by `app/globals.css`) for the canonical variable list, including sidebar, header, chart chrome, and motion tokens.
 
 ## Usage
 

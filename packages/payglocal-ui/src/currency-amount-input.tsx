@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "./utils";
 
 const CURRENCIES = ["USD", "INR", "EUR", "GBP", "SGD", "AED", "JPY"];
 
@@ -28,14 +29,19 @@ export function CurrencyAmountInput({
   id,
 }: CurrencyAmountInputProps) {
   return (
-    <div className="flex items-center h-10 rounded-xl border border-border bg-card overflow-hidden transition-all focus-within:border-muted-foreground/50 focus-within:ring-2 focus-within:ring-ring/20">
-      <div className="relative flex items-center gap-1 pl-3 pr-3 border-r border-border flex-shrink-0 h-full bg-muted/40">
+    <div className="flex h-12 min-h-12 items-stretch overflow-hidden rounded-xl border border-border bg-card text-[15px] transition-all focus-within:border-muted-foreground/50 focus-within:ring-2 focus-within:ring-ring/20">
+      <div className="relative flex min-w-[5.25rem] shrink-0 items-center border-r border-border bg-muted/25 px-3">
         <select
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value)}
           disabled={disabled}
           aria-label="Currency"
-          className="appearance-none text-[13px] font-semibold text-foreground bg-transparent focus:outline-none cursor-pointer pr-4 h-full"
+          className={cn(
+            "h-full min-h-0 w-full min-w-0 cursor-pointer bg-transparent py-2 pl-1 pr-9 text-[15px] font-semibold text-foreground",
+            "focus:outline-none disabled:opacity-50",
+            "appearance-none [-webkit-appearance:none] [-moz-appearance:none]",
+            "[&::-ms-expand]:hidden"
+          )}
         >
           {currencies.map((c) => (
             <option key={c} value={c}>
@@ -43,7 +49,10 @@ export function CurrencyAmountInput({
             </option>
           ))}
         </select>
-        <ChevronsUpDown className="absolute right-2 pointer-events-none w-3 h-3 text-muted-foreground" />
+        <ChevronDown
+          className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground opacity-80"
+          aria-hidden
+        />
       </div>
 
       <input
@@ -56,7 +65,7 @@ export function CurrencyAmountInput({
         required={required}
         min="0"
         step="0.01"
-        className="flex-1 h-full px-3 text-[13px] text-foreground placeholder:text-muted-foreground bg-transparent focus:outline-none disabled:opacity-50"
+        className="min-h-0 min-w-0 flex-1 bg-transparent px-4 py-3 text-[15px] tabular-nums text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
       />
     </div>
   );

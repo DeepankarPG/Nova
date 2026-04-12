@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, SearchX, X } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   CATEGORY_ORDER,
@@ -195,22 +196,14 @@ export function WidgetLibraryModal({
           )}
         </div>
 
-        <div className="shrink-0 border-t border-border bg-card px-6 py-4">
+        <div className="shrink-0 border-t border-border bg-card px-5 py-3.5">
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
-              onClick={handleCancel}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
               Cancel
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
-              onClick={handleApply}
-            >
+            </Button>
+            <Button type="button" variant="primary" size="sm" onClick={handleApply}>
               Apply
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>

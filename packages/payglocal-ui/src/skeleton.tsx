@@ -23,11 +23,39 @@ export function StatCardSkeleton() {
   );
 }
 
-export function TableRowSkeleton({ cols = 6 }: { cols?: number }) {
+export function TableRowSkeleton({
+  cols = 6,
+  comfortable = false,
+  density: densityProp,
+  snug = false,
+}: {
+  cols?: number;
+  /** @deprecated prefer `density` */
+  comfortable?: boolean;
+  density?: "default" | "comfortable" | "compact";
+  snug?: boolean;
+}) {
+  const density =
+    densityProp ??
+    (comfortable ? "comfortable" : "default");
+  const cellPad =
+    density === "comfortable"
+      ? "px-5 py-4"
+      : density === "compact"
+        ? snug
+          ? "pl-1.5 pr-2.5 py-2.5"
+          : "px-3 py-2.5"
+        : "px-4 py-3.5";
   return (
-    <tr className="border-b border-border/60">
+    <tr
+      className={cn(
+        "border-b border-border/60",
+        density === "comfortable" && "min-h-[56px]",
+        density === "compact" && "min-h-[44px]"
+      )}
+    >
       {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-4 py-3.5">
+        <td key={i} className={cellPad}>
           <Shimmer className={cn("h-3.5", i === 0 ? "w-20" : i === cols - 1 ? "w-14" : "w-28")} />
         </td>
       ))}

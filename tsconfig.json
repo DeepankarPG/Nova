@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "apps/atlas-docs"]
+  "exclude": ["node_modules", "apps/atlas-docs", "apps/payglocal-ui-docs"]
 }

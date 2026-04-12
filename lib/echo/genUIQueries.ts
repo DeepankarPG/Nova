@@ -1,0 +1,678 @@
+import type { DashboardSpec } from "./genUITypes";
+
+export type GenUIQuery = {
+  prompt: string;
+  spec: DashboardSpec;
+};
+
+/** Eight curated prompt-to-spec pairs used for demo / quick-action chips. */
+export const GEN_UI_QUERIES: GenUIQuery[] = [
+  {
+    prompt:
+      "Show last 6 months domestic vs international split with payment mode distribution",
+    spec: {
+      id: "dom-intl-split-6m",
+      title: "Domestic vs International — Last 6 Months",
+      summary:
+        "Domestic traffic dominated at 67% of gross volume, while international volume grew 18% MoM driven by the US and Ireland corridors. UPI leads domestic payment modes; cards account for 78% of international volume.",
+      cards: [
+        {
+          type: "metric",
+          id: "gross-vol",
+          title: "Gross Volume (6M)",
+          value: "₹54.8L",
+          change: 14.1,
+          changeLabel: "vs prior 6M",
+          sparkline: [620, 740, 810, 950, 720, 1020],
+        },
+        {
+          type: "metric",
+          id: "intl-vol",
+          title: "International Volume",
+          value: "₹18.0L",
+          subValue: "33% of total",
+          change: 18.2,
+          changeLabel: "MoM growth",
+          sparkline: [180, 215, 238, 290, 241, 330],
+        },
+        {
+          type: "metric",
+          id: "dom-vol",
+          title: "Domestic Volume",
+          value: "₹36.8L",
+          subValue: "67% of total",
+          change: 11.4,
+          changeLabel: "vs prior 6M",
+          sparkline: [440, 525, 572, 660, 479, 690],
+        },
+        {
+          type: "donut",
+          id: "dom-intl-donut",
+          title: "Volume Split",
+          subtitle: "Domestic vs International",
+          centerLabel: "6 Months",
+          segments: [
+            { key: "domestic", label: "Domestic", value: 67, colorVar: "--chart-1" },
+            { key: "international", label: "International", value: 33, colorVar: "--chart-2" },
+          ],
+        },
+        {
+          type: "bar",
+          id: "monthly-dom-intl",
+          title: "Monthly Volume Trend",
+          subtitle: "Domestic vs International (₹ Lakhs)",
+          bars: [
+            { dataKey: "domestic", label: "Domestic", colorVar: "--chart-1" },
+            { dataKey: "international", label: "International", colorVar: "--chart-2" },
+          ],
+          data: [
+            { month: "Oct", domestic: 5.25, international: 2.1 },
+            { month: "Nov", domestic: 5.72, international: 2.38 },
+            { month: "Dec", domestic: 6.60, international: 2.90 },
+            { month: "Jan", domestic: 4.79, international: 2.41 },
+            { month: "Feb", domestic: 5.82, international: 2.98 },
+            { month: "Mar", domestic: 6.90, international: 3.30 },
+          ],
+          xKey: "month",
+          stacked: false,
+        },
+        {
+          type: "donut",
+          id: "pay-mode-donut",
+          title: "Payment Mode Distribution",
+          subtitle: "All transactions",
+          segments: [
+            { key: "upi", label: "UPI", value: 44, colorVar: "--chart-1" },
+            { key: "card", label: "Card", value: 33, colorVar: "--chart-2" },
+            { key: "netbanking", label: "Net Banking", value: 16, colorVar: "--chart-3" },
+            { key: "wallet", label: "Wallet", value: 7, colorVar: "--chart-4" },
+          ],
+        },
+        {
+          type: "table",
+          id: "top-corridors",
+          title: "Top International Corridors",
+          columns: [
+            { key: "country", label: "Country", align: "left" },
+            { key: "volume", label: "Volume (₹)", align: "right" },
+            { key: "share", label: "Share", align: "right" },
+          ],
+          rows: [
+            { country: "🇺🇸 United States", volume: "₹7.4L", share: "41%" },
+            { country: "🇮🇪 Ireland", volume: "₹3.3L", share: "18%" },
+            { country: "🇬🇧 United Kingdom", volume: "₹1.8L", share: "10%" },
+            { country: "🇨🇦 Canada", volume: "₹1.2L", share: "7%" },
+            { country: "🇸🇬 Singapore", volume: "₹0.9L", share: "5%" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Compare this month's success rate to the previous 3 months",
+    spec: {
+      id: "success-rate-3m",
+      title: "Payment Success Rate — Last 4 Months",
+      summary:
+        "March recorded a 94.2% success rate — a 1.8 pp improvement over December's dip to 92.4%. The main driver was a 34% reduction in OTP/3DS timeouts following the payment provider routing update.",
+      cards: [
+        {
+          type: "metric",
+          id: "this-month-sr",
+          title: "Success Rate (Mar)",
+          value: "94.2%",
+          change: 1.8,
+          changeLabel: "vs Dec",
+          sparkline: [92.4, 93.1, 93.8, 94.2],
+        },
+        {
+          type: "metric",
+          id: "attempted",
+          title: "Total Attempts (Mar)",
+          value: "1,362",
+          change: 13.7,
+          changeLabel: "vs Feb",
+          sparkline: [1089, 1148, 1198, 1362],
+        },
+        {
+          type: "metric",
+          id: "failed",
+          title: "Failed Payments (Mar)",
+          value: "78",
+          change: -12,
+          changeLabel: "vs Feb",
+          sparkline: [98, 87, 88, 78],
+        },
+        {
+          type: "line",
+          id: "sr-trend",
+          title: "Success Rate Trend",
+          subtitle: "Monthly %",
+          dataKey: "rate",
+          data: [
+            { month: "Dec", rate: 92.4 },
+            { month: "Jan", rate: 93.1 },
+            { month: "Feb", rate: 93.8 },
+            { month: "Mar", rate: 94.2 },
+          ],
+          xKey: "month",
+          colorVar: "--chart-1",
+        },
+        {
+          type: "bar",
+          id: "outcome-breakdown",
+          title: "Transaction Outcome Breakdown",
+          bars: [
+            { dataKey: "succeeded", label: "Succeeded", colorVar: "--chart-1" },
+            { dataKey: "failed", label: "Failed", colorVar: "--chart-5" },
+          ],
+          data: [
+            { month: "Dec", succeeded: 1005, failed: 84 },
+            { month: "Jan", succeeded: 1061, failed: 87 },
+            { month: "Feb", succeeded: 1110, failed: 88 },
+            { month: "Mar", succeeded: 1284, failed: 78 },
+          ],
+          xKey: "month",
+        },
+        {
+          type: "table",
+          id: "top-failures",
+          title: "Top Failure Reasons",
+          columns: [
+            { key: "reason", label: "Reason", align: "left" },
+            { key: "count", label: "Count", align: "right" },
+            { key: "share", label: "Share", align: "right" },
+          ],
+          rows: [
+            { reason: "Insufficient funds", count: 38, share: "49%" },
+            { reason: "OTP / 3DS timeout", count: 24, share: "31%" },
+            { reason: "Card expired / blocked", count: 9, share: "12%" },
+            { reason: "Network error", count: 7, share: "9%" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Top 5 decline reasons this quarter with trend",
+    spec: {
+      id: "decline-reasons-q",
+      title: "Top Decline Reasons — Q1 2025",
+      summary:
+        "Insufficient funds remains the leading decline reason at 31%, followed by OTP/3DS timeouts at 19%. Card-expired declines fell 22% after a customer proactive card-renewal nudge was deployed in February.",
+      cards: [
+        {
+          type: "metric",
+          id: "total-declines",
+          title: "Total Declines (Q1)",
+          value: "254",
+          change: -8.3,
+          changeLabel: "vs Q4 2024",
+          sparkline: [98, 87, 88, 78],
+        },
+        {
+          type: "metric",
+          id: "decline-rate",
+          title: "Decline Rate",
+          value: "5.8%",
+          change: -1.2,
+          changeLabel: "pp vs Q4",
+          sparkline: [7.6, 7.1, 6.2, 5.8],
+        },
+        {
+          type: "bar",
+          id: "reasons-bar",
+          title: "Decline Reasons by Month",
+          subtitle: "Count",
+          bars: [
+            { dataKey: "funds", label: "Insufficient funds", colorVar: "--chart-1" },
+            { dataKey: "otp", label: "OTP / 3DS timeout", colorVar: "--chart-2" },
+            { dataKey: "expired", label: "Card expired", colorVar: "--chart-3" },
+            { dataKey: "network", label: "Network error", colorVar: "--chart-4" },
+            { dataKey: "other", label: "Other", colorVar: "--chart-5" },
+          ],
+          data: [
+            { month: "Jan", funds: 42, otp: 28, expired: 14, network: 8, other: 6 },
+            { month: "Feb", funds: 39, otp: 25, expired: 11, network: 9, other: 5 },
+            { month: "Mar", funds: 38, otp: 24, expired: 9, network: 7, other: 4 },
+          ],
+          xKey: "month",
+          stacked: true,
+        },
+        {
+          type: "donut",
+          id: "decline-donut",
+          title: "Decline Mix (Q1)",
+          segments: [
+            { key: "funds", label: "Insufficient funds", value: 31, colorVar: "--chart-1" },
+            { key: "otp", label: "OTP / 3DS timeout", value: 19, colorVar: "--chart-2" },
+            { key: "expired", label: "Card expired", value: 13, colorVar: "--chart-3" },
+            { key: "network", label: "Network error", value: 9, colorVar: "--chart-4" },
+            { key: "other", label: "Other", value: 28, colorVar: "--chart-5" },
+          ],
+        },
+        {
+          type: "line",
+          id: "decline-trend",
+          title: "Weekly Decline Rate Trend",
+          dataKey: "rate",
+          data: [
+            { week: "W1", rate: 7.6 },
+            { week: "W2", rate: 7.1 },
+            { week: "W3", rate: 7.4 },
+            { week: "W4", rate: 6.8 },
+            { week: "W5", rate: 6.2 },
+            { week: "W6", rate: 6.5 },
+            { week: "W7", rate: 5.9 },
+            { week: "W8", rate: 5.8 },
+          ],
+          xKey: "week",
+          colorVar: "--chart-5",
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Settlement cycle analysis — average days to payout",
+    spec: {
+      id: "settlement-cycle",
+      title: "Settlement Cycle Analysis",
+      summary:
+        "54% of settlements clear in T+1, with T+0 same-day settlements growing to 28% after the November rail upgrade. Average payout time is 1.1 working days — down from 1.5 days in Q3 2024.",
+      cards: [
+        {
+          type: "metric",
+          id: "avg-days",
+          title: "Avg Settlement Days",
+          value: "1.1 days",
+          change: -27,
+          changeLabel: "vs Q3 2024",
+          sparkline: [1.5, 1.4, 1.3, 1.2, 1.1],
+        },
+        {
+          type: "metric",
+          id: "settled-amount",
+          title: "Settled This Month",
+          value: "₹9.6L",
+          change: 11.8,
+          changeLabel: "vs last month",
+          sparkline: [7.5, 7.9, 8.2, 8.8, 9.6],
+        },
+        {
+          type: "metric",
+          id: "on-hold",
+          title: "Funds on Hold",
+          value: "₹52,340",
+          subValue: "7 transactions",
+          change: 2.1,
+          changeLabel: "vs last week",
+        },
+        {
+          type: "donut",
+          id: "settlement-speed",
+          title: "Settlement Speed Distribution",
+          segments: [
+            { key: "t0", label: "T+0", value: 28, colorVar: "--chart-1" },
+            { key: "t1", label: "T+1", value: 54, colorVar: "--chart-2" },
+            { key: "t2", label: "T+2", value: 14, colorVar: "--chart-3" },
+            { key: "t3plus", label: "T+3+", value: 4, colorVar: "--chart-4" },
+          ],
+          centerLabel: "4 buckets",
+        },
+        {
+          type: "bar",
+          id: "monthly-settlements",
+          title: "Monthly Settlement Volume",
+          subtitle: "₹ Lakhs — settled vs pending",
+          bars: [
+            { dataKey: "settled", label: "Settled", colorVar: "--chart-1" },
+            { dataKey: "pending", label: "Pending", colorVar: "--chart-4" },
+          ],
+          data: [
+            { month: "Oct", settled: 5.8, pending: 0.9 },
+            { month: "Nov", settled: 6.9, pending: 0.8 },
+            { month: "Dec", settled: 7.6, pending: 1.2 },
+            { month: "Jan", settled: 6.7, pending: 0.7 },
+            { month: "Feb", settled: 8.2, pending: 0.6 },
+            { month: "Mar", settled: 9.6, pending: 0.5 },
+          ],
+          xKey: "month",
+        },
+        {
+          type: "split",
+          id: "utr-split",
+          title: "Bank-wise Settlement Split",
+          total: "₹9.6L total",
+          segments: [
+            { label: "HDFC Bank", value: 38, colorVar: "--chart-1" },
+            { label: "ICICI Bank", value: 29, colorVar: "--chart-2" },
+            { label: "SBI", value: 21, colorVar: "--chart-3" },
+            { label: "Others", value: 12, colorVar: "--chart-4" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Country-wise revenue breakdown with top markets",
+    spec: {
+      id: "country-revenue",
+      title: "Country-Wise Revenue Breakdown",
+      summary:
+        "The US remains the top international revenue market at ₹4.1L (41%), while Ireland grew 28% QoQ driven by increased SaaS subscription payments. 7 markets collectively contribute ₹8.34L in international revenue.",
+      cards: [
+        {
+          type: "metric",
+          id: "intl-total",
+          title: "Total International Revenue",
+          value: "₹8.34L",
+          change: 22.4,
+          changeLabel: "vs last quarter",
+          sparkline: [180, 215, 238, 290, 310, 340],
+        },
+        {
+          type: "metric",
+          id: "top-market",
+          title: "Top Market",
+          value: "🇺🇸 United States",
+          subValue: "₹4.10L (41%)",
+          change: 14.2,
+          changeLabel: "vs last quarter",
+        },
+        {
+          type: "metric",
+          id: "fastest-growing",
+          title: "Fastest Growing Market",
+          value: "🇮🇪 Ireland",
+          subValue: "+28% QoQ",
+          change: 28,
+          changeLabel: "QoQ growth",
+        },
+        {
+          type: "bar",
+          id: "country-bar",
+          title: "Revenue by Country",
+          subtitle: "₹ (thousands)",
+          bars: [{ dataKey: "revenue", label: "Revenue", colorVar: "--chart-1" }],
+          data: [
+            { country: "US", revenue: 410196 },
+            { country: "IE", revenue: 183635 },
+            { country: "GB", revenue: 97420 },
+            { country: "CA", revenue: 64800 },
+            { country: "QA", revenue: 32100 },
+            { country: "SG", revenue: 28900 },
+            { country: "DE", revenue: 17400 },
+          ],
+          xKey: "country",
+        },
+        {
+          type: "donut",
+          id: "country-mix",
+          title: "Market Share by Country",
+          segments: [
+            { key: "us", label: "United States", value: 41, colorVar: "--chart-1" },
+            { key: "ie", label: "Ireland", value: 18, colorVar: "--chart-2" },
+            { key: "gb", label: "United Kingdom", value: 10, colorVar: "--chart-3" },
+            { key: "ca", label: "Canada", value: 7, colorVar: "--chart-4" },
+            { key: "other", label: "Other", value: 24, colorVar: "--chart-5" },
+          ],
+        },
+        {
+          type: "table",
+          id: "country-table",
+          title: "All Markets",
+          columns: [
+            { key: "country", label: "Country", align: "left" },
+            { key: "revenue", label: "Revenue", align: "right" },
+            { key: "transactions", label: "Txns", align: "right" },
+            { key: "share", label: "Share", align: "right" },
+          ],
+          rows: [
+            { country: "🇺🇸 United States", revenue: "₹4.10L", transactions: 142, share: "41%" },
+            { country: "🇮🇪 Ireland", revenue: "₹1.84L", transactions: 68, share: "18%" },
+            { country: "🇬🇧 United Kingdom", revenue: "₹0.97L", transactions: 44, share: "10%" },
+            { country: "🇨🇦 Canada", revenue: "₹0.65L", transactions: 31, share: "7%" },
+            { country: "🇶🇦 Qatar", revenue: "₹0.32L", transactions: 12, share: "3%" },
+            { country: "🇸🇬 Singapore", revenue: "₹0.29L", transactions: 19, share: "3%" },
+            { country: "🇩🇪 Germany", revenue: "₹0.17L", transactions: 9, share: "2%" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "UPI vs card volume weekly trend for the last 90 days",
+    spec: {
+      id: "upi-card-90d",
+      title: "UPI vs Card Volume — Last 90 Days",
+      summary:
+        "UPI volume has grown steadily over the 90-day window, now accounting for 46% of total transactions. Card volume remains strong at 31%, with credit cards outpacing debit for the first time this quarter.",
+      cards: [
+        {
+          type: "metric",
+          id: "upi-total",
+          title: "UPI Volume (90D)",
+          value: "₹19.9L",
+          change: 16.8,
+          changeLabel: "vs prior 90D",
+          sparkline: [420, 465, 510, 548, 572, 601, 632],
+        },
+        {
+          type: "metric",
+          id: "card-total",
+          title: "Card Volume (90D)",
+          value: "₹13.4L",
+          change: 8.2,
+          changeLabel: "vs prior 90D",
+          sparkline: [280, 265, 248, 239, 252, 261, 270],
+        },
+        {
+          type: "metric",
+          id: "upi-share",
+          title: "UPI Market Share",
+          value: "46%",
+          change: 3.2,
+          changeLabel: "pp vs prior 90D",
+          sparkline: [42, 43, 44, 44, 45, 45, 46],
+        },
+        {
+          type: "line",
+          id: "upi-card-trend",
+          title: "Weekly UPI vs Card Volume",
+          subtitle: "₹ Lakhs",
+          dataKey: "upi",
+          compareKey: "card",
+          compareLabel: "Card",
+          data: [
+            { week: "W1", upi: 4.2, card: 2.8 },
+            { week: "W2", upi: 4.65, card: 2.65 },
+            { week: "W3", upi: 5.1, card: 2.48 },
+            { week: "W4", upi: 5.48, card: 2.39 },
+            { week: "W5", upi: 5.72, card: 2.52 },
+            { week: "W6", upi: 6.01, card: 2.61 },
+            { week: "W7", upi: 6.32, card: 2.70 },
+          ],
+          xKey: "week",
+          colorVar: "--chart-1",
+        },
+        {
+          type: "donut",
+          id: "payment-mode-90d",
+          title: "Payment Mode Mix (90D)",
+          segments: [
+            { key: "upi", label: "UPI", value: 46, colorVar: "--chart-1" },
+            { key: "credit", label: "Credit Card", value: 18, colorVar: "--chart-2" },
+            { key: "debit", label: "Debit Card", value: 13, colorVar: "--chart-3" },
+            { key: "netbanking", label: "Net Banking", value: 16, colorVar: "--chart-4" },
+            { key: "other", label: "Other", value: 7, colorVar: "--chart-5" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Chargeback rate by payment method last quarter",
+    spec: {
+      id: "chargeback-q",
+      title: "Chargeback Rate by Payment Method — Q1 2025",
+      summary:
+        "Overall chargeback rate was 0.6% in Q1, below the 0.8% threshold. Cards have the highest absolute chargeback count but UPI fraud attempts rose 14% — primarily for high-value transactions above ₹50,000.",
+      cards: [
+        {
+          type: "metric",
+          id: "cb-rate",
+          title: "Overall Chargeback Rate",
+          value: "0.6%",
+          change: -0.2,
+          changeLabel: "pp vs Q4",
+          sparkline: [0.9, 0.8, 0.7, 0.6],
+        },
+        {
+          type: "metric",
+          id: "cb-amount",
+          title: "Total Disputed Amount",
+          value: "₹14,200",
+          subValue: "4 open cases",
+          change: -18,
+          changeLabel: "vs Q4",
+        },
+        {
+          type: "metric",
+          id: "win-rate",
+          title: "Dispute Win Rate",
+          value: "72%",
+          change: 5,
+          changeLabel: "vs Q4",
+          sparkline: [60, 65, 68, 72],
+        },
+        {
+          type: "bar",
+          id: "cb-by-method",
+          title: "Chargebacks by Payment Method",
+          subtitle: "Count per month",
+          bars: [
+            { dataKey: "card", label: "Card", colorVar: "--chart-1" },
+            { dataKey: "upi", label: "UPI", colorVar: "--chart-2" },
+            { dataKey: "netbanking", label: "Net Banking", colorVar: "--chart-3" },
+          ],
+          data: [
+            { month: "Jan", card: 6, upi: 2, netbanking: 1 },
+            { month: "Feb", card: 5, upi: 3, netbanking: 1 },
+            { month: "Mar", card: 4, upi: 3, netbanking: 0 },
+          ],
+          xKey: "month",
+          stacked: true,
+        },
+        {
+          type: "split",
+          id: "cb-split",
+          title: "Dispute Source Split",
+          total: "25 total disputes",
+          segments: [
+            { label: "Card", value: 60, colorVar: "--chart-1" },
+            { label: "UPI", value: 32, colorVar: "--chart-2" },
+            { label: "Net Banking", value: 8, colorVar: "--chart-3" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    prompt: "Hourly transaction heatmap for peak volume windows",
+    spec: {
+      id: "hourly-heatmap",
+      title: "Hourly Transaction Volume — Today vs Yesterday",
+      summary:
+        "Peak volume occurs between 16:00–20:00 IST, accounting for 42% of daily transactions. The 14:00 hour saw the highest single-hour gross volume at ₹5.2L. Early morning (00:00–06:00) accounts for only 4% of daily volume.",
+      cards: [
+        {
+          type: "metric",
+          id: "peak-hour",
+          title: "Peak Hour",
+          value: "14:00–16:00 IST",
+          subValue: "₹5.2L volume",
+          change: 15.5,
+          changeLabel: "vs yesterday",
+        },
+        {
+          type: "metric",
+          id: "daily-total",
+          title: "Today's Total",
+          value: "₹9.43L",
+          change: 14.1,
+          changeLabel: "vs yesterday",
+          sparkline: [0.35, 0.22, 0.18, 0.45, 1.2, 2.8, 4.1, 5.2, 6.4, 7.8, 8.9, 9.2],
+        },
+        {
+          type: "metric",
+          id: "txn-count",
+          title: "Total Transactions",
+          value: "1,362",
+          change: 13.7,
+          changeLabel: "vs yesterday",
+          sparkline: [48, 32, 26, 58, 142, 268, 312, 356, 398, 442, 498, 512],
+        },
+        {
+          type: "line",
+          id: "hourly-trend",
+          title: "Hourly Gross Volume",
+          subtitle: "₹ Lakhs — Today vs Yesterday",
+          dataKey: "today",
+          compareKey: "yesterday",
+          compareLabel: "Yesterday",
+          data: [
+            { hour: "00:00", today: 0.35, yesterday: 0.28 },
+            { hour: "02:00", today: 0.22, yesterday: 0.2 },
+            { hour: "04:00", today: 0.18, yesterday: 0.15 },
+            { hour: "06:00", today: 0.45, yesterday: 0.38 },
+            { hour: "08:00", today: 1.2, yesterday: 0.95 },
+            { hour: "10:00", today: 2.8, yesterday: 2.2 },
+            { hour: "12:00", today: 4.1, yesterday: 3.6 },
+            { hour: "14:00", today: 5.2, yesterday: 4.5 },
+            { hour: "16:00", today: 6.4, yesterday: 5.8 },
+            { hour: "18:00", today: 7.8, yesterday: 7.1 },
+            { hour: "20:00", today: 8.9, yesterday: 8.2 },
+            { hour: "22:00", today: 9.2, yesterday: 8.45 },
+          ],
+          xKey: "hour",
+          colorVar: "--chart-1",
+        },
+        {
+          type: "bar",
+          id: "hourly-count",
+          title: "Hourly Transaction Count",
+          bars: [
+            { dataKey: "count", label: "Transactions", colorVar: "--chart-2" },
+          ],
+          data: [
+            { hour: "00:00", count: 48 },
+            { hour: "04:00", count: 26 },
+            { hour: "08:00", count: 142 },
+            { hour: "12:00", count: 312 },
+            { hour: "14:00", count: 356 },
+            { hour: "16:00", count: 398 },
+            { hour: "18:00", count: 442 },
+            { hour: "20:00", count: 498 },
+            { hour: "22:00", count: 512 },
+          ],
+          xKey: "hour",
+        },
+      ],
+    },
+  },
+];
+
+/** Short prompt texts to show as quick-action chip buttons in the welcome state. */
+export const QUICK_PROMPT_CHIPS = GEN_UI_QUERIES.map((q) => q.prompt);
+
+/** Find the matching spec for a given prompt (or use the first as default). */
+export function matchGenUIQuery(text: string): GenUIQuery | undefined {
+  const t = text.toLowerCase();
+  return GEN_UI_QUERIES.find((q) =>
+    q.prompt
+      .toLowerCase()
+      .split(" ")
+      .filter((w) => w.length > 4)
+      .some((kw) => t.includes(kw))
+  );
+}

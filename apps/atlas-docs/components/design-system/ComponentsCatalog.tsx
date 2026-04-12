@@ -21,17 +21,11 @@ const STATUS_META: Record<
       "bg-blue-500/15 text-blue-800 border-blue-500/25 dark:bg-blue-500/20 dark:text-blue-100 dark:border-blue-400/35",
     dotClass: "bg-blue-500 dark:bg-blue-400",
   },
-  "needs-review": {
-    label: "Needs review",
+  backlog: {
+    label: "Backlog",
     badgeClass:
-      "bg-emerald-500/15 text-emerald-900 border-emerald-500/25 dark:bg-emerald-500/20 dark:text-emerald-100 dark:border-emerald-400/35",
-    dotClass: "bg-emerald-500 dark:bg-emerald-400",
-  },
-  planned: {
-    label: "Planned",
-    badgeClass:
-      "bg-amber-500/15 text-amber-950 border-amber-500/30 dark:bg-amber-500/20 dark:text-amber-100 dark:border-amber-400/35",
-    dotClass: "bg-amber-500 dark:bg-amber-400",
+      "bg-zinc-500/12 text-zinc-800 border-zinc-500/20 dark:bg-zinc-500/18 dark:text-zinc-200 dark:border-zinc-400/25",
+    dotClass: "bg-zinc-400 dark:bg-zinc-500",
   },
 };
 
@@ -108,8 +102,8 @@ export function ComponentsCatalog() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard value={stats.total} label="Total items" />
         <StatCard value={stats.categories} label="Categories" />
-        <StatCard value={stats.needsReview} label="Needs review" />
-        <StatCard value={stats.planned} label="Not started" />
+        <StatCard value={stats.available} label="Available" />
+        <StatCard value={stats.backlog} label="Backlog" />
       </div>
 
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -121,9 +115,8 @@ export function ComponentsCatalog() {
                 <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_META[key].dotClass)} aria-hidden />
                 <span className="font-medium">{STATUS_META[key].label}</span>
                 <span className="text-muted-foreground">
-                  {key === "available" && "Ready to use from tokens or @/components/ui"}
-                  {key === "needs-review" && "In the app; wrap, document, or refine"}
-                  {key === "planned" && "On the roadmap"}
+                  {key === "available" && "Tokens, @payglocal/ui, or documented product pattern"}
+                  {key === "backlog" && "Not scheduled; tracked for future primitives"}
                 </span>
               </div>
             ))}
@@ -147,8 +140,7 @@ export function ComponentsCatalog() {
 
       <p className="text-xs text-muted-foreground">
         <span className="font-medium text-foreground">{stats.available}</span> available ·{" "}
-        <span className="font-medium text-foreground">{stats.needsReview}</span> need review ·{" "}
-        <span className="font-medium text-foreground">{stats.planned}</span> planned
+        <span className="font-medium text-foreground">{stats.backlog}</span> backlog
       </p>
 
       {filteredCategories.map((category) => (

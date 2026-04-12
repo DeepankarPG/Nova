@@ -6,141 +6,7 @@
 /* Manual theme toggle (next-themes) — default v4 `dark:` uses prefers-color-scheme only */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary-light: var(--primary-light);
-  --color-primary-hover: var(--primary-hover);
-  --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-header: var(--header);
-  --color-header-border: var(--header-border);
-  --color-input: var(--input);
-  --color-chart-grid: var(--chart-grid);
-  --color-chart-tick: var(--chart-tick);
-  --color-chart-cursor: var(--chart-cursor);
-  --color-chart-bar-track: var(--chart-bar-track);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  /* Slightly tighter than Tailwind defaults for large radii (cards, dialogs, previews) */
-  --radius-xl: 0.625rem;
-  --radius-2xl: 0.875rem;
-  --radius-3xl: 1.25rem;
-  --radius-4xl: 1.5rem;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-:root {
-  color-scheme: light;
-  /* Used by calc(var(--radius) - Npx) in input-group / focus rings; keep modest */
-  --radius: 0.375rem;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --background: #f6f8fa;
-  --foreground: #111827;
-  --card: #ffffff;
-  --card-foreground: #111827;
-  --border: #e5e7eb;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --popover: #ffffff;
-  --popover-foreground: #111827;
-  --primary: #0061e3;
-  --primary-foreground: #ffffff;
-  --ring: #0061e3;
-  --primary-hover: #0055c8;
-  --primary-light: #eff4ff;
-  --primary-border: #c7d9fb;
-  --primary-text: #0047b0;
-  --accent: #f3f4f6;
-  --accent-foreground: #111827;
-  --sidebar: #e8eaee;
-  --sidebar-border: #d8dce3;
-  --sidebar-foreground: #374151;
-  --header: #ffffff;
-  --header-border: #e2e5ea;
-  --input: #e5e7eb;
-  --chart-grid: #f3f4f6;
-  --chart-tick: #9ca3af;
-  --chart-cursor: rgba(249, 250, 251, 0.95);
-  --chart-bar-track: #f3f4f6;
-  /* shadcn-style series tokens (use as var(--chart-1) in ChartConfig) */
-  --chart-1: #0061e3;
-  --chart-2: #2563eb;
-  --chart-3: #7c3aed;
-  --chart-4: #059669;
-  --chart-5: #d97706;
-  /* PayGlocal dashboard widget system */
-  --pg-blue: #1a56db;
-  --pg-blue-light: #ebf3ff;
-  --pg-navy: #1e2a3b;
-  --pg-border: #e5e9f0;
-  --pg-surface: #f7f9fc;
-}
-
-.dark {
-  color-scheme: dark;
-  --destructive: #f87171;
-  --destructive-foreground: #450a0a;
-  --background: #0b0f14;
-  --foreground: #f3f4f6;
-  --card: #141a22;
-  --card-foreground: #f3f4f6;
-  --border: #2a3441;
-  --muted: #1e2630;
-  --muted-foreground: #b4bcc8;
-  --popover: #1a222d;
-  --popover-foreground: #f3f4f6;
-  --primary: #0061e3;
-  --primary-foreground: #ffffff;
-  --ring: #3b82f6;
-  --primary-hover: #3b82f6;
-  --primary-light: rgba(0, 97, 227, 0.18);
-  --primary-border: #2563eb;
-  --primary-text: #93c5fd;
-  --accent: #1e2630;
-  --accent-foreground: #f3f4f6;
-  --sidebar: #10151c;
-  --sidebar-border: #2a3441;
-  --sidebar-foreground: #d1d5db;
-  --header: #0f1419;
-  --header-border: #2a3441;
-  --input: #2a3441;
-  --chart-grid: #2d3748;
-  --chart-tick: #c4cad4;
-  --chart-cursor: rgba(255, 255, 255, 0.06);
-  /* Subtle bar “track” behind filled bars — must stay dark (not light gray) in dark mode */
-  --chart-bar-track: rgba(255, 255, 255, 0.07);
-  --chart-1: #60a5fa;
-  --chart-2: #818cf8;
-  --chart-3: #c4b5fd;
-  --chart-4: #34d399;
-  --chart-5: #fbbf24;
-  --pg-blue: #0061e3;
-  --pg-blue-light: rgba(0, 97, 227, 0.15);
-  --pg-navy: #e5e7eb;
-  --pg-border: #2a3441;
-  --pg-surface: #141a22;
-}
+@import "../design-system/payglocal-theme.css";
 
 * { box-sizing: border-box; }
 
@@ -152,13 +18,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+/* ─── Scrollbar: 4 px gutter always reserved, thumb visible on hover only ── */
+/*
+ * width/height: 4px — gutter is always reserved so no layout shift occurs
+ * when the thumb appears or disappears.  The track is transparent, so the
+ * reserved 4 px is invisible at rest.  Only the thumb color changes on hover.
+ */
+::-webkit-scrollbar           { width: 4px; height: 4px; }
+::-webkit-scrollbar-track     { background: transparent; }
+::-webkit-scrollbar-thumb     { background: transparent; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; border-radius: 9999px; }
+
+/* Show thumb when the user hovers over the scrollable container */
+*:hover::-webkit-scrollbar-thumb                { background: #d1d5db; }
+.dark *:hover::-webkit-scrollbar-thumb          { background: #4b5563; }
+.dark *:hover::-webkit-scrollbar-thumb:hover    { background: #6b7280; }
+
+/* Firefox */
+*       { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*:hover { scrollbar-color: #d1d5db transparent; }
+.dark *:hover { scrollbar-color: #4b5563 transparent; }
 
 /* ─── Shimmer ────────────────────────────────────────────────────────────── */
 @keyframes shimmer {
@@ -252,3 +131,395 @@ textarea:focus-visible { outline: none; }
 
 /* ─── Recharts ───────────────────────────────────────────────────────────── */
 .recharts-tooltip-wrapper { outline: none !important; }
+
+/* Ask Echo — 1px gradient ring: masked ::before + conic angle (no circular layer → no corner clip). */
+@property --echo-ask-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.echo-ask-ring-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  padding: 1px;
+  isolation: isolate;
+  vertical-align: middle;
+}
+
+.echo-ask-ring-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--echo-ask-angle),
+    #082f73 0deg,
+    var(--primary) 55deg,
+    #1d4ed8 95deg,
+    #38bdf8 118deg,
+    #e0f2fe 128deg,
+    #38bdf8 138deg,
+    var(--primary) 175deg,
+    #172554 215deg,
+    var(--primary) 255deg,
+    #7dd3fc 278deg,
+    #f8fafc 288deg,
+    #7dd3fc 298deg,
+    #082f73 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: echo-ask-angle-spin 4s linear infinite;
+}
+
+.dark .echo-ask-ring-wrap::before {
+  background: conic-gradient(
+    from var(--echo-ask-angle),
+    #0c1e3d 0deg,
+    var(--primary) 50deg,
+    #1e40af 90deg,
+    #38bdf8 115deg,
+    #bae6fd 125deg,
+    #38bdf8 135deg,
+    var(--primary) 170deg,
+    #020617 210deg,
+    var(--primary) 248deg,
+    #22d3ee 272deg,
+    #e0f2fe 282deg,
+    #22d3ee 292deg,
+    #0c1e3d 360deg
+  );
+}
+
+@keyframes echo-ask-angle-spin {
+  from {
+    --echo-ask-angle: 0deg;
+  }
+  to {
+    --echo-ask-angle: 360deg;
+  }
+}
+
+/* EchoGlobeMark: subtle scale so “live” state reads even if GIF decode is slow or subtle */
+@keyframes echo-globe-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.echo-globe-mark--live img {
+  transform-origin: center center;
+  animation: echo-globe-breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-globe-mark--live img {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-ask-ring-wrap::before {
+    animation: none;
+  }
+}
+
+/* EchoCollapsibleStatus — staggered vertical wave (traveling bounce) */
+@keyframes echo-status-ellipsis-wave {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+  }
+  22% {
+    transform: translateY(-0.38em);
+  }
+}
+
+.echo-status-ellipsis-dot {
+  display: inline-block;
+  min-width: 0.2em;
+  text-align: center;
+  animation: echo-status-ellipsis-wave 1.05s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.echo-status-ellipsis-dot:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.echo-status-ellipsis-dot:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-status-ellipsis-dot {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Echo voice composer — waveform bars (scaleY, token-colored in component) */
+@keyframes echo-voice-bar-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.38);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.echo-voice-wave__bar {
+  animation: echo-voice-bar-bounce 1.05s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.echo-voice-wave__bar--paused {
+  animation: none;
+  transform: scaleY(0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-voice-wave__bar {
+    animation: none;
+    transform: scaleY(0.72);
+  }
+}
+
+/* Echo composer — listening state: soft animated wash behind the input */
+@keyframes echo-listening-field-drift {
+  0%,
+  100% {
+    background-position: 0% 40%;
+  }
+  50% {
+    background-position: 100% 60%;
+  }
+}
+
+.echo-listening-field {
+  border-radius: inherit;
+}
+
+.echo-listening-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--primary) 14%, transparent) 0%,
+    color-mix(in srgb, var(--primary) 6%, transparent) 42%,
+    transparent 78%
+  );
+  background-size: 240% 240%;
+  animation: echo-listening-field-drift 5.5s ease-in-out infinite;
+}
+
+.dark .echo-listening-field::before {
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--primary) 18%, transparent) 0%,
+    color-mix(in srgb, var(--primary) 8%, transparent) 48%,
+    transparent 82%
+  );
+  background-size: 240% 240%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-listening-field::before {
+    animation: none;
+    background-position: 35% 45%;
+  }
+}
+
+/* EchoGlobeMark — slow rotateY so the globe reads as turning on a vertical axis */
+.echo-globe-mark--axis-spin {
+  perspective: 200px;
+}
+
+.echo-globe-mark--axis-spin-img {
+  transform-origin: center center;
+  animation: echo-globe-axis-y 22s linear infinite;
+}
+
+@keyframes echo-globe-axis-y {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-globe-mark--axis-spin-img {
+    animation: none;
+  }
+}
+
+/* ─── Echo full-page: orb ambient pulse ─────────────────────────────────── */
+@keyframes echo-orb-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.82; }
+}
+
+/* ─── Echo full page: mesh wash + fractal glass (noise) + faceted highlights ─ */
+/*
+ * Ref: soft blue glow left → white; bottom lighter for composer. No grid.
+ * ::before = SVG feTurbulence fractal noise (tiled) + diagonal “glass” facets, slow drift.
+ * ::after = hairline moving sheen (very slow).
+ */
+.echo-stripe-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: #fafcff;
+  /* Mesh: left blue wash → white field */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.65) 56%,
+      #ffffff 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(219, 234, 254, 0.92) 0%,
+      rgba(255, 255, 255, 0.97) 42%,
+      #ffffff 72%,
+      #ffffff 100%
+    );
+  background-size: 100% 100%, 100% 100%;
+  background-position: center;
+}
+
+/* Tiled fractal noise (anisotropic feTurbulence) + soft crystalline highlights */
+.echo-stripe-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.58;
+  /* soft-light reads fractal grain on near-white better than overlay */
+  mix-blend-mode: soft-light;
+  /* Anisotropic baseFrequency + 5 octaves = visible self-similar “glass” grain */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.38 0.55' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='1.45' intercept='-0.12'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' fill='%23fff'/%3E%3C/svg%3E"),
+    linear-gradient(124deg, rgba(255, 255, 255, 0.55) 0%, transparent 42%),
+    linear-gradient(208deg, rgba(191, 219, 254, 0.38) 0%, transparent 48%),
+    linear-gradient(322deg, transparent 58%, rgba(255, 255, 255, 0.4) 100%);
+  background-size:
+    88px 88px,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position: center;
+  will-change: transform, opacity;
+  animation: echo-glass-drift 110s ease-in-out infinite alternate;
+}
+
+/* Slow prismatic sheen */
+.echo-stripe-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+  background: linear-gradient(
+    102deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 62%
+  );
+  background-size: 260% 100%;
+  background-position: 0% 50%;
+  animation: echo-glass-sheen 125s linear infinite;
+}
+
+@keyframes echo-glass-drift {
+  0% {
+    transform: translate3d(-0.35%, 0.2%, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(0.45%, -0.25%, 0);
+    opacity: 0.64;
+  }
+}
+
+@keyframes echo-glass-sheen {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-stripe-bg::before,
+  .echo-stripe-bg::after {
+    animation: none;
+  }
+  .echo-stripe-bg::before {
+    transform: none;
+    opacity: 0.54;
+  }
+  .echo-stripe-bg::after {
+    opacity: 0.08;
+    background-position: 50% 50%;
+  }
+}
+
+.dark .echo-stripe-bg {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--background) 94%, white 6%) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(30, 58, 138, 0.12) 0%,
+      var(--background) 45%,
+      var(--background) 100%
+    );
+  background-size: 100% 100%, 100% 100%;
+}
+
+.dark .echo-stripe-bg::before {
+  opacity: 0.36;
+  mix-blend-mode: soft-light;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.38 0.55' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='1.45' intercept='-0.12'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' fill='%23fff'/%3E%3C/svg%3E"),
+    linear-gradient(124deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%),
+    linear-gradient(208deg, rgba(96, 165, 250, 0.08) 0%, transparent 48%),
+    linear-gradient(322deg, transparent 58%, rgba(255, 255, 255, 0.05) 100%);
+  background-size: 88px 88px, 100% 100%, 100% 100%, 100% 100%;
+}
+
+.dark .echo-stripe-bg::after {
+  opacity: 0.1;
+}
+

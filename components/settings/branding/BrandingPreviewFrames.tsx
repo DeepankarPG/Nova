@@ -2,7 +2,19 @@
 
 import { cn } from "@/lib/utils";
 
-export function BrandingMobileFrame({ children, className }: { children: React.ReactNode; className?: string }) {
+export function BrandingMobileFrame({
+  children,
+  className,
+  /** Overrides fixed screen height (default ~560px / 72svh). Use for taller preview shells. */
+  screenClassName,
+  /** When false, children fill the screen and manage their own inner scroll (e.g. chat + fixed composer). Default wraps children in a scroll region. */
+  scrollBody = true,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  screenClassName?: string;
+  scrollBody?: boolean;
+}) {
   return (
     <div
       className={cn(
@@ -19,10 +31,26 @@ export function BrandingMobileFrame({ children, className }: { children: React.R
         Single clipped screen stack: avoids subpixel gaps / black wedges at bottom corners.
         Do not put separate border-radius on the scroll region — parent overflow-hidden + rounded-[2.1rem] clips everything.
       */}
-      <div className="relative flex max-h-[min(560px,68vh)] flex-col overflow-hidden rounded-[2.1rem] bg-white">
-        <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-white [scrollbar-gutter:stable]">
-          <div className="w-full min-w-0">{children}</div>
-        </div>
+      {/*
+        Taller viewport reads more like a phone (less “square”); scroll inside if content grows.
+      */}
+      {/*
+        Fixed viewport height (not min-height): content scrolls inside so the device shell
+        does not grow when the thread gets longer — matches a real phone bezel size.
+      */}
+      <div
+        className={cn(
+          "relative flex h-[min(560px,72svh)] max-h-[88svh] flex-col overflow-hidden rounded-[2.1rem] bg-white",
+          screenClassName
+        )}
+      >
+        {scrollBody ? (
+          <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-white [scrollbar-gutter:stable]">
+            <div className="flex min-h-full w-full min-w-0 flex-col">{children}</div>
+          </div>
+        ) : (
+          <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white">{children}</div>
+        )}
         <div className="flex shrink-0 justify-center bg-white px-2 pb-2 pt-1.5">
           <div className="h-1 w-24 rounded-full bg-zinc-300/90" aria-hidden />
         </div>
@@ -36,18 +64,24 @@ export function BrandingDesktopFrame({
   className,
   addressBar = "https://pay.payglocal.in/checkout/mock",
   contentClassName,
+  /** Full-width page area (no grey side gutters); fixed viewport height so inner chat layouts can use h-full. */
+  fullBleedContent = false,
+  bodyClassName,
 }: {
   children: React.ReactNode;
   className?: string;
   /** URL shown in the mock browser bar */
   addressBar?: string;
-  /** Width constraint for centered content (default: checkout-sized column) */
+  /** Width constraint for centered content (default: checkout-sized column); ignored when fullBleedContent */
   contentClassName?: string;
+  fullBleedContent?: boolean;
+  bodyClassName?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-md ring-1 ring-black/5 dark:ring-white/10",
+        "flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-md ring-1 ring-black/5 dark:ring-white/10",
+        fullBleedContent ? "max-w-full" : "max-w-2xl",
         className
       )}
     >
@@ -62,8 +96,26 @@ export function BrandingDesktopFrame({
           <span className="truncate font-mono">{addressBar}</span>
         </div>
       </div>
-      <div className="min-h-0 max-h-[min(640px,70vh)] overflow-y-auto bg-[#f3f4f6] p-3 dark:bg-zinc-950/50 sm:p-4">
-        <div className={cn("mx-auto w-full", contentClassName ?? "max-w-md")}>{children}</div>
+      <div
+        className={cn(
+          "min-h-0 bg-[#f3f4f6] dark:bg-zinc-950/50",
+          fullBleedContent
+            ? "h-[min(760px,78vh)] max-h-[min(900px,88vh)] min-h-[min(520px,52vh)] overflow-hidden p-0"
+            : "max-h-[min(640px,70vh)] overflow-y-auto p-3 sm:p-4",
+          bodyClassName
+        )}
+      >
+        <div
+          className={cn(
+            "w-full",
+            fullBleedContent
+              ? "flex h-full min-h-0 min-w-0 flex-col"
+              : "mx-auto",
+            fullBleedContent ? (contentClassName ?? "max-w-none") : (contentClassName ?? "max-w-md")
+          )}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

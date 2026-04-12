@@ -3,6 +3,7 @@
 import { Search, Bell, HelpCircle, Menu, Plus, FileText, Link2, CreditCard, Repeat2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { MerchantSelector } from "./MerchantSelector";
+import { AskEchoButton } from "./AskEchoButton";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -62,7 +63,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   ];
 
   return (
-    <header className="h-[57px] flex items-center gap-2 px-4 md:px-5 flex-shrink-0 bg-header border-b border-header-border">
+    <header className="relative z-30 flex h-[57px] shrink-0 items-center gap-2 border-b border-header-border bg-header px-4 md:px-5">
 
       {/* ── Hamburger (mobile only) ── */}
       <button
@@ -171,6 +172,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
         >
           <HelpCircle className="w-[17px] h-[17px] text-muted-foreground" />
         </button>
+
+        <AskEchoButton />
 
         {/* ── Create button ── */}
         <div ref={createRef} className="relative">

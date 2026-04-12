@@ -25,10 +25,7 @@ export function InviteTeammateModal({
   const [sending, setSending] = useState(false);
 
   const validateEmail = (val: string) => {
-    if (!val) {
-      setEmailError("");
-      return;
-    }
+    if (!val) { setEmailError(""); return; }
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     setEmailError(ok ? "" : "Please enter a valid email address");
   };
@@ -46,67 +43,92 @@ export function InviteTeammateModal({
     onOpenChange(false);
   };
 
-  const inputCls =
-    "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground transition-shadow focus:outline-none focus:ring-2 focus:ring-ring/35";
+  const inputBase = cn(
+    "w-full rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-sm text-foreground",
+    "placeholder:text-muted-foreground/70 transition-[border-color,box-shadow]",
+    "focus:border-primary/50 focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring/25"
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-[26rem]">
-        <div className="border-b border-border bg-muted/30 px-6 py-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Mail className="h-5 w-5" strokeWidth={2} aria-hidden />
-            </div>
-            <div className="min-w-0 pt-0.5">
-              <DialogTitle className="text-left">Invite teammate</DialogTitle>
-              <DialogDescription className="mt-1.5 text-left text-[13px] leading-relaxed">
-                They&apos;ll receive an email to join your workspace with the role you choose.
-              </DialogDescription>
-            </div>
+      {/*
+       * p-0: kill the base p-6 pt-10 so sections own their padding.
+       * The close button is absolute top-3 right-3 (12 px / 12 px).
+       * Header pt-4 aligns content with the close button row.
+       * pr-12 on the text block keeps text clear of the × button.
+       */}
+      <DialogContent className="overflow-hidden p-0 sm:max-w-[25rem]">
+
+        {/* ── Header ──────────────────────────────────────────────────────
+            pt-4 lines up vertically with the absolute close button (top-3).
+            pr-12 clears the × (h-9 w-9 at right-3 = 12+36=48px from right).
+        */}
+        <div className="flex items-start gap-3 px-5 pb-4 pt-4 pr-12">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Mail className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-semibold leading-snug tracking-tight">
+              Invite teammate
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] leading-snug">
+              They&apos;ll receive an email to join your workspace with the role you choose.
+            </DialogDescription>
           </div>
         </div>
 
-        <div className="space-y-5 px-6 py-6">
-          <div className="space-y-2">
-            <label htmlFor="qa-invite-email" className="text-sm font-medium text-foreground">
+        {/* ── Divider ──────────────────────────────────────────────────── */}
+        <div className="h-px bg-border" />
+
+        {/* ── Form ─────────────────────────────────────────────────────── */}
+        <div className="space-y-4 px-5 py-4">
+          <div className="space-y-1.5">
+            <label htmlFor="qa-invite-email" className="block text-[13px] font-medium text-foreground">
               Work email
             </label>
             <input
               id="qa-invite-email"
               type="email"
               autoComplete="email"
-              className={cn(inputCls, emailError && "border-destructive/60 focus:ring-destructive/25")}
+              autoFocus
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                validateEmail(e.target.value);
-              }}
+              onChange={(e) => { setEmail(e.target.value); validateEmail(e.target.value); }}
               placeholder="name@company.com"
+              className={cn(
+                inputBase,
+                emailError && "border-destructive/60 focus:border-destructive/70 focus:ring-destructive/20"
+              )}
             />
-            {emailError ? <p className="text-[13px] text-destructive">{emailError}</p> : null}
+            {emailError ? (
+              <p className="text-[12px] text-destructive">{emailError}</p>
+            ) : null}
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="qa-invite-role" className="text-sm font-medium text-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="qa-invite-role" className="block text-[13px] font-medium text-foreground">
               Role
             </label>
             <select
               id="qa-invite-role"
-              className={cn(inputCls, "h-[42px] cursor-pointer")}
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              className={cn(inputBase, "h-10 cursor-pointer")}
             >
               <option value="Viewer">Viewer — read-only</option>
               <option value="Developer">Developer — API &amp; integrations</option>
               <option value="Manager">Manager — team &amp; settings</option>
             </select>
-            <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground">
               You can change this later from Client management.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/20 px-6 py-4 sm:flex-row sm:justify-end">
+        {/* ── Divider ──────────────────────────────────────────────────── */}
+        <div className="h-px bg-border" />
+
+        {/* ── Footer ───────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3.5">
           <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -121,6 +143,7 @@ export function InviteTeammateModal({
             Send invite
           </Button>
         </div>
+
       </DialogContent>
     </Dialog>
   );

@@ -5,6 +5,7 @@ import {
   Globe2,
   Link2,
   Receipt,
+  Scale,
   Settings,
   UserPlus,
   type LucideIcon,
@@ -24,6 +25,7 @@ const quickActions: QuickActionItem[] = [
   { id: "invite-teammate", label: "Invite teammate", icon: UserPlus },
   { id: "fx-calculator", label: "FX calculator", icon: CircleDollarSign },
   { id: "international-accounts", label: "International accounts", icon: Globe2 },
+  { id: "manage-dispute", label: "Manage dispute", icon: Scale },
 ];
 
 const quickAccessCardClass = cn(

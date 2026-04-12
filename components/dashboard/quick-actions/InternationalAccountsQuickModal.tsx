@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Globe, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -77,11 +77,18 @@ export function InternationalAccountsQuickModal({
         showClose
         className="flex max-h-[min(90vh,720px)] w-[calc(100%-1.5rem)] max-w-[920px] flex-col gap-0 overflow-hidden p-0 sm:w-full"
       >
-        <div className="border-b border-border px-5 pb-4 pt-5 pr-14 sm:px-6 sm:pt-6">
-          <DialogTitle>International accounts</DialogTitle>
-          <DialogDescription className="mt-1.5">
-            Receiving details by client location — copy everything to share with your payer.
-          </DialogDescription>
+        <div className="flex items-start gap-3 border-b border-border px-5 pb-4 pt-4 pr-14">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Globe className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-semibold leading-snug tracking-tight">
+              International accounts
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] leading-snug">
+              Receiving details by client location — copy everything to share with your payer.
+            </DialogDescription>
+          </div>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">

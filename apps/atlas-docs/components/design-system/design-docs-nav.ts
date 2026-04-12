@@ -29,6 +29,11 @@ export const DESIGN_DOCS_NAV: DesignDocsNavSection[] = [
       { title: "Card", href: "/design/card", description: "Header, content, footer surface" },
       { title: "Input", href: "/design/input", description: "Field, groups, states" },
       { title: "Dialog", href: "/design/dialog", description: "Radix modal shell" },
+      {
+        title: "Overlays & menus",
+        href: "/design/overlays",
+        description: "Select, tabs, tooltip, popover, menus, scroll, avatar, toasts",
+      },
       { title: "Data table", href: "/design/data-table", description: "Paginated columns" },
       { title: "Status badge", href: "/design/status-badge", description: "Workflow states" },
       { title: "Page header", href: "/design/page-header", description: "Title and actions" },

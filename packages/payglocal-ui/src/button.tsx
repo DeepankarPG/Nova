@@ -16,20 +16,22 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
     "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
   secondary:
-    "bg-neutral-900 text-white border border-neutral-900 shadow-sm hover:bg-neutral-800 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-200 dark:hover:bg-zinc-300",
+    "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
   ghost:
-    "bg-transparent text-foreground border border-transparent hover:bg-muted",
+    "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
   danger:
     "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700",
   outline:
     "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
-  link: "border border-transparent bg-transparent text-primary shadow-none hover:underline underline-offset-4 h-auto px-0 py-0 rounded-none font-medium",
+  link:
+    "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 text-[15px] font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline",
 };
 
+/** Heights and padding match dashboard primary actions (~44–48px) and comfortable tap targets. */
 const sizes = {
-  sm: "h-7 px-3 text-xs gap-1.5 rounded-lg",
-  md: "h-8 px-3.5 text-sm gap-2 rounded-lg",
-  lg: "h-10 px-4 text-sm gap-2 rounded-xl",
+  sm: "h-9 min-h-9 px-3.5 text-xs gap-1.5 rounded-lg",
+  md: "h-10 min-h-10 px-5 text-sm gap-2 rounded-lg",
+  lg: "h-[3.25rem] min-h-[3.25rem] px-10 text-[15px] gap-2.5 rounded-xl",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -52,9 +54,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          "inline-flex items-center justify-center font-medium transition-all duration-150",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+          "inline-flex items-center justify-center font-medium transition-colors duration-pg-fast ease-pg-standard",
+          variant !== "link" && "disabled:cursor-not-allowed disabled:opacity-50",
+          variant === "link" && "justify-center",
+          variant !== "link" && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
           variantClasses[variant],
           variant !== "link" && sizes[size],
           className
@@ -65,7 +68,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <Loader2
             className={cn(
               "animate-spin",
-              size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"
+              size === "sm" ? "size-3.5" : size === "lg" ? "size-[1.125rem]" : "size-3.5"
             )}
           />
         ) : (

@@ -26,8 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+    <html lang="en" suppressHydrationWarning className="h-dvh overflow-hidden">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} h-dvh min-h-0 overflow-hidden antialiased bg-background text-foreground`}
+      >
         {process.env.NODE_ENV === "development" && (
           <Script
             src="https://mcp.figma.com/mcp/html-to-design/capture.js"

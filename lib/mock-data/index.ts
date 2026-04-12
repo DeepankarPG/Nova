@@ -167,7 +167,7 @@ export const recentTransactions = [
     id: "gl_o-8c...pk3m9Y4",
     amount: 1250.00,
     currency: "USD",
-    status: "success",
+    status: "sent_for_capture",
     method: "card",
     cardBrand: "mastercard",
     cardLast4: "5100",
@@ -179,7 +179,7 @@ export const recentTransactions = [
     id: "gl_o-7b...qr2n8Z3",
     amount: 8900.00,
     currency: "INR",
-    status: "success",
+    status: "sent_for_capture",
     method: "upi",
     cardBrand: null,
     cardLast4: null,
@@ -203,7 +203,7 @@ export const recentTransactions = [
     id: "gl_o-5f...mn5q7B8",
     amount: 2800.00,
     currency: "INR",
-    status: "success",
+    status: "sent_for_capture",
     method: "netbanking",
     cardBrand: null,
     cardLast4: null,
@@ -215,11 +215,11 @@ export const recentTransactions = [
     id: "gl_o-4e...lk8r5C6",
     amount: 3200.00,
     currency: "INR",
-    status: "success",
+    status: "sent_for_capture",
     method: "card",
     cardBrand: "mastercard",
     cardLast4: "1859",
-    customerName: "Arjun Mehta",
+    customerName: "Karan Gopalan Krishnamurthy Ghaiii",
     email: "arjun.m@design.co",
     date: "2026-03-11T16:30:00",
   },
@@ -275,7 +275,7 @@ export const allTransactions = [
     id: "gl_o-2c...gh0t3E4",
     amount: 15600.00,
     currency: "INR",
-    status: "success",
+    status: "sent_for_capture",
     method: "card",
     cardBrand: "visa",
     cardLast4: "3302",
@@ -287,7 +287,7 @@ export const allTransactions = [
     id: "gl_o-1b...fe1u2F3",
     amount: 720.00,
     currency: "AED",
-    status: "success",
+    status: "sent_for_capture",
     method: "card",
     cardBrand: "mastercard",
     cardLast4: "4488",
@@ -323,7 +323,7 @@ export const allTransactions = [
     id: "gl_o-8y...ab4x9I0",
     amount: 6750.00,
     currency: "INR",
-    status: "success",
+    status: "sent_for_capture",
     method: "netbanking",
     cardBrand: null,
     cardLast4: null,
@@ -390,18 +390,40 @@ export const allSettlements = [
 
 // ─── Disputes ──────────────────────────────────────────────────────────────────
 
-export const disputes = [
+export type DisputeMockRow = {
+  id: string;
+  transactionId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  /** Optional row-specific badge key (e.g. evidence phase); falls back to `status`. */
+  badgeStatus?: string;
+  reason: string;
+  customerName: string;
+  email: string;
+  dueDate: string;
+  createdAt: string;
+  cardBrand?: "visa" | "mastercard" | "amex";
+  cardLast4?: string;
+  countryCode?: string;
+};
+
+export const disputes: DisputeMockRow[] = [
   {
     id: "dsp_x1y2z3",
     transactionId: "gl_o-4e...lk8r5C6",
-    amount: 450.75,
-    currency: "EUR",
+    amount: 19.23,
+    currency: "USD",
     status: "open",
+    badgeStatus: "deadline_missed",
     reason: "Product not received",
     customerName: "James O'Brien",
     email: "james.ob@gmail.com",
-    dueDate: "2026-03-20T00:00:00",
-    createdAt: "2026-03-12T09:20:00",
+    dueDate: "2026-03-31T05:29:00",
+    createdAt: "2026-01-23T09:20:00",
+    cardBrand: "visa",
+    cardLast4: "2685",
+    countryCode: "US",
   },
   {
     id: "dsp_a2b3c4",
@@ -409,23 +431,47 @@ export const disputes = [
     amount: 580.25,
     currency: "GBP",
     status: "under_review",
+    badgeStatus: "evidence_submitted",
     reason: "Duplicate charge",
     customerName: "Emma Thompson",
     email: "emma.t@outlook.com",
-    dueDate: "2026-03-18T00:00:00",
-    createdAt: "2026-03-11T14:10:00",
+    dueDate: "2026-03-18T14:00:00",
+    createdAt: "2026-01-22T14:10:00",
+    cardBrand: "mastercard",
+    cardLast4: "4411",
+    countryCode: "GB",
   },
   {
     id: "dsp_d5e6f7",
     transactionId: "gl_o-8y...ab4x9I0",
-    amount: 2100.00,
+    amount: 2100.0,
     currency: "INR",
     status: "won",
+    badgeStatus: "won",
     reason: "Unauthorized transaction",
     customerName: "Ravi Kumar",
     email: "ravi.k@bank.co.in",
     dueDate: "2026-03-10T00:00:00",
-    createdAt: "2026-03-09T11:00:00",
+    createdAt: "2026-01-21T11:00:00",
+    cardBrand: "visa",
+    cardLast4: "9021",
+    countryCode: "IN",
+  },
+  {
+    id: "dsp_l0s1t2",
+    transactionId: "gl_o-1a...zz9y8X7",
+    amount: 124.5,
+    currency: "USD",
+    status: "lost",
+    badgeStatus: "lost",
+    reason: "Fraudulent",
+    customerName: "Alex Morgan",
+    email: "alex.m@example.com",
+    dueDate: "2026-02-01T12:00:00",
+    createdAt: "2026-01-20T08:15:00",
+    cardBrand: "visa",
+    cardLast4: "1144",
+    countryCode: "US",
   },
 ];
 
@@ -1811,3 +1857,15 @@ export const clients = [
     lastActive: "2026-02-28T11:00:00",
   },
 ];
+
+// ─── AI Storefront (seed only; runtime mutations live in lib/ai-storefront/dev-store) ─
+
+export {
+  aiStorefrontOverviewSeed,
+  aiStorefrontSettingsSeed,
+  aiStorefrontProductsSeed,
+  aiStorefrontInventorySeed,
+  aiStorefrontAiContextSeed,
+  aiStorefrontPreviewDefaultSeed,
+  aiStorefrontPreviewCatalogueDownSeed,
+} from "./ai-storefront";

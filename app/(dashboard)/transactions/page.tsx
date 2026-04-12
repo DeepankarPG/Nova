@@ -2,19 +2,45 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import { Download, Search, CreditCard, Smartphone, Building2, X, CheckCircle2, AlertCircle, BarChart2, Receipt } from "lucide-react";
+import {
+  Download,
+  Search,
+  CreditCard,
+  Smartphone,
+  Building2,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  BarChart2,
+  Receipt,
+  Copy,
+} from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatTableDateTime } from "@/lib/utils";
 import { allTransactions } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 type Transaction = typeof allTransactions[number];
 
-const statusOptions = ["All", "success", "in_progress", "failed", "refunded"];
+const statusOptions = [
+  "All",
+  "sent_for_capture",
+  "in_progress",
+  "failed",
+  "refunded",
+] as const;
+
+function statusFilterLabel(s: string) {
+  if (s === "All") return "All";
+  if (s === "sent_for_capture") return "Sent for capture";
+  if (s === "in_progress") return "In progress";
+  if (s === "refunded") return "Refunded";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 const methodOptions = ["All", "card", "upi", "netbanking"];
 
 const methodIcons: Record<string, React.ReactNode> = {
@@ -23,9 +49,56 @@ const methodIcons: Record<string, React.ReactNode> = {
   netbanking: <Building2   className="w-3.5 h-3.5 text-muted-foreground" />,
 };
 
-function fmtAmt(amount: number, currency: string) {
-  const s = currency === "INR" ? "₹" : currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : `${currency} `;
-  return `${s}${amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+const CURRENCY_GLYPH: Record<string, string> = {
+  INR: "₹",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  SGD: "S$",
+};
+
+/** Formatted number only (grouping + decimals), for right-aligned amount column. */
+function fmtAmountNumber(amount: number) {
+  return amount.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+}
+
+/** Matches ISO code column in body rows so the header lines up with numeric amounts. */
+const AMOUNT_CODE_COL = "w-10 shrink-0";
+
+function AmountColumnHeader() {
+  return (
+    <div className="flex w-full min-w-0 items-baseline gap-2">
+      <div className="min-w-0 flex-1 text-right">
+        <span className="inline-block whitespace-nowrap text-[11px] font-semibold tabular-nums text-muted-foreground">
+          Amount
+        </span>
+      </div>
+      <span className={cn(AMOUNT_CODE_COL)} aria-hidden />
+    </div>
+  );
+}
+
+function AmountCell({ amount, currency }: { amount: number; currency: string }) {
+  const glyph = CURRENCY_GLYPH[currency] ?? "";
+  const num = fmtAmountNumber(amount);
+  return (
+    <div className="flex w-full min-w-0 items-baseline gap-2">
+      <div className="min-w-0 flex-1 text-right">
+        <span className="inline-block whitespace-nowrap text-[13px] font-semibold tabular-nums text-foreground">
+          {glyph}
+          {num}
+        </span>
+      </div>
+      <span
+        className={cn(
+          AMOUNT_CODE_COL,
+          "text-left text-[11px] font-normal tabular-nums text-muted-foreground"
+        )}
+      >
+        {currency}
+      </span>
+    </div>
+  );
 }
 
 function CardBrand({ brand }: { brand: string | null | undefined }) {
@@ -47,18 +120,52 @@ function CardBrand({ brand }: { brand: string | null | undefined }) {
   return <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-bold text-muted-foreground bg-muted">CARD</span>;
 }
 
+function TransactionIdCell({ id }: { id: string }) {
+  return (
+    <div className="group/id flex min-w-0 max-w-full items-center gap-1.5">
+      <span
+        className="min-w-0 flex-1 truncate text-[13px] font-mono text-muted-foreground"
+        title={id}
+      >
+        {id}
+      </span>
+      <button
+        type="button"
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+          "text-muted-foreground opacity-0 transition-opacity",
+          "hover:bg-muted hover:text-foreground",
+          "group-hover/id:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        )}
+        aria-label="Copy transaction ID"
+        title="Copy"
+        onClick={() => {
+          void navigator.clipboard.writeText(id).then(
+            () => toast.success("Copied"),
+            () => toast.error("Could not copy")
+          );
+        }}
+      >
+        <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
 function PaymentMethod({ row }: { row: Transaction }) {
   if (row.method === "card") return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <CardBrand brand={row.cardBrand} />
-      <span className="text-[13px] text-muted-foreground font-mono">•••• {row.cardLast4 ?? "—"}</span>
+      <span className="text-[13px] text-muted-foreground font-mono">
+        … {row.cardLast4 ?? "—"}
+      </span>
     </div>
   );
   if (row.method === "upi") return (
     <span className="inline-flex items-center justify-center w-8 h-5 rounded text-[9px] font-black bg-muted text-[#5f259f] dark:text-violet-300">UPI</span>
   );
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
       <span className="text-[13px] text-muted-foreground">Netbanking</span>
     </div>
@@ -68,59 +175,72 @@ function PaymentMethod({ row }: { row: Transaction }) {
 const columns: Column<Transaction>[] = [
   {
     key: "amount",
-    header: "Amount",
-    minWidth: 125,
+    header: <AmountColumnHeader />,
+    align: "right",
+    width: "200px",
+    minWidth: 184,
     render: (row) => (
-      <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-        <span className="font-semibold text-foreground tabular-nums text-[13px]">{fmtAmt(row.amount, row.currency)}</span>
-        <span className="text-[11px] text-muted-foreground font-medium">{row.currency}</span>
-      </div>
+      <AmountCell amount={row.amount} currency={row.currency} />
     ),
   },
   {
     key: "status",
     header: "Status",
-    minWidth: 155,
+    width: "176px",
     render: (row) => <StatusBadge status={row.status} size="sm" />,
   },
   {
     key: "method",
     header: "Payment method",
-    minWidth: 140,
+    width: "138px",
     render: (row) => <PaymentMethod row={row} />,
   },
   {
     key: "customer",
     header: "Customer name",
-    minWidth: 145,
+    width: "148px",
+    maxWidth: 180,
+    cellClassName: "max-w-0",
     render: (row) => (
-      <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{row.customerName}</span>
+      <span
+        className="block min-w-0 max-w-full truncate text-[13px] font-medium text-foreground"
+        title={row.customerName}
+      >
+        {row.customerName}
+      </span>
     ),
   },
   {
     key: "email",
     header: "Email",
-    minWidth: 185,
+    width: "196px",
+    maxWidth: 240,
+    cellClassName: "max-w-0",
     render: (row) => (
-      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{row.email}</span>
+      <span
+        className="block min-w-0 max-w-full truncate text-[13px] font-normal text-muted-foreground"
+        title={row.email}
+      >
+        {row.email}
+      </span>
     ),
   },
   {
     key: "id",
     header: "Transaction ID",
-    minWidth: 155,
-    render: (row) => (
-      <span className="text-[13px] font-mono text-primary/70 hover:text-primary transition-colors cursor-pointer whitespace-nowrap">
-        {row.id}
-      </span>
-    ),
+    width: "192px",
+    maxWidth: 220,
+    cellClassName: "max-w-0",
+    render: (row) => <TransactionIdCell id={row.id} />,
   },
   {
     key: "date",
     header: "Date and time",
-    minWidth: 150,
+    width: "152px",
     render: (row) => (
-      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{formatDate(row.date)}</span>
+      <span className="whitespace-nowrap text-[13px] font-normal text-muted-foreground">
+        {formatTableDateTime(row.date)}
+      </span>
     ),
   },
 ];
@@ -154,7 +274,7 @@ export default function TransactionsPage() {
   const hasActive = statusFilter !== "All" || methodFilter !== "All" || search;
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-4">
+    <div className="w-full max-w-[1400px] space-y-4">
       <PageHeader
         title="Transactions"
         subtitle={`${allTransactions.length} total transactions`}
@@ -243,7 +363,7 @@ export default function TransactionsPage() {
                   ? "bg-foreground text-background border-foreground"
                   : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
               )}>
-              {s === "All" ? "All" : s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1)}
+              {statusFilterLabel(s)}
             </button>
           ))}
         </div>
@@ -280,9 +400,19 @@ export default function TransactionsPage() {
         </p>
       )}
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} skeletonRows={8}
-        emptyTitle="No transactions found" emptyDescription="Try adjusting your filters"
-        rowKey={(row) => row.id} pageSize={10}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        isLoading={isLoading}
+        skeletonRows={8}
+        emptyTitle="No transactions found"
+        emptyDescription="Try adjusting your filters"
+        rowKey={(row) => row.id}
+        pageSize={10}
+        density="compact"
+        snug
+        footerSummary="count"
+        footerCountLabels={{ singular: "result", plural: "results" }}
         rowCta={{ label: "View details" }}
       />
     </div>

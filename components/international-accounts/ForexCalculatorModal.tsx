@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from "react";
-import { Building2, Landmark, Sparkles } from "lucide-react";
+import { Building2, Landmark, Sparkles, TrendingUp } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -92,11 +92,18 @@ export function ForexCalculatorModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100%-1.5rem)] sm:max-w-lg p-0 gap-0 overflow-hidden">
-        <div className="px-5 pt-6 pb-4 border-b border-border">
-          <DialogTitle>Forex calculator</DialogTitle>
-          <DialogDescription className="mt-1.5">
-            What you’d keep in INR after PayGlocal fee and GST — reference rate only.
-          </DialogDescription>
+        <div className="flex items-start gap-3 border-b border-border px-5 pb-4 pt-4 pr-12">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <TrendingUp className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-semibold leading-snug tracking-tight">
+              Forex calculator
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] leading-snug">
+              What you’d keep in INR after PayGlocal fee and GST — reference rate only.
+            </DialogDescription>
+          </div>
         </div>
 
         <div className="px-5 py-5 space-y-4">

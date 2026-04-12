@@ -8,12 +8,18 @@
   ],
   "scripts": {
     "dev": "next dev",
+    "dev:fresh": "rm -f .next/dev/lock && next dev",
     "dev:atlas": "npm run dev -w @payglocal/atlas-docs",
+    "dev:ui-docs": "npm run dev -w @payglocal/ui-docs",
+    "dev:ui-docs:fresh": "rm -f apps/payglocal-ui-docs/.next/dev/lock && npm run dev -w @payglocal/ui-docs",
+    "dev:docs": "npm run dev -w @payglocal/ui-docs",
     "build": "next build",
     "build:atlas": "npm run build -w @payglocal/atlas-docs",
+    "build:ui-docs": "npm run build -w @payglocal/ui-docs",
     "start": "next start",
     "lint": "eslint",
     "lint:atlas": "npm run lint -w @payglocal/atlas-docs",
+    "lint:ui-docs": "npm run lint -w @payglocal/ui-docs",
     "publish:ui": "npm publish -w @payglocal/ui --access public",
     "ui:check-types": "npm run check-types -w @payglocal/ui"
   },

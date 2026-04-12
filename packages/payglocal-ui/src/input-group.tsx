@@ -13,8 +13,8 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group relative flex w-full items-center rounded-md border border-input bg-transparent shadow-sm outline-none transition-[color,box-shadow] dark:bg-input/30",
-        "h-9 has-[>textarea]:h-auto",
+        "group/input-group relative flex w-full items-stretch rounded-xl border border-border bg-card shadow-sm outline-none transition-[color,box-shadow] dark:bg-card/50",
+        "min-h-11 h-11 has-[>textarea]:h-auto",
         "has-[>[data-align=inline-start]]:[&>input]:pl-2",
         "has-[>[data-align=inline-end]]:[&>input]:pr-2",
         "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
@@ -29,14 +29,14 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const inputGroupAddonVariants = cva(
-  "text-muted-foreground flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-sm font-medium group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
+  "text-muted-foreground flex h-auto min-h-11 cursor-text select-none items-center justify-center gap-2 px-0 text-[15px] font-medium group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
         "inline-start":
-          "order-first pl-3 has-[>button]:-ml-[0.45rem] has-[>kbd]:-ml-[0.35rem]",
+          "order-first pl-3.5 has-[>button]:-ml-[0.45rem] has-[>kbd]:-ml-[0.35rem]",
         "inline-end":
-          "order-last pr-3 has-[>button]:-mr-[0.4rem] has-[>kbd]:-mr-[0.35rem]",
+          "order-last pr-3.5 has-[>button]:-mr-[0.4rem] has-[>kbd]:-mr-[0.35rem]",
         "block-start":
           "order-first w-full justify-start border-b px-3 pt-3 group-has-[>input]/input-group:pt-2.5 [.border-b]:pb-3",
         "block-end":

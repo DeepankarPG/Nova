@@ -167,15 +167,15 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: -6 }}
           transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          className="bg-white rounded-2xl select-none"
+          className="isolate rounded-2xl border border-border bg-popover text-popover-foreground shadow-lg select-none dark:shadow-black/40"
           style={{
-            position:  "fixed",
-            top:       panelPos.top,
-            left:      panelPos.left,
-            width:     PANEL_W,
-            zIndex:    9999,
-            border:    "1px solid #e5e7eb",
-            boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)",
+            position:        "fixed",
+            top:             panelPos.top,
+            left:            panelPos.left,
+            width:           PANEL_W,
+            zIndex:          20000,
+            backgroundColor: "var(--popover)",
+            boxShadow:       "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)",
           }}
         >
           {/* Header */}
@@ -198,12 +198,13 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
                     <motion.div
                       initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                       transition={{ duration: 0.12 }}
-                      className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg z-[10000] py-1 overflow-y-auto"
-                      style={{ border: "1px solid #e5e7eb", minWidth: 130, maxHeight: 220 }}>
+                      className="absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg"
+                    >
                       {MONTHS.map((mn, mi) => (
                         <button key={mn} onClick={() => { setViewMonth(mi); setMonthMenu(false); }}
-                          className="w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-gray-50"
-                          style={{ fontWeight: mi === viewMonth ? 600 : 400, color: mi === viewMonth ? PRIMARY : "#374151" }}>
+                          className="w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
+                          style={{ fontWeight: mi === viewMonth ? 600 : 400, color: mi === viewMonth ? PRIMARY : undefined }}
+                        >
                           {mn}
                         </button>
                       ))}
@@ -224,12 +225,13 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
                     <motion.div
                       initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                       transition={{ duration: 0.12 }}
-                      className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg z-[10000] py-1 overflow-y-auto"
-                      style={{ border: "1px solid #e5e7eb", minWidth: 90, maxHeight: 200 }}>
+                      className="absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg"
+                    >
                       {years.map(yr => (
                         <button key={yr} onClick={() => { setViewYear(yr); setYearMenu(false); }}
-                          className="w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-gray-50"
-                          style={{ fontWeight: yr === viewYear ? 600 : 400, color: yr === viewYear ? PRIMARY : "#374151" }}>
+                          className="w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
+                          style={{ fontWeight: yr === viewYear ? 600 : 400, color: yr === viewYear ? PRIMARY : undefined }}
+                        >
                           {yr}
                         </button>
                       ))}
@@ -245,15 +247,23 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
             </button>
           </div>
 
-          {/* Day headers */}
-          <div className="grid grid-cols-7 px-3 pb-1">
-            {DAYS.map(d => (
-              <div key={d} className="text-center text-[11.5px] font-semibold text-gray-400 py-1">{d}</div>
+          {/* Day headers — explicit grid: Tailwind grid-cols-7 can be dropped from CSS output for portalled nodes */}
+          <div
+            className="px-3 pb-1"
+            style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
+          >
+            {DAYS.map((d) => (
+              <div key={d} className="py-1 text-center text-[11.5px] font-semibold text-muted-foreground">
+                {d}
+              </div>
             ))}
           </div>
 
           {/* Day grid */}
-          <div className="grid grid-cols-7 px-3 pb-4 gap-y-0.5">
+          <div
+            className="gap-y-0.5 px-3 pb-4"
+            style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
+          >
             {cells.map((cell, i) => {
               const selected = isSelected(cell);
               const tod      = isToday(cell);
@@ -281,7 +291,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
 
   return (
     <div className={cn("relative", className)}>
-      {label && <p className="text-[14px] font-semibold text-gray-900 mb-2">{label}</p>}
+      {label && <p className="mb-2 text-sm font-medium text-foreground">{label}</p>}
 
       {/* Trigger */}
       <button
@@ -289,15 +299,15 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
         type="button"
         onClick={() => open ? setOpen(false) : openPanel()}
         className={cn(
-          "w-full h-12 flex items-center gap-2.5 px-4 text-left rounded-2xl border transition-colors",
-          open ? "border-gray-400 bg-white" : "border-gray-200 bg-white hover:border-gray-300",
+          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] shadow-sm transition-colors",
+          open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45",
         )}
       >
-        <CalendarDays className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        <span className={cn("flex-1 text-[14px]", value ? "text-gray-800" : "text-gray-400")}>
+        <CalendarDays className="size-[1.125rem] shrink-0 text-muted-foreground" />
+        <span className={cn("flex-1", value ? "text-foreground" : "text-muted-foreground")}>
           {value ? displayDate(value) : placeholder}
         </span>
-        <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform flex-shrink-0", open && "rotate-180")} />
+        <ChevronDown className={cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
       {/* Portal */}

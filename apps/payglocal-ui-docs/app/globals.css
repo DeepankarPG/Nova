@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/* Paths are resolved from this file's directory (`app/`). Two levels up is `apps/`, not the repo root — use three `../` to reach `packages/`. */
+@source "../**/*.{ts,tsx}";
+@source "../../../packages/payglocal-ui/src/**/*.{ts,tsx}";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import "../../../design-system/payglocal-theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(90deg, #ebebeb 25%, #d8d8d8 50%, #ebebeb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s var(--motion-ease-standard) infinite;
+}
+.dark .shimmer {
+  background: linear-gradient(90deg, #1e2630 25%, #2a3441 50%, #1e2630 75%);
+  background-size: 200% 100%;
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}

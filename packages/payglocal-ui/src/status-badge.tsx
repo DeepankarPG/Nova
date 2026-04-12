@@ -1,5 +1,5 @@
 import { cn } from "./utils";
-import { Check, X, RefreshCw, Clock, AlertCircle } from "lucide-react";
+import { Check, X, RefreshCw, Clock, AlertCircle, ArrowRight, Info } from "lucide-react";
 
 type StatusType = string;
 
@@ -12,10 +12,10 @@ type BadgeVariant =
   | "orange"
   | "muted";
 
-type BadgeMeta = {
+export type StatusBadgeMeta = {
   label: string;
   variant: BadgeVariant;
-  trailIcon?: "check" | "x" | "refresh" | "clock" | "alert";
+  trailIcon?: "check" | "x" | "refresh" | "clock" | "alert" | "arrow-right" | "info";
 };
 
 /* Light: low-opacity hue-matched borders (readable but soft). Dark: stronger borders for contrast on dark surfaces. */
@@ -35,7 +35,7 @@ const VARIANT_CLASS: Record<BadgeVariant, string> = {
     "bg-muted text-muted-foreground border-border/40 dark:bg-zinc-800/90 dark:text-zinc-200 dark:border-zinc-500/45",
 };
 
-const config: Record<string, BadgeMeta> = {
+const config: Record<string, StatusBadgeMeta> = {
   success: { label: "Success", variant: "success", trailIcon: "check" },
   sent_for_capture: { label: "Sent for capture", variant: "success", trailIcon: "check" },
   settled: { label: "Settled", variant: "success", trailIcon: "check" },
@@ -51,6 +51,8 @@ const config: Record<string, BadgeMeta> = {
   authorised_pending_capture: { label: "Authorised pending capture", variant: "warning" },
   pending: { label: "Pending", variant: "warning" },
   under_review: { label: "Under review", variant: "warning", trailIcon: "clock" },
+  evidence_submitted: { label: "Evidence submitted", variant: "info", trailIcon: "arrow-right" },
+  deadline_missed: { label: "Deadline missed", variant: "muted", trailIcon: "info" },
   processing: { label: "Processing", variant: "warning", trailIcon: "clock" },
 
   refunded: { label: "Refunded", variant: "refund", trailIcon: "refresh" },
@@ -70,6 +72,13 @@ const config: Record<string, BadgeMeta> = {
 
   sent_for_review: { label: "Sent for review", variant: "muted", trailIcon: "clock" },
   sent_for_settlement: { label: "Sent for settlement", variant: "muted" },
+
+  /** AI Storefront & integrations */
+  live: { label: "Live", variant: "success", trailIcon: "check" },
+  paused: { label: "Paused", variant: "warning", trailIcon: "clock" },
+  healthy: { label: "Healthy", variant: "success", trailIcon: "check" },
+  degraded: { label: "Degraded", variant: "warning", trailIcon: "alert" },
+  unknown: { label: "Unknown", variant: "muted", trailIcon: "info" },
 };
 
 interface StatusBadgeProps {
@@ -77,8 +86,11 @@ interface StatusBadgeProps {
   size?: "sm" | "md";
 }
 
+/** All built-in status keys (for docs and tests). */
+export const STATUS_BADGE_KEYS = Object.freeze(Object.keys(config));
+
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
-  const c: BadgeMeta = config[status] ?? {
+  const c: StatusBadgeMeta = config[status] ?? {
     label: status.replace(/_/g, " "),
     variant: "muted",
   };
@@ -97,6 +109,10 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
       <Clock {...iProps} strokeWidth={2} />
     ) : c.trailIcon === "alert" ? (
       <AlertCircle {...iProps} strokeWidth={2} />
+    ) : c.trailIcon === "arrow-right" ? (
+      <ArrowRight {...iProps} strokeWidth={2.5} />
+    ) : c.trailIcon === "info" ? (
+      <Info {...iProps} strokeWidth={2.5} />
     ) : null;
 
   return (

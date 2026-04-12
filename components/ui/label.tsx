@@ -1,1 +1,1 @@
-export { Label } from "../../packages/payglocal-ui/src";
+export { Label } from "@payglocal/ui";
