@@ -22,7 +22,7 @@ const merchants: MerchantData[] = [
       { name: "Card Payments",         count: 2, icon: "card" },
     ],
     accounts: [
-      { id: "mid-instamart", mid: "MID-SWIG-INS-001", productName: "Instamart", status: "active" },
+      { id: "mid-The Junction", mid: "MID-SWIG-INS-001", productName: "The Junction", status: "active" },
       { id: "mid-dineout", mid: "MID-SWIG-DIN-002", productName: "Dineout", status: "active" },
       { id: "mid-genie", mid: "MID-SWIG-GEN-003", productName: "Genie", status: "active" },
     ],

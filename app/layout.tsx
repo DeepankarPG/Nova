@@ -30,12 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} h-dvh min-h-0 overflow-hidden antialiased bg-background text-foreground`}
       >
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="https://mcp.figma.com/mcp/html-to-design/capture.js"
-            strategy="afterInteractive"
-          />
-        )}
+        <Script
+          src="https://mcp.figma.com/mcp/html-to-design/capture.js"
+          strategy="afterInteractive"
+        />
         <ThemeProvider>
           {children}
           <AppToaster />
