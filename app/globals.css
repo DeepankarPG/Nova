@@ -147,19 +147,29 @@ textarea:focus-visible { outline: none; }
   padding: 1px;
   isolation: isolate;
   vertical-align: middle;
+  /* Clips the rotating ::before corners to the button's rounded-rect boundary */
+  overflow: hidden;
 }
 
 .echo-ask-ring-wrap::before {
   content: "";
   position: absolute;
-  inset: 0;
+  /*
+   * Large CIRCLE centered on the button.
+   * A circle rotated is still a circle — no corners ever poke out.
+   * overflow:hidden on the wrapper clips it to the button's rounded-rect shape,
+   * so gradient colours sweep ALONG the ring border instead of rotating around it.
+   * 200px diameter covers "Ask Echo" button diagonally (~120px) with room to spare.
+   */
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
   z-index: 0;
-  box-sizing: border-box;
-  border-radius: inherit;
-  padding: 1px;
   pointer-events: none;
   background: conic-gradient(
-    from var(--echo-ask-angle),
+    from 0deg,
     #082f73 0deg,
     var(--primary) 55deg,
     #1d4ed8 95deg,
@@ -174,16 +184,12 @@ textarea:focus-visible { outline: none; }
     #7dd3fc 298deg,
     #082f73 360deg
   );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: echo-ask-angle-spin 4s linear infinite;
+  animation: echo-ask-ring-rotate 4s linear infinite;
 }
 
 .dark .echo-ask-ring-wrap::before {
   background: conic-gradient(
-    from var(--echo-ask-angle),
+    from 0deg,
     #0c1e3d 0deg,
     var(--primary) 50deg,
     #1e40af 90deg,
@@ -200,13 +206,25 @@ textarea:focus-visible { outline: none; }
   );
 }
 
-@keyframes echo-ask-angle-spin {
-  from {
-    --echo-ask-angle: 0deg;
-  }
-  to {
-    --echo-ask-angle: 360deg;
-  }
+@keyframes echo-ask-ring-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Mobile FAB — spins once then pauses, repeat. 40% spin, 60% rest out of 10s total. */
+.echo-fab-ring-pulse {
+  animation: echo-fab-ring-pulse 10s ease-in-out infinite;
+}
+
+@keyframes echo-fab-ring-pulse {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(360deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-ask-ring-wrap::before { animation: none; }
+  .echo-fab-ring-pulse { animation: none; }
 }
 
 /* EchoGlobeMark: subtle scale so “live” state reads even if GIF decode is slow or subtle */
@@ -273,6 +291,45 @@ textarea:focus-visible { outline: none; }
 }
 
 /* Echo voice composer — waveform bars (scaleY, token-colored in component) */
+/* ── Echo FAB — clockwise rotating conic gradient ────────────────── */
+.echo-fab-gradient {
+  overflow: hidden;
+}
+
+/* Rotating conic gradient layer — 200% size so corners clear the circle clip */
+.echo-fab-gradient::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    #4f46e5 0deg,
+    #2563eb 90deg,
+    #60a5fa 160deg,
+    #818cf8 220deg,
+    #1e40af 280deg,
+    #4f46e5 360deg
+  );
+  animation: echo-fab-spin 5s linear infinite;
+  z-index: 0;
+}
+
+/* Logo and all direct children stay above the rotating layer */
+.echo-fab-gradient > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes echo-fab-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echo-fab-gradient::before { animation: none; }
+}
+
 @keyframes echo-voice-bar-bounce {
   0%,
   100% {
