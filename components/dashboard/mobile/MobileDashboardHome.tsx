@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import {
   ChevronDown, ArrowDownLeft,
-  Link2, Receipt, Globe, FileText,
+  Link2, Receipt, Globe, FileText, Scale,
   XCircle, Clock,
   ChevronRight, AlertTriangle, AlertCircle, TrendingUp, ArrowUpRight,
 } from "lucide-react";
@@ -144,7 +144,7 @@ const BANNER_THEME: Record<BannerSeverity, {
   },
 };
 
-export function BannerCarousel() {
+export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
   const [idx, setIdx] = useState(0);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const total = BANNER_SLIDES.length;
@@ -168,7 +168,7 @@ export function BannerCarousel() {
        here so the shadow isn't clipped. */
     <div
       style={{
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.06)",
+        boxShadow: "0 -4px 12px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)",
       }}
     >
       <div
@@ -191,7 +191,7 @@ export function BannerCarousel() {
               <div key={i} style={{ width: `${100 / total}%`, background: theme.surface }}>
 
                 {/* Edge-to-edge content row */}
-                <div className="flex items-center gap-3 px-[14px] py-[13px]">
+                <div className="flex items-center gap-3 px-[14px] py-[13px] cursor-pointer" onClick={onOpen}>
 
                   {/* Icon container 38×38, radius 10 */}
                   <div
@@ -333,10 +333,7 @@ function PulseTooltip({
 function ReferralBannerSlide() {
   return (
     <div className="px-4 pt-1 pb-3">
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ height: 248 }}
-      >
+      <div className="rounded-xl overflow-hidden" style={{ height: 272 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/R&E.png"
@@ -433,7 +430,7 @@ function MerchantPulseCard({ metric, setMetric }: { metric: MetricKey; setMetric
       <div className="px-4 pt-1 pb-3">
 
         {/* Metric label + dropdown */}
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-0.5">
           <p className="text-[10px] font-semibold text-muted-foreground/80 uppercase tracking-[0.1em]">
             {m.label}
           </p>
@@ -662,10 +659,10 @@ const QUICK_ACTIONS = [
     bg:    "bg-emerald-50 dark:bg-emerald-950/40",
   },
   {
-    label: "Transactions",
-    icon:  ArrowDownLeft,
-    key:   "transactions",
-    href:  "/transactions",
+    label: "Disputes",
+    icon:  Scale,
+    key:   "disputes",
+    href:  "/disputes",
     color: "text-teal-600 dark:text-teal-400",
     bg:    "bg-teal-50 dark:bg-teal-950/40",
   },
@@ -685,7 +682,10 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
 
           const inner = (
             <div className="flex flex-col items-center gap-2">
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center border border-border bg-background">
+              <div
+                className="h-12 w-12 rounded-xl flex items-center justify-center border border-border bg-card"
+                style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)" }}
+              >
                 <Icon className="h-[20px] w-[20px] text-foreground" strokeWidth={1.75} />
               </div>
               {/* Single-line label — never wraps */}
@@ -701,7 +701,7 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
                 key={item.key}
                 type="button"
                 onClick={onCreatePaymentLink}
-                className="flex flex-col items-center active:opacity-60 transition-opacity"
+                className="flex flex-col items-center transition-transform duration-100 active:scale-[0.94]"
               >
                 {inner}
               </button>
@@ -711,7 +711,7 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
             <Link
               key={item.key}
               href={item.href!}
-              className="flex flex-col items-center active:opacity-60 transition-opacity"
+              className="flex flex-col items-center transition-transform duration-100 active:scale-[0.94]"
             >
               {inner}
             </Link>
@@ -728,11 +728,8 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
 function NeedsAttentionSection() {
   const { hidden } = useHideAmounts();
   return (
-    <div className="mx-4">
-      <div className="flex items-center gap-1.5 mb-3">
-        <AlertTriangle className="h-[16px] w-[16px] text-amber-500" />
-        <p className="text-[15px] font-semibold text-foreground">Needs attention</p>
-      </div>
+    <div className="mx-4 mt-3">
+      <p className="text-[15px] font-semibold text-foreground mb-3">Needs attention</p>
 
       <div className="space-y-2">
         {NEEDS_ATTENTION.map((item) => (
@@ -780,7 +777,7 @@ function RecentTransactionsCard() {
       <div className="rounded-xl bg-card overflow-hidden border border-border shadow-sm">
         {/* Header — reduced from 15px to 13px */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2.5">
-          <p className="text-[13px] font-semibold text-foreground">Recent transactions</p>
+          <p className="text-[15px] font-semibold text-foreground">Recent transactions</p>
           <Link href="/transactions" className="text-[11.5px] font-semibold text-primary">
             See all
           </Link>
@@ -882,7 +879,7 @@ export function MobileDashboardHome({
   const [metric, setMetric] = useState<MetricKey>("gross");
 
   return (
-    <div className="flex flex-col gap-2.5 pb-4 pt-1.5">
+    <div className="flex flex-col gap-4 pb-4 pt-1.5">
 
       {/* ① Hero carousel — Gross Volume · Referral (2 slides) */}
       <HeroCarousel metric={metric} setMetric={setMetric} />

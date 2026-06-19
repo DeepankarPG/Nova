@@ -299,7 +299,7 @@ function AppStage() {
           On Home tab, the sticky banner carousel is rendered above the nav bar
           inside this same container so they form one fixed unit. */}
       <div className="absolute bottom-0 left-0 right-0 z-40">
-        {activeTab === "home" && <BannerCarousel />}
+        {activeTab === "home" && <BannerCarousel onOpen={() => setNotifsOpen(true)} />}
         <div className="bg-background border-t border-border/60">
         <div className="flex items-center h-[64px] px-2">
           {TABS.slice(0, 2).map((tab) => {
@@ -421,7 +421,8 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
 
       {/* Logo */}
       <div style={{ display: "flex", justifyContent: "center", padding: "16px 24px 0", flexShrink: 0 }}>
-        <Image src="/PG-logo_workmark.svg" alt="PayGlocal" width={130} height={28} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/PG_blue.svg" alt="PayGlocal" width={115} height={21} />
       </div>
 
       {/* Title + subtitle */}
