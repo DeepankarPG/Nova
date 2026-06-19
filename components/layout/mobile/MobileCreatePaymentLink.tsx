@@ -544,7 +544,6 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                     <Lottie
                       animationData={successAnim}
                       loop={true}
-                      speed={0.5}
                       className="h-[115px] w-[115px]"
                     />
                   </motion.div>
