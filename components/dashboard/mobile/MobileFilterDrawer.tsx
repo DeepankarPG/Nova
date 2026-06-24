@@ -119,9 +119,11 @@ function catHasFilter(f: FilterState, cat: FilterCat): boolean {
 export function MobileFilterDrawer({
   initialFilters,
   onApply,
+  onReset,
 }: {
   initialFilters: FilterState;
   onApply: (filters: FilterState) => void;
+  onReset?: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState<FilterCat>("status");
   const [draft, setDraft] = useState<FilterState>(() => cloneFilters(initialFilters));
@@ -283,7 +285,7 @@ export function MobileFilterDrawer({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
         <h3 className="text-[15px] font-bold text-foreground">Filters</h3>
-        <button type="button" onClick={resetDraft}
+        <button type="button" onClick={() => { resetDraft(); onReset?.(); }}
           className="text-[14px] font-semibold text-primary active:opacity-60 transition-opacity">
           Reset
         </button>
@@ -329,7 +331,8 @@ export function MobileFilterDrawer({
       {/* Footer */}
       <div className="shrink-0 border-t border-border/50 px-4 py-3">
         <button type="button" onClick={() => onApply(cloneFilters(draft))}
-          className="w-full py-3.5 rounded-2xl bg-primary text-white text-[15px] font-bold active:scale-[0.98] transition-all">
+          disabled={!hasAnyFilter(draft)}
+          className="w-full py-3.5 rounded-2xl bg-primary text-white text-[15px] font-bold active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
           Apply filters
         </button>
       </div>

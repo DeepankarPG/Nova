@@ -453,6 +453,7 @@ function AppStage() {
             <MobileFilterDrawer
               initialFilters={txnFilterApplied}
               onApply={(filters) => { setTxnFilterApplied(filters); setTxnFilterOpen(false); }}
+              onReset={() => setTxnFilterApplied(emptyFilters())}
             />
           </motion.div>
         )}

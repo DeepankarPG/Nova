@@ -220,7 +220,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
             <button
               type="button"
               onClick={() => setDropdownOpen(prev => !prev)}
-              className="flex items-center gap-1.5 px-3 h-[34px] rounded-xl border border-border bg-background text-[12.5px] font-medium text-foreground active:bg-muted/40 transition-colors"
+              className="flex items-center gap-1.5 px-3 h-[34px] rounded-xl border border-border bg-white text-[12.5px] font-medium text-foreground active:bg-muted/40 transition-colors"
             >
               {PERIODS.find(p => p.id === period)?.label}
               <ChevronDown

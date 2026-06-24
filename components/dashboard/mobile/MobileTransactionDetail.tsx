@@ -1,7 +1,51 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Copy, Check, ChevronRight, Wallet, Landmark } from "lucide-react";
+import { X, Copy, Check, Clock, ChevronRight, Wallet, Landmark } from "lucide-react";
+
+const BANK_CFG: Record<string, { short: string; bg: string }> = {
+  "HDFC Bank":  { short: "HDFC",  bg: "#004C8F" },
+  "Axis Bank":  { short: "AXIS",  bg: "#97144D" },
+  "ICICI Bank": { short: "ICICI", bg: "#F7861C" },
+  "SBI":        { short: "SBI",   bg: "#22409A" },
+  "Kotak Bank": { short: "KMB",   bg: "#ED1C24" },
+  "Yes Bank":   { short: "YES",   bg: "#003087" },
+};
+
+function IndiaFlag() {
+  return (
+    <svg
+      width="20" height="14" viewBox="0 0 20 14"
+      style={{ borderRadius: 2, flexShrink: 0, display: "inline-block" }}
+      aria-label="India"
+    >
+      <rect width="20" height="4.67" fill="#FF9933" />
+      <rect y="4.67" width="20" height="4.67" fill="#FFFFFF" />
+      <rect y="9.33" width="20" height="4.67" fill="#138808" />
+      <g transform="translate(10,7)">
+        {Array.from({ length: 24 }).map((_, i) => (
+          <line key={i} x1="0" y1="0" x2="0" y2="-1.7"
+            stroke="#000080" strokeWidth="0.28"
+            transform={`rotate(${i * 15})`} />
+        ))}
+        <circle r="1.7" fill="none" stroke="#000080" strokeWidth="0.35" />
+        <circle r="0.28" fill="#000080" />
+      </g>
+    </svg>
+  );
+}
+
+function BankBadge({ name }: { name: string }) {
+  const cfg = BANK_CFG[name] ?? { short: name.slice(0, 4).toUpperCase(), bg: "#6B7280" };
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded px-1.5 h-[18px] text-[9px] font-bold text-white shrink-0 tracking-wide"
+      style={{ backgroundColor: cfg.bg }}
+    >
+      {cfg.short}
+    </span>
+  );
+}
 import { cn } from "@/lib/utils";
 
 /* ── Types ────────────────────────────────────────────────────────── */
@@ -46,6 +90,7 @@ type TxnDetail = {
   currency: string;
   createdAt: string;
   expectedSettlementDate?: string;
+  creditedBank?: string;
   statusNotes?: StatusNotes;
   linkedTransaction?: LinkedTransaction;
 };
@@ -65,6 +110,7 @@ const TXN_DETAIL_MAP: Record<string, TxnDetail> = {
     settlementStatus: "settled",
     settlementDate: "05 Jun 2026",
     utrNumber: "UTR2026060498765432",
+    creditedBank: "HDFC Bank",
     comments: "—",
     currency: "INR",
     createdAt: "04 Jun 2026 · 10:50 AM",
@@ -90,6 +136,7 @@ const TXN_DETAIL_MAP: Record<string, TxnDetail> = {
     settlementStatus: "settled",
     settlementDate: "04 Jun 2026",
     utrNumber: "UTR2026060488001223",
+    creditedBank: "Axis Bank",
     comments: "Bulk order payment",
     currency: "INR",
     createdAt: "04 Jun 2026 · 09:32 AM",
@@ -186,11 +233,6 @@ const STATUS_CONFIG = {
   pending: { label: "In Progress", dot: "bg-amber-500",   text: "text-amber-700 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-950/40"     },
 } as const;
 
-const SETTLEMENT_CFG: Record<string, { label: string; text: string; bg: string }> = {
-  settled: { label: "Settled", text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
-  pending: { label: "Pending", text: "text-amber-700 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-950/40"     },
-  failed:  { label: "Failed",  text: "text-red-700 dark:text-red-400",         bg: "bg-red-50 dark:bg-red-950/40"         },
-};
 
 /* ── Copy button ──────────────────────────────────────────────────── */
 function VDivider() {
@@ -356,9 +398,8 @@ export function MobileTransactionDetail({
 }) {
   const [loading, setLoading] = useState(true);
 
-  const detail        = TXN_DETAIL_MAP[txn.id] ?? null;
-  const statusCfg     = STATUS_CONFIG[txn.status];
-  const settlementCfg = detail ? SETTLEMENT_CFG[detail.settlementStatus] : undefined;
+  const detail    = TXN_DETAIL_MAP[txn.id] ?? null;
+  const statusCfg = STATUS_CONFIG[txn.status];
 
   useEffect(() => {
     setLoading(true);
@@ -489,7 +530,7 @@ export function MobileTransactionDetail({
                   Charged to{" "}
                   <span className="font-semibold text-primary">{txn.name}</span>
                   {" "}
-                  <span>🇮🇳</span>
+                  <IndiaFlag />
                 </p>
               </div>
             </div>
@@ -502,58 +543,59 @@ export function MobileTransactionDetail({
               {loading ? <SkSection rows={2} /> : (
                 <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
 
-                  {/* Settlement Status + date inline */}
-                  <div className="px-4 py-3.5 border-b border-border/50">
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5 leading-none">
-                      Settlement Status
-                    </p>
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      {settlementCfg ? (
-                        <span className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold",
-                          settlementCfg.text, settlementCfg.bg,
-                        )}>
-                          {settlementCfg.label}
-                        </span>
+                  {/* Row 1: Settlement Status | Settlement date */}
+                  <PairedRow
+                    left={{
+                      label: "Settlement Status",
+                      value: detail?.settlementStatus === "settled" ? (
+                        <div className="flex items-center gap-1.5">
+                          <Check className="h-[14px] w-[14px] text-emerald-600 shrink-0" strokeWidth={2.5} />
+                          <p className="text-[13px] font-medium text-foreground leading-snug">Settled</p>
+                        </div>
                       ) : (
-                        <p className="text-[13px] font-medium text-muted-foreground">
-                          {detail?.settlementStatus ?? "—"}
-                        </p>
-                      )}
-                      {detail?.settlementStatus === "pending" && detail?.expectedSettlementDate ? (
-                        <p className="text-[11.5px] text-muted-foreground">
-                          Expected by {detail.expectedSettlementDate}
-                        </p>
-                      ) : (detail?.settlementDate && detail.settlementDate !== "—") ? (
-                        <p className="text-[11.5px] text-muted-foreground">
-                          {detail.settlementDate}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-[14px] w-[14px] text-amber-600 shrink-0" strokeWidth={2} />
+                          <p className="text-[13px] font-medium text-amber-600 leading-snug">Pending</p>
+                        </div>
+                      ),
+                    }}
+                    right={{
+                      label: detail?.settlementStatus === "settled" ? "Settled on" : "Expected on",
+                      value: detail?.settlementStatus === "settled"
+                        ? (detail?.settlementDate && detail.settlementDate !== "—" ? detail.settlementDate : "—")
+                        : (detail?.expectedSettlementDate ?? "—"),
+                    }}
+                  />
 
-                  {/* UTR Number */}
-                  <div className="px-4 py-3.5">
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5 leading-none">
-                      UTR Number
-                    </p>
-                    {detail?.utrNumber && detail.settlementStatus === "settled" ? (
-                      <div className="flex items-center gap-2 min-w-0">
+                  {/* Row 2: UTR Number | Credited to */}
+                  <PairedRow
+                    last
+                    left={{
+                      label: "UTR Number",
+                      value: detail?.utrNumber ? (
                         <div className="flex items-center gap-0.5 min-w-0">
-                          <p className="text-[13px] font-medium text-foreground leading-snug truncate">
-                            {detail.utrNumber}
-                          </p>
+                          <button type="button"
+                            className="text-[13px] font-medium text-primary leading-snug truncate">
+                            {detail.utrNumber.slice(0, 10)}...
+                          </button>
                           <CopyBtn value={detail.utrNumber} />
                         </div>
-                        <button type="button"
-                          className="text-[12px] font-semibold text-primary shrink-0 ml-auto">
-                          View details
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-[13px] font-medium text-foreground">—</p>
-                    )}
-                  </div>
+                      ) : (
+                        <p className="text-[13px] font-medium text-foreground leading-snug">—</p>
+                      ),
+                    }}
+                    right={{
+                      label: "Credited to",
+                      value: detail?.creditedBank ? (
+                        <div className="flex items-center gap-1.5">
+                          <BankBadge name={detail.creditedBank} />
+                          <p className="text-[13px] font-medium text-foreground leading-snug">···432</p>
+                        </div>
+                      ) : (
+                        <p className="text-[13px] font-medium text-foreground leading-snug">—</p>
+                      ),
+                    }}
+                  />
 
                 </div>
               )}
