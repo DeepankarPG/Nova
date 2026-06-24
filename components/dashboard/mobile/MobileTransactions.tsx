@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Search, X, SlidersHorizontal, Wallet, Landmark, ChevronDown, Check, Download,
+  Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
@@ -105,6 +105,101 @@ const TABS: { id: TxnTab; label: string }[] = [
   { id: "failed",   label: "Failed"   },
 ];
 
+/* ── Chip filter types ──────────────────────────────────────────────── */
+type ChipId = "status" | "datetime" | "method" | "amount" | "currency";
+
+type ChipFilters = {
+  status: Set<string>;
+  datetime: { preset: string | null; from: string; to: string };
+  method: Set<string>;
+  amount: { min: string; max: string };
+  currency: string;
+};
+
+function emptyChipFilters(): ChipFilters {
+  return { status: new Set(), datetime: { preset: null, from: "", to: "" }, method: new Set(), amount: { min: "", max: "" }, currency: "" };
+}
+
+function cloneChipFilters(f: ChipFilters): ChipFilters {
+  return { ...f, status: new Set(f.status), method: new Set(f.method), datetime: { ...f.datetime }, amount: { ...f.amount } };
+}
+
+function isChipActive(f: ChipFilters, id: ChipId): boolean {
+  switch (id) {
+    case "status":   return f.status.size > 0;
+    case "datetime": return f.datetime.preset !== null || (f.datetime.from !== "" && f.datetime.to !== "");
+    case "method":   return f.method.size > 0;
+    case "amount":   return f.amount.min !== "" || f.amount.max !== "";
+    case "currency": return f.currency !== "";
+  }
+}
+
+const DATE_PRESET_LABELS: Record<string, string> = {
+  today: "Today", "7d": "Last 7 days", "30d": "Last 30 days", "3m": "Last 3 months", custom: "Custom",
+};
+
+function getChipLabel(f: ChipFilters, id: ChipId): string {
+  const SL: Record<string, string> = { success: "Completed", pending: "Pending", failed: "Failed", refunded: "Refunded" };
+  const ML: Record<string, string> = { upi: "UPI", card: "Card", netbanking: "Net Banking" };
+  switch (id) {
+    case "status": {
+      if (f.status.size === 0) return "Status";
+      const txt = [...f.status].map(s => SL[s] ?? s).join(", ");
+      return txt.length > 18 ? txt.slice(0, 17) + "…" : txt;
+    }
+    case "datetime": {
+      const { preset, from, to } = f.datetime;
+      if (preset === "custom" && from && to) return `${from} – ${to}`;
+      if (preset) return DATE_PRESET_LABELS[preset] ?? "Date & Time";
+      return "Date & Time";
+    }
+    case "method": {
+      if (f.method.size === 0) return "Payment Method";
+      const txt = [...f.method].map(m => ML[m] ?? m).join(", ");
+      return txt.length > 18 ? txt.slice(0, 17) + "…" : txt;
+    }
+    case "amount": {
+      const { min, max } = f.amount;
+      if (!min && !max) return "Amount";
+      if (min && max) return `₹${min} – ₹${max}`;
+      return min ? `≥ ₹${min}` : `≤ ₹${max}`;
+    }
+    case "currency": return f.currency || "Currency";
+  }
+}
+
+/* ── Chip constants ─────────────────────────────────────────────────── */
+const CHIPS: { id: ChipId; label: string }[] = [
+  { id: "status",   label: "Status"         },
+  { id: "datetime", label: "Date & Time"    },
+  { id: "method",   label: "Payment Method" },
+  { id: "amount",   label: "Amount"         },
+  { id: "currency", label: "Currency"       },
+];
+
+const CHIP_STATUS_OPTS = [
+  { id: "success",  label: "Completed", color: "text-emerald-700", bg: "bg-emerald-50" },
+  { id: "pending",  label: "Pending",   color: "text-amber-700",   bg: "bg-amber-50"   },
+  { id: "failed",   label: "Failed",    color: "text-red-700",     bg: "bg-red-50"     },
+  { id: "refunded", label: "Refunded",  color: "text-red-700",     bg: "bg-red-50"     },
+];
+
+const CHIP_DATE_PRESETS = [
+  { id: "today",  label: "Today"         },
+  { id: "7d",     label: "Last 7 days"   },
+  { id: "30d",    label: "Last 30 days"  },
+  { id: "3m",     label: "Last 3 months" },
+  { id: "custom", label: "Custom range"  },
+];
+
+const CHIP_METHOD_OPTS = [
+  { id: "upi",        label: "UPI"         },
+  { id: "card",       label: "Card"        },
+  { id: "netbanking", label: "Net Banking" },
+];
+
+const CHIP_CURRENCY_OPTS = ["INR", "USD", "EUR", "GBP"];
+
 /* ── Helpers ────────────────────────────────────────────────────────── */
 function fmtAmount(amount: number, currency: string): string {
   const sym: Record<string, string> = { INR: "₹", USD: "$", EUR: "€", GBP: "£" };
@@ -174,8 +269,176 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
   const [period,       setPeriod]       = useState<Period>("1D");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [tab,          setTab]          = useState<TxnTab>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery,  setSearchQuery]  = useState("");
+  const [openChip,     setOpenChip]     = useState<ChipId | null>(null);
+  const [chipFilters,  setChipFilters]  = useState<ChipFilters>(emptyChipFilters());
+  const [chipDraft,    setChipDraft]    = useState<ChipFilters>(emptyChipFilters());
+  const [dropdownPos,  setDropdownPos]  = useState<{ left: number; top: number }>({ left: 16, top: 0 });
+
+  const rootRef     = useRef<HTMLDivElement>(null);
+  const chipBtnRefs = useRef<Partial<Record<ChipId, HTMLButtonElement | null>>>({});
+
+  useEffect(() => { setDropdownOpen(false); }, [period]);
+
   const { hidden } = useHideAmounts();
+
+  const openChipPanel = (id: ChipId) => {
+    setChipDraft(cloneChipFilters(chipFilters));
+    const btn  = chipBtnRefs.current[id];
+    const root = rootRef.current;
+    if (btn && root) {
+      const br = btn.getBoundingClientRect();
+      const rr = root.getBoundingClientRect();
+      const left = Math.max(0, Math.min(br.left - rr.left, rr.width - 244));
+      setDropdownPos({ left, top: br.bottom - rr.top + 4 });
+    }
+    setOpenChip(id);
+  };
+
+  const applyChipFilter = () => { setChipFilters(cloneChipFilters(chipDraft)); setOpenChip(null); };
+
+  const clearChip = (id: ChipId) => {
+    setChipFilters(prev => {
+      const next = cloneChipFilters(prev);
+      if (id === "status")   next.status   = new Set();
+      if (id === "datetime") next.datetime = { preset: null, from: "", to: "" };
+      if (id === "method")   next.method   = new Set();
+      if (id === "amount")   next.amount   = { min: "", max: "" };
+      if (id === "currency") next.currency = "";
+      return next;
+    });
+    setOpenChip(null);
+  };
+
+  const renderChipPanel = () => {
+    if (!openChip) return null;
+    switch (openChip) {
+      case "status":
+        return (
+          <div className="divide-y divide-border/50">
+            {CHIP_STATUS_OPTS.map(s => {
+              const checked = chipDraft.status.has(s.id);
+              return (
+                <button key={s.id} type="button"
+                  onClick={() => setChipDraft(prev => {
+                    const status = new Set(prev.status);
+                    if (status.has(s.id)) status.delete(s.id); else status.add(s.id);
+                    return { ...prev, status };
+                  })}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/20">
+                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold", s.bg, s.color)}>{s.label}</span>
+                  <span className="flex-1" />
+                  <span className={cn("h-[18px] w-[18px] rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", checked ? "bg-primary border-primary" : "border-border")}>
+                    {checked && <svg viewBox="0 0 10 8" className="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 3.5 6.5 9 1" /></svg>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      case "datetime":
+        return (
+          <div>
+            <div className="divide-y divide-border/50">
+              {CHIP_DATE_PRESETS.map(p => {
+                const sel = chipDraft.datetime.preset === p.id;
+                return (
+                  <button key={p.id} type="button"
+                    onClick={() => setChipDraft(prev => ({ ...prev, datetime: { ...prev.datetime, preset: p.id } }))}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-muted/20">
+                    <span className={cn("text-[13px]", sel ? "font-semibold text-foreground" : "text-muted-foreground")}>{p.label}</span>
+                    <span className={cn("h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center shrink-0", sel ? "border-primary" : "border-border")}>
+                      {sel && <span className="h-2 w-2 rounded-full bg-primary block" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {chipDraft.datetime.preset === "custom" && (
+              <div className="px-4 pt-2 pb-1 space-y-2 border-t border-border/50">
+                <div>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1">From</p>
+                  <input type="date" value={chipDraft.datetime.from}
+                    onChange={e => setChipDraft(prev => ({ ...prev, datetime: { ...prev.datetime, from: e.target.value } }))}
+                    className="w-full rounded-xl border border-border px-3 py-2 text-[12px] bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1">To</p>
+                  <input type="date" value={chipDraft.datetime.to}
+                    onChange={e => setChipDraft(prev => ({ ...prev, datetime: { ...prev.datetime, to: e.target.value } }))}
+                    className="w-full rounded-xl border border-border px-3 py-2 text-[12px] bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "method":
+        return (
+          <div className="divide-y divide-border/50">
+            {CHIP_METHOD_OPTS.map(mo => {
+              const checked = chipDraft.method.has(mo.id);
+              const Icon = mo.id === "upi" ? Wallet : mo.id === "card" ? CreditCard : Landmark;
+              return (
+                <button key={mo.id} type="button"
+                  onClick={() => setChipDraft(prev => {
+                    const method = new Set(prev.method);
+                    if (method.has(mo.id)) method.delete(mo.id); else method.add(mo.id);
+                    return { ...prev, method };
+                  })}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/20">
+                  <Icon className={cn("h-[15px] w-[15px] shrink-0", checked ? "text-primary" : "text-muted-foreground")} strokeWidth={1.75} />
+                  <span className={cn("flex-1 text-[13px]", checked ? "font-semibold text-foreground" : "text-muted-foreground")}>{mo.label}</span>
+                  <span className={cn("h-[18px] w-[18px] rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", checked ? "bg-primary border-primary" : "border-border")}>
+                    {checked && <svg viewBox="0 0 10 8" className="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 3.5 6.5 9 1" /></svg>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      case "amount":
+        return (
+          <div className="px-4 pt-3 pb-1">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <p className="text-[11px] font-medium text-muted-foreground mb-1">Min</p>
+                <input type="number" placeholder="0" value={chipDraft.amount.min}
+                  onChange={e => setChipDraft(prev => ({ ...prev, amount: { ...prev.amount, min: e.target.value } }))}
+                  className="w-full rounded-xl border border-border px-3 py-2 text-[13px] bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                <p className="text-[10px] text-muted-foreground mt-0.5">INR</p>
+              </div>
+              <span className="text-[13px] text-muted-foreground mb-[22px]">–</span>
+              <div className="flex-1">
+                <p className="text-[11px] font-medium text-muted-foreground mb-1">Max</p>
+                <input type="number" placeholder="∞" value={chipDraft.amount.max}
+                  onChange={e => setChipDraft(prev => ({ ...prev, amount: { ...prev.amount, max: e.target.value } }))}
+                  className="w-full rounded-xl border border-border px-3 py-2 text-[13px] bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                <p className="text-[10px] text-muted-foreground mt-0.5">INR</p>
+              </div>
+            </div>
+          </div>
+        );
+      case "currency":
+        return (
+          <div className="divide-y divide-border/50">
+            {CHIP_CURRENCY_OPTS.map(c => {
+              const sel = chipDraft.currency === c;
+              return (
+                <button key={c} type="button"
+                  onClick={() => setChipDraft(prev => ({ ...prev, currency: prev.currency === c ? "" : c }))}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-muted/20">
+                  <span className={cn("text-[13px]", sel ? "font-semibold text-foreground" : "text-muted-foreground")}>{c}</span>
+                  <span className={cn("h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center shrink-0", sel ? "border-primary" : "border-border")}>
+                    {sel && <span className="h-2 w-2 rounded-full bg-primary block" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      default: return null;
+    }
+  };
 
   /* ── Filtered list ───────────────────────────────────────────────── */
   const f = externalFilterState ?? emptyFilters();
@@ -193,21 +456,30 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
       if (max !== null && t.amount > max) return false;
       return true;
     })
-    .filter(t => !f.country || t.currency === f.country);
+    .filter(t => !f.country || t.currency === f.country)
+    .filter(t => chipFilters.status.size === 0 || chipFilters.status.has(t.status))
+    .filter(t => chipFilters.method.size === 0 || chipFilters.method.has(t.paymentMethod))
+    .filter(t => {
+      const { min, max } = chipFilters.amount;
+      if (min !== "" && t.amount < parseFloat(min)) return false;
+      if (max !== "" && t.amount > parseFloat(max)) return false;
+      return true;
+    })
+    .filter(t => chipFilters.currency === "" || t.currency === chipFilters.currency);
 
   const m = METRICS[period];
 
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="space-y-3 pb-10 bg-background relative min-h-full">
+    <div ref={rootRef} className="space-y-3 pb-10 bg-background relative min-h-full">
 
-      {/* Click-outside overlay — closes dropdown when tapping outside */}
-      {dropdownOpen && (
-        <div className="absolute inset-0 z-[19]" onClick={() => setDropdownOpen(false)} />
+      {/* Click-outside overlay — closes period dropdown and chip panels */}
+      {(dropdownOpen || openChip !== null) && (
+        <div className="absolute inset-0 z-[19]" onClick={() => { setDropdownOpen(false); setOpenChip(null); }} />
       )}
 
       {/* Zone 1 — Period selector (sticky) */}
-      <div className="sticky top-0 z-20 bg-background px-4 pt-3.5 pb-2.5 border-b border-border/30 overflow-visible">
+      <div className="bg-background px-4 pt-3.5 pb-2.5 overflow-visible">
         <div className="flex items-center justify-between gap-3">
 
           {/* Dynamic label */}
@@ -232,7 +504,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
             {/* Dropdown menu */}
             {dropdownOpen && (
               <div
-                className="absolute right-0 top-full mt-1.5 bg-background rounded-2xl border border-border overflow-hidden min-w-[130px]"
+                className="absolute right-0 top-full mt-1.5 bg-white rounded-2xl border border-border overflow-hidden min-w-[130px]"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.10)", zIndex: 21 }}
               >
                 {PERIODS.map(p => {
@@ -366,6 +638,44 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
           </button>
         </div>
 
+        {/* Filter chips — active chips float to the left */}
+        <div className="flex gap-2 px-4 pb-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+          {[...CHIPS].sort((a, b) => {
+            const aActive = isChipActive(chipFilters, a.id) ? 0 : 1;
+            const bActive = isChipActive(chipFilters, b.id) ? 0 : 1;
+            return aActive - bActive;
+          }).map(chip => {
+            const active = isChipActive(chipFilters, chip.id);
+            return (
+              <button
+                key={chip.id}
+                ref={el => { chipBtnRefs.current[chip.id] = el; }}
+                type="button"
+                onClick={() => openChipPanel(chip.id)}
+                className={cn(
+                  "flex items-center gap-1 h-8 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0",
+                  active
+                    ? "bg-primary text-white rounded-full pl-3 pr-1.5"
+                    : "border border-border bg-white text-muted-foreground rounded-full px-3"
+                )}
+              >
+                <span>{getChipLabel(chipFilters, chip.id)}</span>
+                {active ? (
+                  <span
+                    role="button"
+                    className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white/20 shrink-0 ml-0.5"
+                    onClick={e => { e.stopPropagation(); clearChip(chip.id); }}
+                  >
+                    <X className="h-[10px] w-[10px] text-white" strokeWidth={2.5} />
+                  </span>
+                ) : (
+                  <ChevronDown className="h-[11px] w-[11px] text-muted-foreground/60 shrink-0" strokeWidth={2} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Tab strip */}
         <div className="flex gap-1 mx-4 mb-3 bg-muted/60 p-1 rounded-xl">
           {TABS.map((t) => (
@@ -434,6 +744,30 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
           })}
         </div>
       </div>
+
+      {/* Chip dropdown panel — rendered at root level to escape overflow-hidden container */}
+      {openChip !== null && (
+        <div
+          className="absolute z-[30] bg-white rounded-2xl border border-border overflow-hidden"
+          style={{
+            left: dropdownPos.left,
+            top: dropdownPos.top,
+            minWidth: 228,
+            maxWidth: 260,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+          }}
+        >
+          <div className="overflow-y-auto" style={{ maxHeight: 260 }}>
+            {renderChipPanel()}
+          </div>
+          <div className="px-3 py-3 border-t border-border/50">
+            <button type="button" onClick={applyChipFilter}
+              className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-bold active:scale-[0.98] transition-all">
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

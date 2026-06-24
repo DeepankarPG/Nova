@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet, Landmark, CreditCard } from "lucide-react";
+import { X, Wallet, Landmark, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ── Shared types (imported by MobileTransactions and page.tsx) ─────── */
@@ -120,10 +120,12 @@ export function MobileFilterDrawer({
   initialFilters,
   onApply,
   onReset,
+  onClose,
 }: {
   initialFilters: FilterState;
   onApply: (filters: FilterState) => void;
   onReset?: () => void;
+  onClose?: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState<FilterCat>("status");
   const [draft, setDraft] = useState<FilterState>(() => cloneFilters(initialFilters));
@@ -285,9 +287,9 @@ export function MobileFilterDrawer({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
         <h3 className="text-[15px] font-bold text-foreground">Filters</h3>
-        <button type="button" onClick={() => { resetDraft(); onReset?.(); }}
-          className="text-[14px] font-semibold text-primary active:opacity-60 transition-opacity">
-          Reset
+        <button type="button" onClick={onClose}
+          className="h-8 w-8 flex items-center justify-center rounded-full text-muted-foreground active:bg-muted/40 transition-colors">
+          <X className="h-[16px] w-[16px]" strokeWidth={2.25} />
         </button>
       </div>
 
@@ -329,10 +331,14 @@ export function MobileFilterDrawer({
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border/50 px-4 py-3">
+      <div className="shrink-0 border-t border-border/50 px-4 py-3 flex items-center gap-3">
+        <button type="button" onClick={() => { resetDraft(); onReset?.(); }}
+          className="flex-1 py-3.5 rounded-2xl border border-border text-[15px] font-bold text-foreground active:bg-muted/30 transition-all">
+          Reset
+        </button>
         <button type="button" onClick={() => onApply(cloneFilters(draft))}
           disabled={!hasAnyFilter(draft)}
-          className="w-full py-3.5 rounded-2xl bg-primary text-white text-[15px] font-bold active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
+          className="flex-1 py-3.5 rounded-2xl bg-primary text-white text-[15px] font-bold active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
           Apply filters
         </button>
       </div>

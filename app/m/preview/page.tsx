@@ -454,6 +454,7 @@ function AppStage() {
               initialFilters={txnFilterApplied}
               onApply={(filters) => { setTxnFilterApplied(filters); setTxnFilterOpen(false); }}
               onReset={() => setTxnFilterApplied(emptyFilters())}
+              onClose={() => setTxnFilterOpen(false)}
             />
           </motion.div>
         )}

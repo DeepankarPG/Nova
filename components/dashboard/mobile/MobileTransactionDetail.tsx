@@ -15,8 +15,8 @@ const BANK_CFG: Record<string, { short: string; bg: string }> = {
 function IndiaFlag() {
   return (
     <svg
-      width="20" height="14" viewBox="0 0 20 14"
-      style={{ borderRadius: 2, flexShrink: 0, display: "inline-block" }}
+      width="14" height="10" viewBox="0 0 20 14"
+      style={{ borderRadius: 1.5, flexShrink: 0, display: "inline-block" }}
       aria-label="India"
     >
       <rect width="20" height="4.67" fill="#FF9933" />
@@ -39,7 +39,7 @@ function BankBadge({ name }: { name: string }) {
   const cfg = BANK_CFG[name] ?? { short: name.slice(0, 4).toUpperCase(), bg: "#6B7280" };
   return (
     <span
-      className="inline-flex items-center justify-center rounded px-1.5 h-[18px] text-[9px] font-bold text-white shrink-0 tracking-wide"
+      className="inline-flex items-center justify-center rounded px-1 h-[14px] text-[7.5px] font-bold text-white shrink-0 tracking-wide"
       style={{ backgroundColor: cfg.bg }}
     >
       {cfg.short}
@@ -372,14 +372,16 @@ function LinkedTxnRow({
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[13px] font-semibold text-foreground">{linked.displayAmount}</span>
-        <span className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold",
-          statusCfg.text, statusCfg.bg,
-        )}>
-          <span className={cn("h-[4px] w-[4px] rounded-full shrink-0", statusCfg.dot)} />
-          {statusCfg.label}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-[13px] font-semibold text-foreground">{linked.displayAmount}</span>
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold",
+            statusCfg.text, statusCfg.bg,
+          )}>
+            <span className={cn("h-[4px] w-[4px] rounded-full shrink-0", statusCfg.dot)} />
+            {statusCfg.label}
+          </span>
+        </div>
         <ChevronRight className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={2} />
       </div>
     </button>
@@ -413,7 +415,7 @@ export function MobileTransactionDetail({
 
   /* Merchant Txn ID truncated for Payment Details card */
   const merchantId      = detail?.merchantTxnId ?? txn.id.toUpperCase();
-  const merchantIdShort = merchantId.length > 12 ? `${merchantId.slice(0, 7)}.......${merchantId.slice(-4)}` : merchantId;
+  const merchantIdShort = merchantId.length > 8 ? `${merchantId.slice(0, 4)}......${merchantId.slice(-4)}` : merchantId;
 
   /* Date + time parts for summary card */
   const createdAtStr   = detail?.createdAt ?? (txn.date ? `${txn.date} · ${txn.time}` : txn.time);
@@ -576,7 +578,7 @@ export function MobileTransactionDetail({
                         <div className="flex items-center gap-0.5 min-w-0">
                           <button type="button"
                             className="text-[13px] font-medium text-primary leading-snug truncate">
-                            {detail.utrNumber.slice(0, 10)}...
+                            {detail.utrNumber.slice(0, 4)}......{detail.utrNumber.slice(-4)}
                           </button>
                           <CopyBtn value={detail.utrNumber} />
                         </div>
@@ -585,7 +587,7 @@ export function MobileTransactionDetail({
                       ),
                     }}
                     right={{
-                      label: "Credited to",
+                      label: "Settled to",
                       value: detail?.creditedBank ? (
                         <div className="flex items-center gap-1.5">
                           <BankBadge name={detail.creditedBank} />
