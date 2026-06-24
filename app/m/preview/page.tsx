@@ -16,7 +16,9 @@ import { MobileNotifications }       from "@/components/layout/mobile/MobileNoti
 import { MobileCreatePaymentLink }   from "@/components/layout/mobile/MobileCreatePaymentLink";
 import { MobileTapToPay }            from "@/components/layout/mobile/MobileTapToPay";
 import { MobileFilterSheet }         from "@/components/layout/mobile/MobileFilterSheet";
-import { MobileDashboardHome, BannerCarousel } from "@/components/dashboard/mobile/MobileDashboardHome";
+import { MobileDashboardHome, BannerCarousel, CriticalNotificationsSheet } from "@/components/dashboard/mobile/MobileDashboardHome";
+import { MobileTransactionDetail } from "@/components/dashboard/mobile/MobileTransactionDetail";
+import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
 import { MobileAnalytics }           from "@/components/dashboard/mobile/MobileAnalytics";
 import { MobileTransactions }        from "@/components/dashboard/mobile/MobileTransactions";
 import {
@@ -27,6 +29,8 @@ import {
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
+import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
+import type { FilterState } from "@/components/dashboard/mobile/MobileFilterDrawer";
 import { cn } from "@/lib/utils";
 
 /* ── Phone dimensions ── */
@@ -152,18 +156,27 @@ function AppStage() {
   const [tapToPayOpen,     setTapToPayOpen]     = useState(false);
   const [filterOpen,       setFilterOpen]       = useState<FilterId | null>(null);
   const [appliedFilters,   setAppliedFilters]   = useState<Partial<Record<FilterId, string>>>({});
+  const [txnFilterOpen,    setTxnFilterOpen]    = useState(false);
+  const [txnFilterApplied, setTxnFilterApplied] = useState<FilterState>(emptyFilters());
   const [plusOpen,         setPlusOpen]         = useState(false);
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
-  const [intlSheetOpen,    setIntlSheetOpen]    = useState(false);
-  const [intlCountry,      setIntlCountry]      = useState<IntlCountry>(COUNTRIES[0]);
+  const [intlSheetOpen,       setIntlSheetOpen]       = useState(false);
+  const [intlCountry,         setIntlCountry]         = useState<IntlCountry>(COUNTRIES[0]);
+  const [criticalSheetOpen,   setCriticalSheetOpen]   = useState(false);
+  const [selectedTxn,         setSelectedTxn]         = useState<RecentTxnItem | null>(null);
   const { hidden, toggle } = useHideAmounts();
+
+  useEffect(() => {
+    const t = setTimeout(() => setCriticalSheetOpen(true), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div
       className="relative flex flex-col w-full h-full overflow-hidden bg-no-repeat"
       style={{
         backgroundColor: "#f6f8fa",
-        backgroundImage: "linear-gradient(to bottom, #dbeafe 0%, #f6f8fa 380px)",
+        backgroundImage: activeTab === "home" ? "linear-gradient(to bottom, #dbeafe 0%, #f6f8fa 380px)" : "none",
         backgroundSize: "100% 380px",
       }}
     >
@@ -201,8 +214,39 @@ function AppStage() {
       ) : (
         <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">
-            {activeTab === "analytics" ? "Analytics" : activeTab === "txns" ? "Transactions" : "International"}
+            {activeTab === "analytics" ? "Analytics" : activeTab === "txns" ? "Payments" : "International"}
           </h1>
+        </div>
+      )}
+
+      {/* Payments sub-tab bar */}
+      {activeTab === "txns" && (
+        <div className="shrink-0 bg-transparent border-b border-border/50">
+          <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+            {[
+              { id: "transactions",  label: "Transactions"  },
+              { id: "payment-links", label: "Payment Links" },
+              { id: "invoice",       label: "Invoice"       },
+              { id: "mca-links",     label: "MCA Links"     },
+            ].map((tab) => {
+              const active = tab.id === "transactions";
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={cn(
+                    "relative shrink-0 px-4 h-10 text-[13.5px] whitespace-nowrap transition-colors",
+                    active ? "font-semibold text-primary" : "font-normal text-muted-foreground"
+                  )}
+                >
+                  {tab.label}
+                  {active && (
+                    <span className="absolute inset-x-4 bottom-0 h-[2.5px] bg-primary rounded-full" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -217,9 +261,9 @@ function AppStage() {
         {activeTab === "analytics" ? <MobileAnalytics /> :
          activeTab === "txns" ? (
            <MobileTransactions
-             appliedFilters={appliedFilters}
-             onOpenFilter={setFilterOpen}
-             onClearFilter={(id) => setAppliedFilters(prev => { const n = {...prev}; delete n[id]; return n; })}
+             externalFilterState={txnFilterApplied}
+             onFilterButtonTap={() => setTxnFilterOpen(true)}
+             onTxnTap={setSelectedTxn}
            />
          ) :
          activeTab === "intl" ? (
@@ -232,6 +276,7 @@ function AppStage() {
          <MobileDashboardHome
            onCreatePaymentLink={() => setPaymentLinkOpen(true)}
            onTapToPay={() => setTapToPayOpen(true)}
+           onTxnTap={setSelectedTxn}
          />}
       </div>
 
@@ -348,9 +393,10 @@ function AppStage() {
       </div>{/* /absolute bottom-0 z-40 */}
 
       {/* Sheets — all with contained so they stay inside the phone frame */}
-      <MobileMoreSheet         open={moreOpen}        onClose={() => setMoreOpen(false)}        contained />
-      <MobileEchoSheet         open={echoOpen}        onClose={() => setEchoOpen(false)}         contained />
-      <MobileNotifications     open={notifsOpen}      onClose={() => setNotifsOpen(false)}       contained />
+      <MobileMoreSheet             open={moreOpen}            onClose={() => setMoreOpen(false)}            contained />
+      <MobileEchoSheet             open={echoOpen}            onClose={() => setEchoOpen(false)}            contained />
+      <MobileNotifications         open={notifsOpen}          onClose={() => setNotifsOpen(false)}          contained />
+      <CriticalNotificationsSheet  open={criticalSheetOpen}   onClose={() => setCriticalSheetOpen(false)}   contained />
       <MobileCreatePaymentLink open={paymentLinkOpen} onClose={() => setPaymentLinkOpen(false)}  contained />
       <MobileTapToPay          open={tapToPayOpen}    onClose={() => setTapToPayOpen(false)}     contained />
       <CountrySheet
@@ -367,6 +413,95 @@ function AppStage() {
         contained
       />
       <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained />
+
+      {/* ── Filter Drawer — backdrop ── */}
+      <AnimatePresence>
+        {txnFilterOpen && (
+          <motion.div
+            key="filter-backdrop"
+            className="absolute inset-0 z-[69]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.3)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setTxnFilterOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Filter Drawer — sheet ── */}
+      <AnimatePresence>
+        {txnFilterOpen && (
+          <motion.div
+            key="filter-sheet"
+            className="absolute inset-x-0 bottom-0 z-[70] flex flex-col bg-background overflow-hidden"
+            style={{
+              height: "calc(100% - 44px)",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobileFilterDrawer
+              initialFilters={txnFilterApplied}
+              onApply={(filters) => { setTxnFilterApplied(filters); setTxnFilterOpen(false); }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Transaction Detail — blur backdrop ── */}
+      <AnimatePresence>
+        {selectedTxn && (
+          <motion.div
+            key="txn-backdrop"
+            className="absolute inset-0 z-[79]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setSelectedTxn(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Transaction Detail — bottom sheet ── */}
+      <AnimatePresence>
+        {selectedTxn && (
+          <motion.div
+            key={selectedTxn.id}
+            className="absolute inset-x-0 bottom-0 z-[80] flex flex-col bg-background overflow-hidden"
+            style={{
+              height: "93%",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobileTransactionDetail
+              txn={selectedTxn}
+              onClose={() => setSelectedTxn(null)}
+              onOpenTransaction={setSelectedTxn}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -599,7 +734,7 @@ function PreviewScreen() {
                 flexShrink: 0,
                 overflow: "hidden",
                 background:
-  "linear-gradient(to bottom, #006FFD 0%, #BFD2F3 70%, #FFFFFF 100%)",
+  "linear-gradient(to bottom, #006FFD 0%, #BFD2F3 80%, #FFFFFF 100%)",
                 display: "flex",
                 flexDirection: "column",
               }}

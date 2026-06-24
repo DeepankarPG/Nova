@@ -1,620 +1,439 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
-  ArrowDownLeft, XCircle, Clock, RotateCcw,
-  AlertTriangle, Info, Search, CirclePlus, X,
-  ChevronsUpDown,
+  Search, X, SlidersHorizontal, Wallet, Landmark, ChevronDown, Check, Download,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
+import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
+import { emptyFilters, hasAnyFilter } from "@/components/dashboard/mobile/MobileFilterDrawer";
+import type { FilterState } from "@/components/dashboard/mobile/MobileFilterDrawer";
 
-/* ─── Types ───────────────────────────────────────────────────────── */
+/* ── Types ──────────────────────────────────────────────────────────── */
 type TxnStatus = "success" | "failed" | "pending" | "refunded";
 type TxnTab    = "all" | "success" | "refunded" | "failed";
 type Period    = "1D" | "1W" | "1M" | "3M" | "YTD";
 
-/* ─── Period chips ────────────────────────────────────────────────── */
-const PERIODS: { id: Period; label: string }[] = [
-  { id: "1D",  label: "Today" },
-  { id: "1W",  label: "1W"    },
-  { id: "1M",  label: "1M"    },
-  { id: "3M",  label: "3M"    },
-  { id: "YTD", label: "YTD"   },
-];
-
-/* ─── Period-based metrics ────────────────────────────────────────── */
-const PERIOD_METRICS: Record<Period, {
-  collected: string; payments: number;
-  refunds: string; refundsCount: number;
-  disputes: string; disputesOpen: number;
-  failed: number;
-}> = {
-  "1D":  { collected:"₹9,42,800",       payments:1284,   refunds:"₹18,500",    refundsCount:24,  disputes:"₹14,200",    disputesOpen:4,  failed:78   },
-  "1W":  { collected:"₹47,77,000",      payments:6425,   refunds:"₹92,400",    refundsCount:118, disputes:"₹68,500",    disputesOpen:12, failed:312  },
-  "1M":  { collected:"₹1,87,40,000",    payments:25340,  refunds:"₹3,62,800",  refundsCount:485, disputes:"₹2,14,600",  disputesOpen:32, failed:1203 },
-  "3M":  { collected:"₹5,82,20,000",    payments:76480,  refunds:"₹11,24,500", refundsCount:1480,disputes:"₹6,84,200",  disputesOpen:86, failed:3842 },
-  "YTD": { collected:"₹9,42,00,000",    payments:124800, refunds:"₹18,20,600", refundsCount:2410,disputes:"₹11,48,400", disputesOpen:142,failed:6254 },
+type TxnRow = {
+  id: string;
+  txDetailId?: string;
+  customerName: string;
+  customerEmail: string;
+  date: string;
+  time: string;
+  paymentMethod: "upi" | "card" | "netbanking" | "wire";
+  cardNetwork?: "visa" | "mastercard";
+  cardLast4?: string;
+  amount: number;
+  currency: string;
+  status: TxnStatus;
 };
 
-/* ─── Dummy transactions ──────────────────────────────────────────── */
-const ALL_TXNS: {
-  id: string; name: string; amount: string; method: string;
-  status: TxnStatus; time: string;
-}[] = [
-  { id:"t1",  name:"Priya Mehta",      amount:"₹4,500",   method:"UPI",         status:"success",  time:"2m ago"   },
-  { id:"t2",  name:"Rajan Stores",     amount:"₹12,200",  method:"Card",        status:"success",  time:"18m ago"  },
-  { id:"t3",  name:"SwiftPay Ltd",     amount:"₹890",     method:"Net Banking", status:"failed",   time:"34m ago"  },
-  { id:"t4",  name:"Ananya Kapoor",    amount:"₹2,100",   method:"UPI",         status:"pending",  time:"1h ago"   },
-  { id:"t5",  name:"Globaltech Inc",   amount:"₹67,800",  method:"Card",        status:"success",  time:"2h ago"   },
-  { id:"t6",  name:"Meera Sharma",     amount:"₹3,250",   method:"UPI",         status:"refunded", time:"3h ago"   },
-  { id:"t7",  name:"Techno Ventures",  amount:"₹18,500",  method:"Card",        status:"success",  time:"4h ago"   },
-  { id:"t8",  name:"Sunrise Foods",    amount:"₹5,600",   method:"UPI",         status:"failed",   time:"5h ago"   },
-  { id:"t9",  name:"Kiran Patel",      amount:"₹9,400",   method:"Net Banking", status:"refunded", time:"6h ago"   },
-  { id:"t10", name:"Digital Mart",     amount:"₹22,100",  method:"Card",        status:"success",  time:"7h ago"   },
-  { id:"t11", name:"Falcon Exports",   amount:"₹1,45,000",method:"Wire",        status:"success",  time:"8h ago"   },
-  { id:"t12", name:"Raj Electronics",  amount:"₹7,800",   method:"UPI",         status:"failed",   time:"10h ago"  },
-  { id:"t13", name:"Sunita Nair",      amount:"₹4,200",   method:"UPI",         status:"success",  time:"11h ago"  },
-  { id:"t14", name:"Blue Ocean Ltd",   amount:"₹31,500",  method:"Card",        status:"refunded", time:"12h ago"  },
-  { id:"t15", name:"Arjun Mehta",      amount:"₹6,700",   method:"Net Banking", status:"success",  time:"14h ago"  },
-  { id:"t16", name:"City Hardware",    amount:"₹14,300",  method:"UPI",         status:"failed",   time:"16h ago"  },
-  { id:"t17", name:"Pearl Fashions",   amount:"₹8,900",   method:"Card",        status:"success",  time:"18h ago"  },
-  { id:"t18", name:"Omega Solutions",  amount:"₹52,000",  method:"Wire",        status:"refunded", time:"20h ago"  },
-];
-
-/* ─── Status config ───────────────────────────────────────────────── */
-const STATUS_CFG: Record<TxnStatus, {
-  Icon: typeof ArrowDownLeft;
-  iconColor: string; iconBg: string;
-  text: string; border: string;
-  prefix: string; amountColor: string;
-  label: string;
-}> = {
-  success:  { Icon:ArrowDownLeft, iconColor:"text-emerald-700", iconBg:"bg-muted/70", text:"text-emerald-700",             border:"border-emerald-500/50", prefix:"+",  amountColor:"text-foreground",           label:"Completed" },
-  failed:   { Icon:XCircle,       iconColor:"text-red-700",     iconBg:"bg-muted/70", text:"text-red-700 dark:text-red-500", border:"border-red-600/50",    prefix:"−",  amountColor:"text-red-700 dark:text-red-500", label:"Failed"   },
-  pending:  { Icon:Clock,         iconColor:"text-amber-700",   iconBg:"bg-muted/70", text:"text-amber-700",               border:"border-amber-700/60",   prefix:"",   amountColor:"text-amber-700",            label:"Pending"   },
-  refunded: { Icon:RotateCcw,     iconColor:"text-primary",     iconBg:"bg-muted/70", text:"text-primary",                 border:"border-primary/40",     prefix:"−",  amountColor:"text-primary",              label:"Refunded"  },
-};
-
-const TABS: { id: TxnTab; label: string }[] = [
-  { id:"all",      label:"All"      },
-  { id:"success",  label:"Success"  },
-  { id:"refunded", label:"Refunded" },
-  { id:"failed",   label:"Failed"   },
-];
-
-const PAGE_SIZE = 5;
-
-const FILTER_CHIPS = [
-  { id: "date",     label: "Date & Time"     },
-  { id: "amount",   label: "Amount"          },
-  { id: "currency", label: "Currency"        },
-  { id: "status",   label: "Status"          },
-  { id: "method",   label: "Payment method"  },
-  { id: "more",     label: "More filters"    },
+/* ── Legacy export — keeps page.tsx import intact ───────────────────── */
+const _LEGACY = [
+  { id: "date" }, { id: "amount" }, { id: "currency" },
+  { id: "status" }, { id: "method" }, { id: "more" },
 ] as const;
-export type FilterId = typeof FILTER_CHIPS[number]["id"];
+export type FilterId = typeof _LEGACY[number]["id"];
 
-/* ─── Styled select helper ────────────────────────────────────────── */
-function FilterSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+/* ── Periods ────────────────────────────────────────────────────────── */
+const PERIODS: { id: Period; label: string }[] = [
+  { id: "1D",  label: "Today"        },
+  { id: "1W",  label: "1 Week"       },
+  { id: "1M",  label: "1 Month"      },
+  { id: "3M",  label: "3 Months"     },
+  { id: "YTD", label: "Year to date" },
+];
+
+const PERIOD_LABELS: Record<Period, string> = {
+  "1D":  "Today's statistics",
+  "1W":  "This week's statistics",
+  "1M":  "This month's statistics",
+  "3M":  "Last 3 months' statistics",
+  "YTD": "This year's statistics",
+};
+
+/* ── Metrics per period ─────────────────────────────────────────────── */
+type PeriodMetric = {
+  totalVolume: string; volumeDelta: string; volumeDeltaPos: boolean;
+  successRate: string; successDelta: string; successDeltaPos: boolean;
+  avgTicket: string;   ticketDelta: string;  ticketDeltaPos: boolean;
+  failedCount: string; failedDelta: string;  failedDeltaPos: boolean;
+};
+
+const METRICS: Record<Period, PeriodMetric> = {
+  "1D":  { totalVolume: "₹8,47,250.00",   volumeDelta: "+8.4% vs last",  volumeDeltaPos: true,  successRate: "94.20%", successDelta: "+1.2%", successDeltaPos: true,  avgTicket: "₹2,475", ticketDelta: "-3.1%", ticketDeltaPos: false, failedCount: "2",   failedDelta: "-50%", failedDeltaPos: true },
+  "1W":  { totalVolume: "₹41,87,000",     volumeDelta: "+12.3% vs last", volumeDeltaPos: true,  successRate: "93.50%", successDelta: "+0.8%", successDeltaPos: true,  avgTicket: "₹2,490", ticketDelta: "-1.5%", ticketDeltaPos: false, failedCount: "14",  failedDelta: "-32%", failedDeltaPos: true },
+  "1M":  { totalVolume: "₹1,82,40,000",   volumeDelta: "+5.2% vs last",  volumeDeltaPos: true,  successRate: "92.80%", successDelta: "+0.4%", successDeltaPos: true,  avgTicket: "₹2,530", ticketDelta: "+0.8%", ticketDeltaPos: true,  failedCount: "58",  failedDelta: "-18%", failedDeltaPos: true },
+  "3M":  { totalVolume: "₹5,34,20,000",   volumeDelta: "+9.1% vs last",  volumeDeltaPos: true,  successRate: "92.10%", successDelta: "+2.1%", successDeltaPos: true,  avgTicket: "₹2,560", ticketDelta: "+2.2%", ticketDeltaPos: true,  failedCount: "190", failedDelta: "-24%", failedDeltaPos: true },
+  "YTD": { totalVolume: "₹8,72,30,000",   volumeDelta: "+21.4% vs last", volumeDeltaPos: true,  successRate: "91.80%", successDelta: "+3.8%", successDeltaPos: true,  avgTicket: "₹2,580", ticketDelta: "+4.2%", ticketDeltaPos: true,  failedCount: "330", failedDelta: "-35%", failedDeltaPos: true },
+};
+
+/* ── Sparkline data ─────────────────────────────────────────────────── */
+const SPARK = {
+  volume:  [420, 480, 510, 490, 560, 620, 720, 847],
+  success: [88, 90, 91, 92, 91, 93, 94, 94.2],
+  ticket:  [2600, 2580, 2540, 2510, 2490, 2480, 2476, 2475],
+  failed:  [12, 10, 8, 7, 6, 5, 3, 2],
+};
+
+/* ── Table mock data ────────────────────────────────────────────────── */
+const TABLE_TXNS: TxnRow[] = [
+  { id: "GID-001", txDetailId: "tx1", customerName: "Priya Mehta",    customerEmail: "priya.mehta@gmail.com",   date: "04 Jun", time: "10:50 AM", paymentMethod: "upi",        amount:  4500,    currency: "INR", status: "success" },
+  { id: "GID-003", txDetailId: "tx2", customerName: "Rajan Stores",   customerEmail: "accounts@rajanstores.in", date: "04 Jun", time: "10:32 AM", paymentMethod: "card",       cardNetwork: "mastercard", cardLast4: "8821", amount: 12200,    currency: "INR", status: "success" },
+  { id: "GID-002", txDetailId: "tx3", customerName: "SwiftPay Ltd",   customerEmail: "ops@swiftpay.io",         date: "04 Jun", time: "10:16 AM", paymentMethod: "netbanking", amount:   890,    currency: "INR", status: "failed"  },
+  { id: "GID-004", txDetailId: "tx4", customerName: "Ananya Kapoor",  customerEmail: "ananya.k@gmail.com",      date: "04 Jun", time: "09:50 AM", paymentMethod: "upi",        amount:  2100,    currency: "INR", status: "pending" },
+  { id: "GID-005", txDetailId: "tx5", customerName: "Globaltech Inc", customerEmail: "finance@globaltech.com",  date: "04 Jun", time: "08:41 AM", paymentMethod: "card",       cardNetwork: "visa",       cardLast4: "4242", amount: 67800,    currency: "INR", status: "success" },
+  { id: "GID-006", txDetailId: "tx6", customerName: "Yajat Gupta",    customerEmail: "yajat.gupta@payglo.in",   date: "12 Mar", time: "03:22 PM", paymentMethod: "card",       cardNetwork: "visa",       cardLast4: "990",  amount:   325.58, currency: "INR", status: "pending" },
+  { id: "GID-007",                    customerName: "Sarah Mitchell", customerEmail: "sarah.m@example.com",     date: "12 Mar", time: "02:10 PM", paymentMethod: "card",       cardNetwork: "mastercard", cardLast4: "5100", amount:  1250,    currency: "USD", status: "success" },
+];
+
+/* ── Amount color + sign prefix per status ──────────────────────────── */
+const AMOUNT_CFG: Record<TxnStatus, { color: string; prefix: string }> = {
+  success:  { color: "text-emerald-700",               prefix: "+"  },
+  failed:   { color: "text-red-700 dark:text-red-500", prefix: "-"  },
+  pending:  { color: "text-amber-700",                 prefix: ""   },
+  refunded: { color: "text-red-700 dark:text-red-500", prefix: "-"  },
+};
+
+/* ── Tabs ───────────────────────────────────────────────────────────── */
+const TABS: { id: TxnTab; label: string }[] = [
+  { id: "all",      label: "All"      },
+  { id: "success",  label: "Success"  },
+  { id: "refunded", label: "Refunded" },
+  { id: "failed",   label: "Failed"   },
+];
+
+/* ── Helpers ────────────────────────────────────────────────────────── */
+function fmtAmount(amount: number, currency: string): string {
+  const sym: Record<string, string> = { INR: "₹", USD: "$", EUR: "€", GBP: "£" };
+  const prefix = sym[currency] ?? "";
+  const abs = Math.abs(amount);
+  const hasDec = abs % 1 !== 0;
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return prefix + abs.toLocaleString(locale, {
+    minimumFractionDigits: hasDec ? 2 : 0,
+    maximumFractionDigits: hasDec ? 2 : 0,
+  });
+}
+
+function toRecentItem(row: TxnRow): RecentTxnItem {
+  const methodLabel =
+    row.paymentMethod === "upi" ? "UPI" :
+    row.paymentMethod === "card" ? "Card" :
+    row.paymentMethod === "netbanking" ? "Net Banking" : "Wire";
+  const status: "success" | "failed" | "pending" =
+    row.status === "refunded" ? "success" : row.status;
+  return {
+    id: row.txDetailId ?? row.id,
+    name: row.customerName,
+    amount: fmtAmount(row.amount, row.currency),
+    method: methodLabel,
+    status,
+    time: row.time,
+    date: row.date,
+  };
+}
+
+/* ── Sparkline SVG ──────────────────────────────────────────────────── */
+function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: number; h: number }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const pad = 2;
+  const step = w / (data.length - 1);
+  const pts = data.map((v, i) =>
+    `${i * step},${h - pad - ((v - min) / range) * (h - pad * 2)}`
+  ).join(" ");
+  const lastX = (data.length - 1) * step;
+  const area = `0,${h} ${pts} ${lastX},${h}`;
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full appearance-none rounded-xl border border-border bg-card px-3.5 py-3 text-[14px] text-foreground pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20"
-      >
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-      <ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-    </div>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+      <polygon points={area} fill={color} fillOpacity={0.12} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-/* ─── Props ───────────────────────────────────────────────────────── */
+/* ── Props ──────────────────────────────────────────────────────────── */
 interface Props {
+  /* Legacy props kept for backward compat with page.tsx */
   appliedFilters?: Partial<Record<FilterId, string>>;
   onOpenFilter?: (id: FilterId) => void;
   onClearFilter?: (id: FilterId) => void;
+  /* New props */
+  externalFilterState?: FilterState;
+  onFilterButtonTap?: () => void;
+  onTxnTap?: (txn: RecentTxnItem) => void;
 }
 
-/* ─── Root ────────────────────────────────────────────────────────── */
-export function MobileTransactions({ appliedFilters: appliedProp, onOpenFilter, onClearFilter }: Props = {}) {
-  const [period,      setPeriod]    = useState<Period>("1D");
-  const [tab,         setTab]       = useState<TxnTab>("all");
-  const [visible,     setVisible]   = useState(PAGE_SIZE);
+/* ── Root ───────────────────────────────────────────────────────────── */
+export function MobileTransactions({ externalFilterState, onFilterButtonTap, onTxnTap }: Props = {}) {
+  const [period,       setPeriod]       = useState<Period>("1D");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [tab,          setTab]          = useState<TxnTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { hidden } = useHideAmounts();
 
-  /* ── Filter sheet state ─────────────────────────────────────────── */
-  const [openFilter, setOpenFilter] = useState<FilterId | null>(null);
+  /* ── Filtered list ───────────────────────────────────────────────── */
+  const f = externalFilterState ?? emptyFilters();
+  const q = searchQuery.trim().toLowerCase();
 
-  const [dateMode, setDateMode] = useState("is in the last");
-  const [dateN,    setDateN]    = useState("7");
-  const [dateUnit, setDateUnit] = useState("days");
-  const [dateTz,   setDateTz]   = useState<"kolkata" | "utc">("kolkata");
-
-  const [amtMode, setAmtMode] = useState("is equal to");
-  const [amtVal,  setAmtVal]  = useState("");
-
-  const [currFilt,  setCurrFilt]  = useState("INR");
-  const [selStatus, setSelStatus] = useState<Set<string>>(new Set());
-  const [methodFilt, setMethodFilt] = useState("Card");
-
-  const [applied, setApplied] = useState<Partial<Record<FilterId, string>>>({});
-
-  /* ── Helpers ────────────────────────────────────────────────────── */
-  const clearFilter = (id: FilterId) => {
-    setApplied(prev => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    // Reset draft for that filter
-    if (id === "date")     { setDateMode("is in the last"); setDateN("7"); setDateUnit("days"); setDateTz("kolkata"); }
-    if (id === "amount")   { setAmtMode("is equal to"); setAmtVal(""); }
-    if (id === "currency") { setCurrFilt("INR"); }
-    if (id === "status")   { setSelStatus(new Set()); }
-    if (id === "method")   { setMethodFilt("Card"); }
-  };
-
-  const handleApply = () => {
-    if (!openFilter) return;
-
-    if (openFilter === "date") {
-      setApplied(prev => ({ ...prev, date: `Last ${dateN} ${dateUnit}` }));
-    } else if (openFilter === "amount") {
-      const sym = amtMode === "is equal to" ? "=" : amtMode === "is greater than" ? ">" : "<";
-      setApplied(prev => ({ ...prev, amount: `${sym} ₹${amtVal || "0"}` }));
-    } else if (openFilter === "currency") {
-      setApplied(prev => ({ ...prev, currency: currFilt }));
-    } else if (openFilter === "status") {
-      if (selStatus.size > 0) {
-        setApplied(prev => ({ ...prev, status: `${selStatus.size} status${selStatus.size > 1 ? "es" : ""}` }));
-      } else {
-        setApplied(prev => { const next = { ...prev }; delete next.status; return next; });
-      }
-    } else if (openFilter === "method") {
-      setApplied(prev => ({ ...prev, method: methodFilt }));
-    }
-
-    setOpenFilter(null);
-  };
-
-  const toggleSelStatus = (s: string) => {
-    setSelStatus(prev => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s); else next.add(s);
-      return next;
-    });
-  };
-
-  /* ── Effective applied (external prop takes priority) ──────────── */
-  const effectiveApplied = appliedProp ?? applied;
-
-  const m = PERIOD_METRICS[period];
-
-  const filtered = ALL_TXNS
+  const filtered = TABLE_TXNS
     .filter(t => tab === "all" || t.status === tab)
-    .filter(t => !searchQuery.trim() || t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.method.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter(t => !q || t.customerName.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.id.toLowerCase().includes(q))
+    .filter(t => f.statuses.size === 0 || f.statuses.has(t.status))
+    .filter(t => f.methods.size === 0 || f.methods.has(t.paymentMethod))
+    .filter(t => {
+      const min = f.minAmount ? parseFloat(f.minAmount) : null;
+      const max = f.maxAmount ? parseFloat(f.maxAmount) : null;
+      if (min !== null && t.amount < min) return false;
+      if (max !== null && t.amount > max) return false;
+      return true;
+    })
+    .filter(t => !f.country || t.currency === f.country);
 
-  const shown   = filtered.slice(0, visible);
-  const hasMore = visible < filtered.length;
-
-  const handleTab = (t: TxnTab) => { setTab(t); setVisible(PAGE_SIZE); };
-
-  /* ── Sheet label ────────────────────────────────────────────────── */
-  const filterLabel = FILTER_CHIPS.find(c => c.id === openFilter)?.label ?? "";
-
-  /* ── Sheet header ───────────────────────────────────────────────── */
-  const SheetHeader = () => (
-    <>
-      <div className="flex justify-center pt-3 pb-0 shrink-0">
-        <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-      </div>
-      <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-border/50 shrink-0">
-        <h3 className="text-[16px] font-bold text-foreground">Filter by: {filterLabel}</h3>
-        <button
-          type="button"
-          onClick={() => setOpenFilter(null)}
-          className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-muted/80"
-        >
-          <X className="h-4 w-4" strokeWidth={2} />
-        </button>
-      </div>
-    </>
-  );
-
-  /* ── Apply button ───────────────────────────────────────────────── */
-  const ApplyButton = () => (
-    <div className="px-5 pb-6 pt-3 shrink-0">
-      <button
-        type="button"
-        onClick={handleApply}
-        className="w-full py-4 rounded-2xl bg-primary text-white text-[15px] font-bold active:scale-[0.98] transition-all"
-      >
-        Apply
-      </button>
-    </div>
-  );
-
-  /* ── Filter content ─────────────────────────────────────────────── */
-  const renderFilterContent = () => {
-    switch (openFilter) {
-      case "date":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            <FilterSelect value={dateMode} onChange={setDateMode} options={["is in the last", "is after", "is before", "is in range"]} />
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={dateN}
-                onChange={e => setDateN(e.target.value)}
-                className="flex-1 rounded-xl border border-border bg-card px-3.5 py-3 text-[14px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-              <div className="flex-1">
-                <FilterSelect value={dateUnit} onChange={setDateUnit} options={["days", "weeks", "months"]} />
-              </div>
-            </div>
-            <div>
-              <p className="text-[13px] font-semibold text-foreground mb-2.5">Timezone</p>
-              <div className="flex gap-3">
-                {(["kolkata", "utc"] as const).map(tz => (
-                  <button
-                    key={tz}
-                    type="button"
-                    onClick={() => setDateTz(tz)}
-                    className="flex items-center gap-2 text-[13.5px] text-foreground"
-                  >
-                    <span className={cn(
-                      "h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center shrink-0",
-                      dateTz === tz ? "border-primary" : "border-border"
-                    )}>
-                      {dateTz === tz && <span className="h-2 w-2 rounded-full bg-primary block" />}
-                    </span>
-                    {tz === "kolkata" ? "Kolkata Time" : "UTC"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case "amount":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            <FilterSelect value={amtMode} onChange={setAmtMode} options={["is equal to", "is greater than", "is less than"]} />
-            <div className="flex items-center gap-0 rounded-xl border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-primary/20">
-              <span className="px-3.5 text-[14px] text-muted-foreground font-medium shrink-0">₹</span>
-              <input
-                type="number"
-                value={amtVal}
-                onChange={e => setAmtVal(e.target.value)}
-                placeholder="0"
-                className="flex-1 bg-transparent py-3 pr-3.5 text-[14px] text-foreground focus:outline-none"
-              />
-            </div>
-          </div>
-        );
-
-      case "currency":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            <FilterSelect value={currFilt} onChange={setCurrFilt} options={["INR", "USD", "EUR", "GBP", "AED", "SGD"]} />
-          </div>
-        );
-
-      case "status":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
-            {["Success", "Failed", "Pending", "Refunded"].map(s => {
-              const checked = selStatus.has(s);
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggleSelStatus(s)}
-                  className="w-full flex items-center gap-3 py-3 text-left"
-                >
-                  <span className={cn(
-                    "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
-                    checked ? "bg-primary border-primary" : "border-border"
-                  )}>
-                    {checked && (
-                      <svg viewBox="0 0 10 8" className="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="1 4 3.5 6.5 9 1" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="text-[14px] text-foreground">{s}</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-
-      case "method":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            <FilterSelect value={methodFilt} onChange={setMethodFilt} options={["Card", "UPI", "Net Banking", "Wire"]} />
-          </div>
-        );
-
-      case "more":
-        return (
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            <p className="text-[14px] text-muted-foreground">Additional filters coming soon</p>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const m = METRICS[period];
 
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className={cn("space-y-3 pb-10 bg-background", !onOpenFilter && "relative min-h-full")}>
+    <div className="space-y-3 pb-10 bg-background relative min-h-full">
 
-        {/* ── Period chips ──────────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 bg-background px-4 pt-1 pb-2.5 border-b border-border/30">
-          <div className="flex items-center gap-1.5">
-            {PERIODS.map((p) => (
-              <button key={p.id} type="button" onClick={() => setPeriod(p.id)}
-                className={cn(
-                  "px-3.5 py-1.5 text-[12px] font-semibold transition-colors rounded-lg",
-                  period === p.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
+      {/* Click-outside overlay — closes dropdown when tapping outside */}
+      {dropdownOpen && (
+        <div className="absolute inset-0 z-[19]" onClick={() => setDropdownOpen(false)} />
+      )}
+
+      {/* Zone 1 — Period selector (sticky) */}
+      <div className="sticky top-0 z-20 bg-background px-4 pt-3.5 pb-2.5 border-b border-border/30 overflow-visible">
+        <div className="flex items-center justify-between gap-3">
+
+          {/* Dynamic label */}
+          <p className="text-[14px] font-bold text-foreground leading-none">
+            {PERIOD_LABELS[period]}
+          </p>
+
+          {/* Dropdown selector */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(prev => !prev)}
+              className="flex items-center gap-1.5 px-3 h-[34px] rounded-xl border border-border bg-background text-[12.5px] font-medium text-foreground active:bg-muted/40 transition-colors"
+            >
+              {PERIODS.find(p => p.id === period)?.label}
+              <ChevronDown
+                className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-150", dropdownOpen && "rotate-180")}
+                strokeWidth={2}
+              />
+            </button>
+
+            {/* Dropdown menu */}
+            {dropdownOpen && (
+              <div
+                className="absolute right-0 top-full mt-1.5 bg-background rounded-2xl border border-border overflow-hidden min-w-[130px]"
+                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.10)", zIndex: 21 }}
               >
-                {p.label}
-              </button>
-            ))}
+                {PERIODS.map(p => {
+                  const active = p.id === period;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setPeriod(p.id); setDropdownOpen(false); }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors",
+                        active ? "bg-muted/40" : "active:bg-muted/30"
+                      )}
+                    >
+                      <span className={cn("text-[13px]", active ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                        {p.label}
+                      </span>
+                      {active && (
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0 ml-3" strokeWidth={2.5} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Zone 2 — Metrics */}
+      <div className="px-4 space-y-2.5">
+
+        {/* Card A — Total Volume */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-muted-foreground mb-1">Total Volume</p>
+            <p className="text-[26px] font-bold text-foreground tabular-nums leading-tight">
+              <MaskedNumber value={m.totalVolume} hidden={hidden} rollKey={period} />
+            </p>
+            <p className={cn("text-[11.5px] font-medium mt-1.5", m.volumeDeltaPos ? "text-emerald-600" : "text-red-600")}>
+              {m.volumeDelta}
+            </p>
+          </div>
+          <div className="shrink-0">
+            <Sparkline data={SPARK.volume} color="#3b82f6" w={120} h={48} />
           </div>
         </div>
 
-        {/* ── Metrics ───────────────────────────────────────────────── */}
-        <div className="px-4 space-y-2.5">
-
-          {/* Collected Amount */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <p className="text-[12.5px] font-semibold text-foreground">Collected Amount</p>
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={1.75} />
+        {/* Cards B / C / D */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+            <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Success Rate</p>
+            <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+              {hidden ? "••••" : m.successRate}
+            </p>
+            <p className={cn("text-[10.5px] font-semibold mt-1", m.successDeltaPos ? "text-emerald-600" : "text-red-600")}>
+              {m.successDelta}
+            </p>
+            <div className="mt-2">
+              <Sparkline data={SPARK.success} color="#10b981" w={80} h={28} />
             </div>
-            <p className="text-[28px] font-bold text-foreground tabular-nums leading-tight">
-              <MaskedNumber value={m.collected} hidden={hidden} rollKey={period} />
-            </p>
-            <p className="text-[11.5px] text-muted-foreground mt-1">
-              from {m.payments.toLocaleString("en-IN")} captured payments
-            </p>
           </div>
 
-          {/* Three mini cards */}
-          <div className="grid grid-cols-3 gap-2.5">
-            <Link href="/settlement-reports"
-              className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col gap-1.5"
-            >
-              <div className="flex items-center gap-1">
-                <RotateCcw className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={2} />
-                <p className="text-[11px] font-semibold text-foreground truncate">Refunds</p>
-              </div>
-              <p className="text-[15px] font-bold text-foreground tabular-nums leading-tight">
-                <MaskedNumber value={m.refunds} hidden={hidden} rollKey={period} />
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-snug">{m.refundsCount} processed</p>
-            </Link>
+          <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+            <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Avg. Ticket</p>
+            <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+              {hidden ? "••••" : m.avgTicket}
+            </p>
+            <p className={cn("text-[10.5px] font-semibold mt-1", m.ticketDeltaPos ? "text-emerald-600" : "text-amber-600")}>
+              {m.ticketDelta}
+            </p>
+            <div className="mt-2">
+              <Sparkline data={SPARK.ticket} color="#f59e0b" w={80} h={28} />
+            </div>
+          </div>
 
-            <Link href="/dispute-management"
-              className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col gap-1.5"
-            >
-              <div className="flex items-center gap-1">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-700 shrink-0" strokeWidth={2} />
-                <p className="text-[11px] font-semibold text-foreground truncate">Disputes</p>
-              </div>
-              <p className="text-[15px] font-bold text-amber-700 tabular-nums leading-tight">
-                <MaskedNumber value={m.disputes} hidden={hidden} rollKey={period} />
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-snug">{m.disputesOpen} open</p>
-            </Link>
-
-            <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col gap-1.5">
-              <div className="flex items-center gap-1">
-                <XCircle className="h-3.5 w-3.5 text-red-700 shrink-0" strokeWidth={2} />
-                <p className="text-[11px] font-semibold text-foreground truncate">Failed</p>
-              </div>
-              <p className="text-[15px] font-bold text-red-700 tabular-nums leading-tight">
-                <MaskedNumber value={String(m.failed)} hidden={hidden} rollKey={period} />
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-snug">payments</p>
+          <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+            <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Failed</p>
+            <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+              {hidden ? "••" : m.failedCount}
+            </p>
+            <p className={cn("text-[10.5px] font-semibold mt-1", m.failedDeltaPos ? "text-emerald-600" : "text-red-600")}>
+              {m.failedDelta}
+            </p>
+            <div className="mt-2">
+              <Sparkline data={SPARK.failed} color="#ef4444" w={80} h={28} />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ── Transaction list ──────────────────────────────────────── */}
-        <div className="mx-4 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Zone 3 — All Transactions container */}
+      <div className="mx-4 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <p className="text-[15px] font-bold text-foreground">All Transactions</p>
-            {Object.keys(effectiveApplied).length > 0 && (
-              <button type="button"
-                onClick={() => setApplied({})}
-                className="text-[11.5px] text-primary font-semibold"
-              >
-                Clear all
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <p className="text-[15px] font-bold text-foreground">All Transactions</p>
+          <button type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Download className="h-[14px] w-[14px]" strokeWidth={2} />
+            Export CSV
+          </button>
+        </div>
+
+        {/* Search + Filter */}
+        <div className="flex items-center gap-2.5 px-4 pb-3">
+          <div className="flex-1 flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5">
+            <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search customer, email, ID..."
+              className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")}>
+                <X className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
               </button>
             )}
           </div>
-
-          {/* Search bar */}
-          <div className="px-4 pb-2.5">
-            <div className="flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5">
-              <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => { setSearchQuery(e.target.value); setVisible(PAGE_SIZE); }}
-                placeholder="Search transactions..."
-                className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-              />
-              {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")}>
-                  <X className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Filter chips — single row, horizontal scroll, no scrollbar */}
-          <div
-            className="flex gap-2 px-4 pb-3 overflow-x-auto"
-            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+          <button
+            type="button"
+            onClick={() => onFilterButtonTap?.()}
+            className="relative h-[38px] w-[38px] flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground shrink-0"
           >
-            {FILTER_CHIPS.map(chip => {
-              const isActive = chip.id in effectiveApplied;
-              const appliedLabel = effectiveApplied[chip.id];
-              return (
-                <div key={chip.id} className="shrink-0 flex items-center">
-                  {isActive ? (
-                    <div className={cn(
-                      "flex items-center rounded-lg border text-[11.5px] font-medium",
-                      "bg-primary/[0.08] border-primary/60 text-primary"
-                    )}>
-                      <button
-                        type="button"
-                        onClick={() => { if (onOpenFilter) onOpenFilter(chip.id); else setOpenFilter(chip.id); }}
-                        className="pl-2.5 pr-1.5 py-1.5"
-                      >
-                        {appliedLabel}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { if (onClearFilter) onClearFilter(chip.id); else clearFilter(chip.id); }}
-                        className="pr-2 py-1.5 pl-0.5"
-                        aria-label={`Clear ${chip.label} filter`}
-                      >
-                        <X className="h-3 w-3" strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { if (onOpenFilter) onOpenFilter(chip.id); else setOpenFilter(chip.id); }}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11.5px] font-medium transition-all",
-                        "border-border/60 bg-card text-muted-foreground hover:border-border hover:text-foreground"
-                      )}
-                    >
-                      <CirclePlus className="h-3 w-3" strokeWidth={2} />
-                      {chip.label}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 mx-4 mb-3 bg-muted/60 p-1 rounded-xl">
-            {TABS.map((t) => (
-              <button key={t.id} type="button" onClick={() => handleTab(t.id)}
-                className={cn(
-                  "flex-1 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors",
-                  tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-border border-t border-border">
-            {shown.length === 0 ? (
-              <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No transactions</p>
-            ) : shown.map((txn) => {
-              const cfg  = STATUS_CFG[txn.status];
-              const Icon = cfg.Icon;
-              return (
-                <div key={txn.id} className="flex items-center gap-3.5 px-4 py-3.5">
-                  {/* Icon */}
-                  <div className={cn("h-11 w-11 rounded-full flex items-center justify-center shrink-0", cfg.iconBg)}>
-                    <Icon className={cn("h-[19px] w-[19px]", cfg.iconColor)} strokeWidth={2.25} />
-                  </div>
-
-                  {/* Name + method */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-bold text-foreground truncate">{txn.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{txn.method} · {txn.time}</p>
-                  </div>
-
-                  {/* Amount + badge */}
-                  <div className="text-right shrink-0">
-                    <p className={cn("text-[14px] font-bold tabular-nums leading-tight", cfg.amountColor)}>
-                      {hidden ? "*****" : `${cfg.prefix}${txn.amount}`}
-                    </p>
-                    <span className={cn(
-                      "mt-1 inline-block text-[11px] font-medium px-2 py-0.5 rounded-md border bg-transparent",
-                      cfg.text, cfg.border
-                    )}>
-                      {cfg.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Load more */}
-          {hasMore ? (
-            <button
-              type="button"
-              onClick={() => setVisible((v) => v + PAGE_SIZE)}
-              className="w-full py-3.5 text-[13px] font-medium text-primary border-t border-border hover:bg-muted/40 transition-colors"
-            >
-              Load more
-            </button>
-          ) : shown.length > 0 ? (
-            <p className="py-3.5 text-center text-[12px] text-muted-foreground border-t border-border">
-              All transactions loaded
-            </p>
-          ) : null}
+            <SlidersHorizontal className="h-[15px] w-[15px]" strokeWidth={2} />
+            {hasAnyFilter(f) && (
+              <span className="absolute top-1.5 right-1.5 h-[5px] w-[5px] rounded-full bg-primary" />
+            )}
+          </button>
         </div>
 
-      {/* ── Filter overlay (only when handling locally, no external handler) ── */}
-      {!onOpenFilter && (
-        <AnimatePresence>
-          {openFilter && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                className="absolute inset-0 z-40 bg-black/40"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.22 }}
-                onClick={() => setOpenFilter(null)}
-              />
-              {/* Sheet */}
-              <motion.div
-                className="absolute inset-x-0 bottom-0 z-50 bg-background rounded-t-[24px] flex flex-col"
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        {/* Tab strip */}
+        <div className="flex gap-1 mx-4 mb-3 bg-muted/60 p-1 rounded-xl">
+          {TABS.map((t) => (
+            <button key={t.id} type="button" onClick={() => setTab(t.id)}
+              className={cn(
+                "flex-1 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors",
+                tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              )}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Transaction rows */}
+        <div className="divide-y divide-border">
+          {filtered.length === 0 ? (
+            <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No transactions</p>
+          ) : filtered.map((row) => {
+            const amt = AMOUNT_CFG[row.status];
+            return (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => onTxnTap?.(toRecentItem(row))}
+                className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
               >
-                <SheetHeader />
-                {renderFilterContent()}
-                <ApplyButton />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      )}
+                {/* Left block */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">{row.customerName}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{row.customerEmail}</p>
+                  <div className="mt-1">
+                    {row.paymentMethod === "card" && row.cardNetwork ? (
+                      <div className="flex items-center gap-1">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={row.cardNetwork === "visa" ? "/visa.png" : "/mastercard.png"} alt={row.cardNetwork} className="h-[10px] w-auto object-contain" />
+                        {row.cardLast4 && <p className="text-[12px] text-muted-foreground leading-snug">···{row.cardLast4}</p>}
+                      </div>
+                    ) : row.paymentMethod === "netbanking" ? (
+                      <div className="flex items-center gap-1">
+                        <Landmark className="h-[13px] w-[13px] text-muted-foreground shrink-0" strokeWidth={1.75} />
+                        <p className="text-[12px] text-muted-foreground leading-snug">Net Banking</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Wallet className="h-[13px] w-[13px] text-muted-foreground shrink-0" strokeWidth={1.75} />
+                        <p className="text-[12px] text-muted-foreground leading-snug">{row.paymentMethod === "upi" ? "UPI" : "Wire"}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right block */}
+                <div className="shrink-0 text-right">
+                  <p className="leading-snug">
+                    <span className={cn("text-[13.5px] font-bold tabular-nums", amt.color)}>
+                      {hidden ? "•••" : `${amt.prefix}${fmtAmount(row.amount, row.currency)}`}
+                    </span>
+                    {!hidden && (
+                      <span className="text-[11px] text-muted-foreground ml-1">{row.currency}</span>
+                    )}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{row.date} · {row.time}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
+import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
 
 /* ─── Chart colors ─────────────────────────────────────────────────── */
 const C_TODAY     = "#0061e3";
@@ -255,6 +257,124 @@ export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ─── Critical slides (warning + alert only, excludes blue/info) ─── */
+const CRITICAL_SLIDES = BANNER_SLIDES.filter(s => s.severity !== "info");
+
+/* ─── Single notification card — identical markup to BannerCarousel ─ */
+function BannerNotificationCard({ slide }: { slide: typeof BANNER_SLIDES[number] }) {
+  const Icon  = slide.icon;
+  const theme = BANNER_THEME[slide.severity];
+  return (
+    <div style={{ background: theme.surface }}>
+      <div className="flex items-center gap-3 px-[14px] py-[13px]">
+        <div
+          className="h-[38px] w-[38px] rounded-[10px] flex items-center justify-center shrink-0"
+          style={{ background: theme.iconBg }}
+        >
+          <Icon className="h-[17px] w-[17px]" style={{ color: theme.iconColor }} strokeWidth={1.75} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: theme.titleColor }}>
+              {slide.headline}
+            </p>
+            <Link
+              href={slide.href}
+              className="shrink-0 flex items-center gap-0.5 text-[12px] font-semibold whitespace-nowrap"
+              style={{ color: theme.ctaColor }}
+            >
+              {slide.cta}
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <p className="text-[11.5px] mt-0.5 leading-snug line-clamp-1" style={{ color: theme.subtitleColor }}>
+            {slide.body}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Critical Notifications Bottom Sheet ────────────────────────── */
+export function CriticalNotificationsSheet({
+  open,
+  onClose,
+  contained = false,
+}: {
+  open: boolean;
+  onClose: () => void;
+  contained?: boolean;
+}) {
+  if (CRITICAL_SLIDES.length === 0) return null;
+
+  const pos = contained ? "absolute" : "fixed";
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="critical-backdrop"
+            className={`${pos} inset-0 z-50 bg-black/40`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={onClose}
+          />
+
+          {/* Sheet */}
+          <motion.div
+            key="critical-sheet"
+            className={`${pos} inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-[24px] bg-background`}
+            style={{ maxHeight: "68%" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="h-1 w-10 rounded-full bg-foreground/20" />
+            </div>
+
+            {/* Header */}
+            <div className="px-5 pt-3 pb-4 shrink-0">
+              <p className="text-[17px] font-bold text-foreground">Critical Notifications</p>
+              <p className="text-[13px] text-muted-foreground mt-1 leading-snug">
+                Please review the following items that require your attention.
+              </p>
+            </div>
+
+            {/* Notification list — scrollable */}
+            <div className="flex-1 overflow-y-auto flex flex-col gap-2 px-4 pb-2">
+              {CRITICAL_SLIDES.map((slide, i) => (
+                <div key={i} className="rounded-xl overflow-hidden">
+                  <BannerNotificationCard slide={slide} />
+                </div>
+              ))}
+            </div>
+
+            {/* Sticky CTA footer */}
+            <div className="px-4 py-4 shrink-0 border-t border-border/60">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-[14px] py-[15px] text-[16px] font-semibold text-white"
+                style={{ background: "#007AFF" }}
+              >
+                Got it
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -764,7 +884,7 @@ function NeedsAttentionSection() {
 const TXN_TABS = ["all", "success", "failed"] as const;
 type TxnTab = typeof TXN_TABS[number];
 
-function RecentTransactionsCard() {
+function RecentTransactionsCard({ onTxnTap }: { onTxnTap?: (txn: RecentTxnItem) => void } = {}) {
   const [tab, setTab] = useState<TxnTab>("all");
   const { hidden } = useHideAmounts();
 
@@ -813,7 +933,12 @@ function RecentTransactionsCard() {
             const isFailed  = txn.status === "failed";
 
             return (
-              <div key={txn.id} className="flex items-center gap-3 px-4 py-3">
+              <button
+                type="button"
+                key={txn.id}
+                onClick={() => onTxnTap?.(txn)}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left active:bg-muted/30 transition-colors duration-100"
+              >
                 {/* Avatar — reduced from h-10 to h-9 */}
                 <div className={cn(
                   "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
@@ -862,7 +987,7 @@ function RecentTransactionsCard() {
                     {badge.label}
                   </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -871,11 +996,12 @@ function RecentTransactionsCard() {
   );
 }
 
-/* ─── Root export — prop signature unchanged ─────────────────────── */
+/* ─── Root export ────────────────────────────────────────────────── */
 export function MobileDashboardHome({
   onCreatePaymentLink,
   onTapToPay,
-}: { onCreatePaymentLink?: () => void; onTapToPay?: () => void } = {}) {
+  onTxnTap,
+}: { onCreatePaymentLink?: () => void; onTapToPay?: () => void; onTxnTap?: (txn: RecentTxnItem) => void } = {}) {
   const [metric, setMetric] = useState<MetricKey>("gross");
 
   return (
@@ -891,7 +1017,7 @@ export function MobileDashboardHome({
       <NeedsAttentionSection />
 
       {/* ⑤ Recent transactions */}
-      <RecentTransactionsCard />
+      <RecentTransactionsCard onTxnTap={onTxnTap} />
 
     </div>
   );
