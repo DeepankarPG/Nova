@@ -38,25 +38,25 @@ const slides = [
   {
     id: "settlements",
     // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_1.png" alt="" width="100%" height="280" style={{ objectFit: "contain", display: "block" }} />,
+    illustration: <img src="/Card_1.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
     header: "Complete visibility into every payment",
   },
   {
     id: "analytics",
     // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_2.png" alt="" width="100%" height="280" style={{ objectFit: "contain", display: "block" }} />,
+    illustration: <img src="/Card_2.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
     header: "Understand your business with real-time insights",
   },
   {
     id: "payment-links",
     // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_3.png" alt="" width="100%" height="280" style={{ objectFit: "contain", display: "block" }} />,
+    illustration: <img src="/Card_3.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
     header: "Share a link, get paid instantly",
   },
   {
     id: "echo",
     // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_4.png" alt="" width="100%" height="280" style={{ objectFit: "contain", display: "block" }} />,
+    illustration: <img src="/Card_4.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
     header: "Meet Echo, your payment assistant",
   },
 ];
@@ -599,7 +599,7 @@ function PreviewScreen() {
                 flexShrink: 0,
                 overflow: "hidden",
                 background:
-  "linear-gradient(to bottom, rgba(0,111,253,0.84) 0%, rgba(191,210,243,0.93) 55%, rgba(255,255,255,1) 100%)",
+  "linear-gradient(to bottom, #006FFD 0%, #BFD2F3 70%, #FFFFFF 100%)",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -633,7 +633,7 @@ function PreviewScreen() {
               </div>
 
               {/* Pagination dots — centred, inside blue gradient */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 24px 26px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "24px 24px 26px" }}>
                 {slides.map((_, i) => (
                   <div
                     key={i}
