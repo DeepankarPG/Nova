@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Copy, Check, MoreHorizontal, Wallet, Landmark, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Copy, Check, Link2Off, Wallet, Landmark, FileText } from "lucide-react";
+import { deactivateLinkId } from "@/components/dashboard/mobile/MobilePaymentLinks";
 import { cn } from "@/lib/utils";
 import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
 
@@ -189,7 +191,7 @@ function PairedRow({
   last?: boolean;
 }) {
   return (
-    <div className={cn("flex", !last && "border-b border-border/50")}>
+    <div className={cn("flex items-start", !last && "border-b border-border/50")}>
       <div className="flex-1 min-w-0 px-4 py-3.5 border-r border-border/50">
         <p className="text-[11px] font-medium text-muted-foreground mb-1.5 leading-none">{left.label}</p>
         <div className="min-w-0">
@@ -375,6 +377,8 @@ export function MobilePaymentLinkDetail({
   onClose: () => void;
   onOpenTransaction?: (txn: RecentTxnItem) => void;
 }) {
+  const [showDisableSheet, setShowDisableSheet] = useState(false);
+
   const detail = PL_DETAIL_MAP[linkId];
   if (!detail) return null;
 
@@ -387,6 +391,7 @@ export function MobilePaymentLinkDetail({
   }
 
   return (
+    <div className="flex flex-col flex-1 min-h-0 relative">
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
       {/* Drag handle */}
@@ -409,11 +414,16 @@ export function MobilePaymentLinkDetail({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <button type="button"
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-muted text-foreground"
-            aria-label="More options">
-            <MoreHorizontal className="h-[17px] w-[17px]" strokeWidth={2.25} />
-          </button>
+          {detail.status !== "deactivated" && (
+            <button
+              type="button"
+              onClick={() => setShowDisableSheet(true)}
+              className="flex items-center gap-1.5 px-2 h-9 rounded-full text-red-600 active:opacity-60 transition-opacity"
+            >
+              <Link2Off className="h-[14px] w-[14px]" strokeWidth={2} />
+              <span className="text-[13px] font-semibold">Disable</span>
+            </button>
+          )}
           <button type="button" onClick={onClose}
             className="h-9 w-9 flex items-center justify-center rounded-full bg-muted text-foreground"
             aria-label="Close">
@@ -436,7 +446,7 @@ export function MobilePaymentLinkDetail({
               <span className="text-[32px] font-bold tracking-tight text-foreground leading-none">
                 {fmtAmount(detail.amount)}
               </span>
-              <span className="text-[13px] font-medium text-muted-foreground leading-none self-end mb-0.5">
+              <span className="text-[13px] font-medium text-muted-foreground leading-none">
                 {detail.currency}
               </span>
               <StatusBadge status={detail.status} />
@@ -488,8 +498,8 @@ export function MobilePaymentLinkDetail({
               <PairedRow
                 left={{  label: "Customer name", value: <p className="text-[13px] font-semibold text-foreground leading-snug">{detail.customerName}</p> }}
                 right={{ label: "Phone number",  value: (
-                  <div className="flex items-center gap-1 min-w-0">
-                    <p className="text-[13px] font-medium text-foreground leading-snug truncate">{detail.phone}</p>
+                  <div className="flex items-start gap-1 min-w-0">
+                    <p className="text-[13px] font-medium text-foreground leading-snug truncate flex-1 min-w-0">{detail.phone}</p>
                     <CopyBtn value={detail.phone} />
                   </div>
                 )}}
@@ -535,6 +545,65 @@ export function MobilePaymentLinkDetail({
           Close
         </button>
       </div>
+
+    </div>
+
+    {/* Confirmation bottom sheet */}
+    <AnimatePresence>
+      {showDisableSheet && (
+        <>
+          <motion.div
+            className="absolute inset-0 z-[10] rounded-t-3xl"
+            style={{ background: "rgba(0,0,0,0.4)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setShowDisableSheet(false)}
+          />
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 z-[20] bg-background rounded-t-3xl"
+            style={{ boxShadow: "0 -4px 24px rgba(0,0,0,0.12)" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          >
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="h-1 w-9 rounded-full bg-muted-foreground/25" />
+            </div>
+            <div className="px-5 pt-3 pb-6">
+              <div className="mb-4">
+                <h3 className="text-[16px] font-bold text-foreground mb-2">Disable payment link?</h3>
+                <p className="text-[13.5px] text-muted-foreground leading-relaxed">
+                  This will immediately deactivate the link. The customer will no longer be able to make a payment using this link. This action cannot be undone.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    deactivateLinkId(linkId);
+                    setShowDisableSheet(false);
+                    onClose();
+                  }}
+                  className="w-full flex items-center justify-center py-3.5 rounded-2xl bg-red-600 text-white text-[15px] font-bold active:scale-[0.98] transition-all"
+                >
+                  Disable link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDisableSheet(false)}
+                  className="w-full py-3 text-[15px] font-semibold text-primary active:opacity-60 transition-opacity"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
 
     </div>
   );

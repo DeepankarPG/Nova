@@ -224,6 +224,27 @@ const TXN_DETAIL_MAP: Record<string, TxnDetail> = {
     currency: "INR",
     createdAt: "12 Mar 2026 · 03:22 PM",
   },
+  tx8: {
+    transactionId: "gl_o-8ka9pb1rc2sd3te4uf5vg",
+    email: "karan.kapoor@gmail.com",
+    phone: "+91 98100 55678",
+    address: "14, Linking Road, Bandra West, Mumbai 400050, Maharashtra",
+    merchantTxnId: "MTX-2026-KAP-008",
+    cardType: "—",
+    cardLast4: "3391",
+    paymentCategory: "E-Commerce",
+    issuerName: "—",
+    settlementStatus: "—",
+    settlementDate: "—",
+    utrNumber: null,
+    comments: "—",
+    currency: "INR",
+    createdAt: "04 Jun 2026 · 07:22 AM",
+    statusNotes: {
+      reason: "Transaction declined due to insufficient funds in the customer's account.",
+      errorCode: "INSUFFICIENT_FUNDS",
+    },
+  },
 };
 
 /* ── Status configs ───────────────────────────────────────────────── */
@@ -300,7 +321,7 @@ function DetailRow({ label, value, copy, last }: {
   return (
     <div className={cn("px-4 py-3.5", !last && "border-b border-border/50")}>
       <p className="text-[11px] font-medium text-muted-foreground mb-1.5 leading-none">{label}</p>
-      <div className="flex items-center gap-1 min-w-0">
+      <div className="inline-flex items-center gap-1 max-w-full min-w-0">
         <div className="min-w-0">
           {typeof value === "string"
             ? <p className="text-[13px] font-medium text-foreground leading-snug">{value}</p>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Search, X, Check, Download, Plus, ChevronDown } from "lucide-react";
+import { Search, X, Check, Download, Plus, ChevronDown, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ── Types ────────────────────────────────────────────────────────── */
 type PLStatus = "active" | "paid" | "expired" | "deactivated";
-type PLTab    = "all" | PLStatus;
+type PLTab    = "all" | "active" | "paid" | "expired";
 type Period   = "1D" | "1W" | "1M" | "3M" | "YTD";
 
 type PaymentLink = {
@@ -64,6 +64,12 @@ const PAYMENT_LINKS: PaymentLink[] = [
   },
 ];
 
+/* ── Demo: mutable status override ───────────────────────────────── */
+export function deactivateLinkId(id: string): void {
+  const link = PAYMENT_LINKS.find(pl => pl.id === id);
+  if (link) link.status = "deactivated";
+}
+
 /* ── Period selector ──────────────────────────────────────────────── */
 const PERIODS: { id: Period; label: string }[] = [
   { id: "1D",  label: "Today"        },
@@ -90,11 +96,11 @@ type PLMetric = {
 };
 
 const PL_METRICS: Record<Period, PLMetric> = {
-  "1D":  { totalCollected: "$1,16,119.00", collectDelta: "+12.3% vs last", collectPos: true, totalLinks: "4",   linkDelta: "+4",  linkPos: true, paid: "1",  paidDelta: "+1",  paidPos: true, activeLinks: "2",  activeDelta: "+2",  activePos: true },
-  "1W":  { totalCollected: "$4,82,440.00", collectDelta: "+9.8% vs last",  collectPos: true, totalLinks: "14",  linkDelta: "+6",  linkPos: true, paid: "4",  paidDelta: "+2",  paidPos: true, activeLinks: "6",  activeDelta: "+3",  activePos: true },
-  "1M":  { totalCollected: "$19,48,220.00",collectDelta: "+6.1% vs last",  collectPos: true, totalLinks: "52",  linkDelta: "+18", linkPos: true, paid: "16", paidDelta: "+5",  paidPos: true, activeLinks: "20", activeDelta: "+4",  activePos: true },
-  "3M":  { totalCollected: "$57,24,100.00",collectDelta: "+14.4% vs last", collectPos: true, totalLinks: "148", linkDelta: "+44", linkPos: true, paid: "42", paidDelta: "+12", paidPos: true, activeLinks: "54", activeDelta: "+10", activePos: true },
-  "YTD": { totalCollected: "$93,10,500.00",collectDelta: "+22.7% vs last", collectPos: true, totalLinks: "230", linkDelta: "+72", linkPos: true, paid: "68", paidDelta: "+20", paidPos: true, activeLinks: "82", activeDelta: "+18", activePos: true },
+  "1D":  { totalCollected: "₹1,16,119.00", collectDelta: "+12.3% vs last", collectPos: true, totalLinks: "4",   linkDelta: "+4",  linkPos: true, paid: "1",  paidDelta: "+1",  paidPos: true, activeLinks: "2",  activeDelta: "+2",  activePos: true },
+  "1W":  { totalCollected: "₹4,82,440.00", collectDelta: "+9.8% vs last",  collectPos: true, totalLinks: "14",  linkDelta: "+6",  linkPos: true, paid: "4",  paidDelta: "+2",  paidPos: true, activeLinks: "6",  activeDelta: "+3",  activePos: true },
+  "1M":  { totalCollected: "₹19,48,220.00",collectDelta: "+6.1% vs last",  collectPos: true, totalLinks: "52",  linkDelta: "+18", linkPos: true, paid: "16", paidDelta: "+5",  paidPos: true, activeLinks: "20", activeDelta: "+4",  activePos: true },
+  "3M":  { totalCollected: "₹57,24,100.00",collectDelta: "+14.4% vs last", collectPos: true, totalLinks: "148", linkDelta: "+44", linkPos: true, paid: "42", paidDelta: "+12", paidPos: true, activeLinks: "54", activeDelta: "+10", activePos: true },
+  "YTD": { totalCollected: "₹93,10,500.00",collectDelta: "+22.7% vs last", collectPos: true, totalLinks: "230", linkDelta: "+72", linkPos: true, paid: "68", paidDelta: "+20", paidPos: true, activeLinks: "82", activeDelta: "+18", activePos: true },
 };
 
 /* ── Sparkline data ───────────────────────────────────────────────── */
@@ -106,25 +112,22 @@ const PL_SPARK = {
 };
 
 /* ── Tab definitions ──────────────────────────────────────────────── */
-const PL_TABS: { id: PLTab; label: string; showCheck?: boolean }[] = [
-  { id: "all",         label: "All"         },
-  { id: "active",      label: "Active"      },
-  { id: "paid",        label: "Paid", showCheck: true },
-  { id: "expired",     label: "Expired"     },
-  { id: "deactivated", label: "Deactivated" },
+const PL_TABS: { id: PLTab; label: string }[] = [
+  { id: "all",     label: "All"     },
+  { id: "active",  label: "Active"  },
+  { id: "paid",    label: "Paid"    },
+  { id: "expired", label: "Expired" },
 ];
 
 /* ── Status display config ────────────────────────────────────────── */
 const STATUS_CFG: Record<PLStatus, {
-  label: string;
-  color: string;
   amountColor: string;
-  showCheck: boolean;
+  iconType: "pulse" | "check" | "ban";
 }> = {
-  active:      { label: "Active",      color: "text-emerald-600",      amountColor: "text-emerald-600",      showCheck: false },
-  paid:        { label: "Paid",        color: "text-emerald-600",      amountColor: "text-emerald-600",      showCheck: true  },
-  expired:     { label: "Expired",     color: "text-muted-foreground", amountColor: "text-muted-foreground", showCheck: false },
-  deactivated: { label: "Deactivated", color: "text-muted-foreground", amountColor: "text-muted-foreground", showCheck: false },
+  active:      { amountColor: "text-primary",          iconType: "pulse" },
+  paid:        { amountColor: "text-emerald-600",       iconType: "check" },
+  expired:     { amountColor: "text-muted-foreground",  iconType: "ban"   },
+  deactivated: { amountColor: "text-muted-foreground",  iconType: "ban"   },
 };
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
@@ -346,12 +349,11 @@ export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => 
               type="button"
               onClick={() => setTab(t.id)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-0.5 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 px-1",
+                "flex-1 flex items-center justify-center py-1.5 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 px-1",
                 tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               )}
             >
               {t.label}
-              {t.showCheck && <Check className="h-[10px] w-[10px]" strokeWidth={2.5} />}
             </button>
           ))}
         </div>
@@ -367,31 +369,41 @@ export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => 
                 key={pl.id}
                 type="button"
                 onClick={() => onCardTap?.(pl.id)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
+                className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
               >
-                {/* Left block */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">{pl.customerName}</p>
+                {/* Left block — amount + date */}
+                <div className="shrink-0 flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-1">
+                    {cfg.iconType === "pulse" && (
+                      <span className="relative inline-flex h-[6px] w-[6px] shrink-0">
+                        <span
+                          className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60 animate-ping"
+                          style={{ animationDuration: "1.5s" }}
+                        />
+                        <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-primary" />
+                      </span>
+                    )}
+                    {cfg.iconType === "check" && (
+                      <Check className="h-[12px] w-[12px] text-emerald-600 shrink-0" strokeWidth={2.5} />
+                    )}
+                    {cfg.iconType === "ban" && (
+                      <Ban className="h-[12px] w-[12px] text-muted-foreground shrink-0" strokeWidth={2} />
+                    )}
+                    <span className={cn("text-[16px] font-bold tabular-nums", cfg.amountColor)}>
+                      {fmtAmount(pl.amount)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">{pl.currency}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-snug">{pl.createdAt}</p>
+                </div>
+
+                {/* Right block — customer info */}
+                <div className="flex-1 min-w-0 text-right">
+                  <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{pl.customerName}</p>
                   <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{pl.customerEmail}</p>
                   <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">
                     {pl.paymentFor.length > 28 ? `${pl.paymentFor.slice(0, 28)}...` : pl.paymentFor}
                   </p>
-                </div>
-
-                {/* Right block */}
-                <div className="shrink-0 text-right flex flex-col items-end gap-1">
-                  <p className="leading-snug">
-                    <span className={cn("text-[13.5px] font-bold tabular-nums", cfg.amountColor)}>
-                      {fmtAmount(pl.amount)}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground ml-1">{pl.currency}</span>
-                  </p>
-                  <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium leading-snug", cfg.color)}>
-                    <span className="h-[5px] w-[5px] rounded-full bg-current shrink-0" />
-                    {cfg.label}
-                    {cfg.showCheck && <Check className="h-[9px] w-[9px] shrink-0" strokeWidth={2.5} />}
-                  </span>
-                  <p className="text-[11px] text-muted-foreground leading-snug">{pl.createdAt}</p>
                 </div>
               </button>
             );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import {
-  Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download,
+  Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download, Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
@@ -87,6 +87,7 @@ const TABLE_TXNS: TxnRow[] = [
   { id: "GID-005", txDetailId: "tx5", customerName: "Globaltech Inc", customerEmail: "finance@globaltech.com",  date: "04 Jun", time: "08:41 AM", paymentMethod: "card",       cardNetwork: "visa",       cardLast4: "4242", amount: 67800,    currency: "INR", status: "success" },
   { id: "GID-006", txDetailId: "tx6", customerName: "Yajat Gupta",    customerEmail: "yajat.gupta@payglo.in",   date: "12 Mar", time: "03:22 PM", paymentMethod: "card",       cardNetwork: "visa",       cardLast4: "990",  amount:   325.58, currency: "INR", status: "pending" },
   { id: "GID-007",                    customerName: "Sarah Mitchell", customerEmail: "sarah.m@example.com",     date: "12 Mar", time: "02:10 PM", paymentMethod: "card",       cardNetwork: "mastercard", cardLast4: "5100", amount:  1250,    currency: "USD", status: "success" },
+  { id: "GID-008", txDetailId: "tx8", customerName: "Karan Kapoor",   customerEmail: "karan.kapoor@gmail.com",  date: "04 Jun", time: "07:22 AM", paymentMethod: "card",       cardNetwork: "visa",       cardLast4: "3391", amount:  8750,    currency: "INR", status: "failed"  },
 ];
 
 /* ── Amount color + sign prefix per status ──────────────────────────── */
@@ -655,12 +656,15 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
                 className={cn(
                   "flex items-center gap-1 h-8 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0",
                   active
-                    ? "bg-primary text-white rounded-full pl-3 pr-1.5"
-                    : "border border-border bg-white text-muted-foreground rounded-full px-3"
+                    ? "bg-primary text-white rounded-xl pl-3 pr-1.5"
+                    : "border border-dashed border-border bg-white text-muted-foreground rounded-xl px-3"
                 )}
               >
+                {!active && (
+                  <Plus className="h-[11px] w-[11px] text-muted-foreground/60 shrink-0" strokeWidth={2} />
+                )}
                 <span>{getChipLabel(chipFilters, chip.id)}</span>
-                {active ? (
+                {active && (
                   <span
                     role="button"
                     className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white/20 shrink-0 ml-0.5"
@@ -668,8 +672,6 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
                   >
                     <X className="h-[10px] w-[10px] text-white" strokeWidth={2.5} />
                   </span>
-                ) : (
-                  <ChevronDown className="h-[11px] w-[11px] text-muted-foreground/60 shrink-0" strokeWidth={2} />
                 )}
               </button>
             );

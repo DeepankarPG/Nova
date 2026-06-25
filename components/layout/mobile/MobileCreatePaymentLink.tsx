@@ -33,7 +33,7 @@ const successAnim = recolor(
 ) as typeof _successAnim;
 import {
   X, ChevronRight, Search, Delete,
-  Check, Copy, Share2, Plus, User, Mail, Phone,
+  Check, Copy, Share2, User, Mail, Phone,
   ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -82,11 +82,11 @@ const DIAL_CODES = [
 
 /* ─── Expiry chips ────────────────────────────────────────────────── */
 const EXPIRY_OPTS = [
-  { id:"none", label:"No expiry"  },
-  { id:"24h",  label:"24 hours"   },
-  { id:"7d",   label:"7 days"     },
-  { id:"30d",  label:"30 days"    },
-  { id:"90d",  label:"90 days"    },
+  { id:"24h",    label:"24 hours" },
+  { id:"7d",     label:"7 days"   },
+  { id:"30d",    label:"30 days"  },
+  { id:"90d",    label:"90 days"  },
+  { id:"custom", label:"Custom"   },
 ] as const;
 type ExpiryId = typeof EXPIRY_OPTS[number]["id"];
 
@@ -126,12 +126,13 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
   const [amountRaw,     setAmountRaw]     = useState("");
   const [amountScope,   animateAmount]    = useAnimate();
   const [description,   setDescription]  = useState("");
-  const [showCustomer,  setShowCustomer]  = useState(false);
   const [custName,      setCustName]      = useState("");
   const [custEmail,     setCustEmail]     = useState("");
   const [custDial,      setCustDial]      = useState("+91");
   const [custPhone,     setCustPhone]     = useState("");
-  const [expiry,        setExpiry]        = useState<ExpiryId>("none");
+  const [expiry,        setExpiry]        = useState<ExpiryId>("24h");
+  const [customDate,    setCustomDate]    = useState("");
+  const [customTime,    setCustomTime]    = useState("");
   const [searchQ,       setSearchQ]       = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
 
@@ -146,6 +147,14 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
 
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol ?? "₹";
   const hasAmount = amountRaw !== "" && amountRaw !== "0";
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(custEmail);
+  const isPhoneValid = custPhone.replace(/\D/g, "").length >= 7;
+  const canCreate =
+    hasAmount &&
+    custName.trim() !== "" &&
+    isEmailValid &&
+    isPhoneValid &&
+    (expiry !== "custom" || (customDate !== "" && customTime !== ""));
 
   const filteredCurrencies = useMemo(() =>
     CURRENCIES.filter(c =>
@@ -177,8 +186,9 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
     onClose();
     setTimeout(() => {
       setStep("amount"); setAmountRaw(""); setDescription(""); setFocusMode("amount");
-      setCustName(""); setCustEmail(""); setCustPhone(""); setShowCustomer(false);
-      setExpiry("none"); setSearchQ(""); setGeneratedLink("");
+      setCustName(""); setCustEmail(""); setCustPhone("");
+      setExpiry("24h"); setCustomDate(""); setCustomTime("");
+      setSearchQ(""); setGeneratedLink("");
     }, 350);
   };
 
@@ -372,7 +382,47 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
 
                   <div className="mb-5" />
 
-                  {/* Description — tapping focuses text keyboard */}
+                  {/* Customer — always visible, mandatory */}
+                  <div className="px-5 mb-4">
+                    <p className="text-[13.5px] font-semibold text-foreground mb-2">Customer</p>
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5">
+                        <User className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                        <input type="text" inputMode="text" value={custName}
+                          onChange={e => setCustName(e.target.value)}
+                          onFocus={() => setFocusMode("description")}
+                          placeholder="Full name"
+                          className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                        <input type="email" inputMode="email" value={custEmail}
+                          onChange={e => setCustEmail(e.target.value)}
+                          onFocus={() => setFocusMode("description")}
+                          placeholder="Email address"
+                          className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden">
+                        <button type="button" onClick={() => setStep("dialCode")}
+                          className="flex items-center gap-1.5 px-3.5 py-2.5 border-r border-border/60 text-[14px] font-medium text-foreground shrink-0 hover:bg-muted/40 transition-colors"
+                        >
+                          <span className="text-[16px]">{DIAL_CODES.find(d => d.code === custDial)?.flag}</span>
+                          <span>{custDial}</span>
+                          <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2} />
+                        </button>
+                        <input type="tel" inputMode="tel" value={custPhone}
+                          onChange={e => setCustPhone(e.target.value)}
+                          onFocus={() => setFocusMode("description")}
+                          placeholder="Phone number"
+                          className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none px-3.5 py-2.5 min-w-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
                   <div className="px-5 mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <p className="text-[13.5px] font-semibold text-foreground">Description</p>
@@ -390,75 +440,7 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                     />
                   </div>
 
-                  {/* Customer — expandable form */}
-                  <div className="px-5 mb-4">
-                    <p className="text-[13.5px] font-semibold text-foreground mb-2">Customer</p>
-                    <AnimatePresence initial={false}>
-                      {!showCustomer ? (
-                        <motion.button
-                          key="add-btn"
-                          type="button"
-                          initial={{ opacity:1 }}
-                          exit={{ opacity:0, height:0 }}
-                          onClick={() => setShowCustomer(true)}
-                          className="flex items-center gap-1.5 text-primary"
-                        >
-                          <Plus className="h-4 w-4" strokeWidth={2.5} />
-                          <span className="text-[13.5px] font-semibold">Add customer</span>
-                        </motion.button>
-                      ) : (
-                        <motion.div
-                          key="customer-form"
-                          initial={{ opacity:0, height:0 }}
-                          animate={{ opacity:1, height:"auto" }}
-                          exit={{ opacity:0, height:0 }}
-                          transition={{ duration:0.22, ease:[0.22,1,0.36,1] }}
-                          className="overflow-hidden"
-                        >
-                          <div className="space-y-2.5">
-                            {/* Name — same style as description */}
-                            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5">
-                              <User className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
-                              <input type="text" inputMode="text" value={custName}
-                                onChange={e => setCustName(e.target.value)} placeholder="Full name"
-                                className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
-                              />
-                            </div>
-                            {/* Email */}
-                            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5">
-                              <Mail className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
-                              <input type="email" inputMode="email" value={custEmail}
-                                onChange={e => setCustEmail(e.target.value)} placeholder="Email address"
-                                className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
-                              />
-                            </div>
-                            {/* Phone — no icon, dial code opens sheet */}
-                            <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden">
-                              <button type="button" onClick={() => setStep("dialCode")}
-                                className="flex items-center gap-1.5 px-3.5 py-2.5 border-r border-border/60 text-[14px] font-medium text-foreground shrink-0 hover:bg-muted/40 transition-colors"
-                              >
-                                <span className="text-[16px]">{DIAL_CODES.find(d => d.code === custDial)?.flag}</span>
-                                <span>{custDial}</span>
-                                <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2} />
-                              </button>
-                              <input type="tel" inputMode="tel" value={custPhone}
-                                onChange={e => setCustPhone(e.target.value)} placeholder="Phone number"
-                                className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none px-3.5 py-2.5 min-w-0"
-                              />
-                            </div>
-                            <button type="button"
-                              onClick={() => { setShowCustomer(false); setCustName(""); setCustEmail(""); setCustPhone(""); }}
-                              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              Remove customer
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Expiry chips */}
+                  {/* Expiry */}
                   <div className="px-5 mb-6">
                     <div className="flex items-center gap-2 mb-2.5">
                       <p className="text-[13.5px] font-semibold text-foreground">Expiry</p>
@@ -479,15 +461,39 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                         </button>
                       ))}
                     </div>
+                    {expiry === "custom" && (
+                      <div className="mt-3 space-y-2.5">
+                        <div>
+                          <p className="text-[12px] font-medium text-muted-foreground mb-1.5">Expiry date</p>
+                          <input
+                            type="date"
+                            value={customDate}
+                            onChange={e => setCustomDate(e.target.value)}
+                            onFocus={() => setFocusMode("description")}
+                            className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-[14px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[12px] font-medium text-muted-foreground mb-1.5">Expiry time</p>
+                          <input
+                            type="time"
+                            value={customTime}
+                            onChange={e => setCustomTime(e.target.value)}
+                            onFocus={() => setFocusMode("description")}
+                            className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-[14px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Create link button */}
                 <div className="px-5 pt-2 pb-2 shrink-0">
-                  <button type="button" disabled={!hasAmount} onClick={handleCreate}
+                  <button type="button" disabled={!canCreate} onClick={handleCreate}
                     className={cn(
                       "w-full py-4 rounded-2xl text-[15px] font-bold transition-all duration-200",
-                      hasAmount
+                      canCreate
                         ? "bg-primary text-primary-foreground shadow-sm active:scale-[0.98]"
                         : "bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
                     )}
@@ -569,11 +575,12 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                       <p className="text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Payment link</p>
                       <p className="text-[20px] font-bold text-foreground tabular-nums mb-0.5">{sym} {displayAmount(amountRaw, currency)}</p>
                       {description && <p className="text-[13px] text-muted-foreground mb-2">{description}</p>}
-                      {expiry !== "none" && (
-                        <p className="text-[12px] text-muted-foreground mb-2">
-                          Expires in: {EXPIRY_OPTS.find(e => e.id === expiry)?.label}
-                        </p>
-                      )}
+                      <p className="text-[12px] text-muted-foreground mb-2">
+                        Expires in:{" "}
+                        {expiry === "custom"
+                          ? `${customDate} at ${customTime}`
+                          : EXPIRY_OPTS.find(e => e.id === expiry)?.label}
+                      </p>
                       <p className="font-mono text-[11px] text-muted-foreground break-all mt-2 mb-4">{generatedLink}</p>
                       <div className="flex gap-2">
                         <button type="button" onClick={handleCopy}
@@ -606,8 +613,8 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                     <button type="button"
                       onClick={() => {
                         setStep("amount"); setAmountRaw(""); setDescription("");
-                        setExpiry("none"); setGeneratedLink("");
-                        setShowCustomer(false); setCustName(""); setCustEmail(""); setCustPhone("");
+                        setExpiry("24h"); setCustomDate(""); setCustomTime(""); setGeneratedLink("");
+                        setCustName(""); setCustEmail(""); setCustPhone("");
                       }}
                       className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
                     >
