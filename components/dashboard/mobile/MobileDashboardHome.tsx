@@ -11,6 +11,7 @@ import {
   Link2, Receipt, Globe, FileText, Scale,
   XCircle, Clock,
   ChevronRight, AlertTriangle, AlertCircle, TrendingUp, ArrowUpRight,
+  Wallet, CreditCard, Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
@@ -84,6 +85,18 @@ const TXN_ICON = {
   failed:  XCircle,
   pending: Clock,
 } as const;
+
+const METHOD_ICON: Record<string, React.ElementType> = {
+  "UPI":         Wallet,
+  "Card":        CreditCard,
+  "Net Banking": Landmark,
+};
+
+const AMOUNT_COLOR: Record<string, string> = {
+  success: "text-foreground",
+  failed:  "text-red-600",
+  pending: "text-amber-600",
+};
 
 /* ─── Banner carousel ────────────────────────────────────────────── */
 type BannerSeverity = "info" | "warning" | "alert";
@@ -884,7 +897,7 @@ function NeedsAttentionSection() {
 const TXN_TABS = ["all", "success", "failed"] as const;
 type TxnTab = typeof TXN_TABS[number];
 
-function RecentTransactionsCard({ onTxnTap }: { onTxnTap?: (txn: RecentTxnItem) => void } = {}) {
+function RecentTransactionsCard({ onTxnTap, onSeeAll }: { onTxnTap?: (txn: RecentTxnItem) => void; onSeeAll?: () => void } = {}) {
   const [tab, setTab] = useState<TxnTab>("all");
   const { hidden } = useHideAmounts();
 
@@ -898,9 +911,9 @@ function RecentTransactionsCard({ onTxnTap }: { onTxnTap?: (txn: RecentTxnItem) 
         {/* Header — reduced from 15px to 13px */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2.5">
           <p className="text-[15px] font-semibold text-foreground">Recent transactions</p>
-          <Link href="/transactions" className="text-[11.5px] font-semibold text-primary">
+          <button type="button" onClick={onSeeAll} className="text-[11.5px] font-semibold text-primary active:opacity-60 transition-opacity">
             See all
-          </Link>
+          </button>
         </div>
 
         {/* Tab pills */}
@@ -932,56 +945,36 @@ function RecentTransactionsCard({ onTxnTap }: { onTxnTap?: (txn: RecentTxnItem) 
             const isSuccess = txn.status === "success";
             const isFailed  = txn.status === "failed";
 
+            const MethodIcon = METHOD_ICON[txn.method] ?? Wallet;
             return (
               <button
                 type="button"
                 key={txn.id}
                 onClick={() => onTxnTap?.(txn)}
-                className="flex items-center gap-3 px-4 py-3 w-full text-left active:bg-muted/30 transition-colors duration-100"
+                className="flex items-start justify-between gap-3 px-4 py-3.5 w-full text-left active:bg-muted/30 transition-colors duration-100"
               >
-                {/* Avatar — reduced from h-10 to h-9 */}
-                <div className={cn(
-                  "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
-                  isSuccess  ? "bg-emerald-50 dark:bg-emerald-950/40"
-                  : isFailed ? "bg-red-50 dark:bg-red-950/40"
-                  :            "bg-amber-50 dark:bg-amber-950/40"
-                )}>
-                  <Icon
-                    className={cn(
-                      "h-[15px] w-[15px]",
-                      isSuccess  ? "text-emerald-600 dark:text-emerald-400"
-                      : isFailed ? "text-red-600 dark:text-red-400"
-                      :            "text-amber-600 dark:text-amber-400"
-                    )}
-                    strokeWidth={2}
-                  />
-                </div>
-
-                {/* Name + method — reduced from 13.5/11.5px */}
+                {/* Left block */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12.5px] font-semibold text-foreground truncate leading-tight">
+                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">
                     {txn.name}
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {txn.method} · {txn.time}
-                  </p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <MethodIcon className="h-[12px] w-[12px] text-muted-foreground shrink-0" strokeWidth={1.75} />
+                    <p className="text-[12px] text-muted-foreground leading-snug">{txn.method}</p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{txn.time}</p>
                 </div>
 
-                {/* Amount + badge — reduced from 14/10.5px */}
-                <div className="text-right shrink-0">
-                  <p className={cn(
-                    "text-[13px] font-bold tabular-nums leading-tight",
-                    isSuccess  ? "text-foreground"
-                    : isFailed ? "text-red-600 dark:text-red-400"
-                    :            "text-amber-600 dark:text-amber-400"
-                  )}>
+                {/* Right block */}
+                <div className="shrink-0 text-right">
+                  <p className={cn("text-[13.5px] font-bold tabular-nums leading-snug", AMOUNT_COLOR[txn.status])}>
                     <MaskedNumber
                       value={`${isSuccess ? "+" : isFailed ? "−" : ""}${txn.amount}`}
                       hidden={hidden}
                     />
                   </p>
                   <span className={cn(
-                    "mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-md",
+                    "mt-0.5 inline-block text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full",
                     badge.text, badge.bg
                   )}>
                     {badge.label}
@@ -1001,7 +994,8 @@ export function MobileDashboardHome({
   onCreatePaymentLink,
   onTapToPay,
   onTxnTap,
-}: { onCreatePaymentLink?: () => void; onTapToPay?: () => void; onTxnTap?: (txn: RecentTxnItem) => void } = {}) {
+  onSeeAllTransactions,
+}: { onCreatePaymentLink?: () => void; onTapToPay?: () => void; onTxnTap?: (txn: RecentTxnItem) => void; onSeeAllTransactions?: () => void } = {}) {
   const [metric, setMetric] = useState<MetricKey>("gross");
 
   return (
@@ -1017,7 +1011,7 @@ export function MobileDashboardHome({
       <NeedsAttentionSection />
 
       {/* ⑤ Recent transactions */}
-      <RecentTransactionsCard onTxnTap={onTxnTap} />
+      <RecentTransactionsCard onTxnTap={onTxnTap} onSeeAll={onSeeAllTransactions} />
 
     </div>
   );

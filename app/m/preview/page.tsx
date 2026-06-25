@@ -21,13 +21,16 @@ import { MobileTransactionDetail } from "@/components/dashboard/mobile/MobileTra
 import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
 import { MobileAnalytics }           from "@/components/dashboard/mobile/MobileAnalytics";
 import { MobileTransactions }        from "@/components/dashboard/mobile/MobileTransactions";
+import { MobilePaymentLinks }        from "@/components/dashboard/mobile/MobilePaymentLinks";
+import { MobileInvoices }            from "@/components/dashboard/mobile/MobileInvoices";
+import { MobilePaymentLinkDetail }   from "@/components/dashboard/mobile/MobilePaymentLinkDetail";
 import {
   MobileInternational,
   CountrySheet,
   COUNTRIES,
 } from "@/components/dashboard/mobile/MobileInternational";
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
-import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
+import { HideAmountsProvider } from "@/lib/hide-amounts-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
 import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
 import type { FilterState } from "@/components/dashboard/mobile/MobileFilterDrawer";
@@ -123,6 +126,15 @@ function StatusBar() {
   );
 }
 
+/* ── Payments sub-tab order (used for swipe direction) ── */
+const PAYMENTS_SUB_TABS = ["transactions", "payment-links", "invoice", "mca-links"] as const;
+
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%" }),
+  center: { x: "0%" },
+  exit:  (dir: number) => ({ x: dir >= 0 ? "-100%" : "100%" }),
+};
+
 /* ── Tab types ── */
 type TabId = "home" | "analytics" | "txns" | "intl";
 const TABS: { id: TabId; icon: React.ElementType }[] = [
@@ -146,6 +158,30 @@ function getSubtitle() {
   return "Here's your end-of-day recap";
 }
 
+/* ── PG / MCA toggle ── */
+type PGMode = "PG" | "MCA";
+function PGMCAToggle({ value, onChange }: { value: PGMode; onChange: (v: PGMode) => void }) {
+  return (
+    <div className="flex items-center bg-black/[0.08] rounded-full p-0.5">
+      {(["PG", "MCA"] as const).map(v => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={cn(
+            "px-2.5 py-[5px] text-[12px] font-semibold rounded-full transition-colors",
+            value === v
+              ? "bg-white text-foreground shadow-sm"
+              : "text-foreground/50 active:bg-white/40"
+          )}
+        >
+          {v}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ── App stage: full dashboard inside the phone frame ── */
 function AppStage() {
   const [drawerOpen,       setDrawerOpen]       = useState(false);
@@ -160,11 +196,14 @@ function AppStage() {
   const [txnFilterApplied, setTxnFilterApplied] = useState<FilterState>(emptyFilters());
   const [plusOpen,         setPlusOpen]         = useState(false);
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
+  const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice">("transactions");
+  const [swipeDir,             setSwipeDir]             = useState(0);
+  const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
   const [intlSheetOpen,       setIntlSheetOpen]       = useState(false);
   const [intlCountry,         setIntlCountry]         = useState<IntlCountry>(COUNTRIES[0]);
   const [criticalSheetOpen,   setCriticalSheetOpen]   = useState(false);
   const [selectedTxn,         setSelectedTxn]         = useState<RecentTxnItem | null>(null);
-  const { hidden, toggle } = useHideAmounts();
+  const [pgMode,              setPgMode]              = useState<PGMode>("PG");
 
   useEffect(() => {
     const t = setTimeout(() => setCriticalSheetOpen(true), 600);
@@ -192,18 +231,26 @@ function AppStage() {
               width={40} height={40} className="h-full w-full object-cover" priority />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-foreground leading-tight">
+            <p className="text-[15px] font-bold text-foreground leading-tight truncate whitespace-nowrap">
               {getGreeting()}, Deep{" "}
               <span className="inline-block animate-[wave_2s_ease-in-out_infinite] origin-[70%_70%]">👋</span>
             </p>
             <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{getSubtitle()}</p>
           </div>
-          <div className="flex items-center gap-0.5 shrink-0">
-            <button type="button" onClick={toggle}
-              className="h-9 w-9 flex items-center justify-center rounded-full text-foreground">
-              {hidden ? <EyeClosed className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      : <Eye       className="h-[18px] w-[18px]" strokeWidth={1.75} />}
+          <div className="flex items-center gap-2 shrink-0">
+            <PGMCAToggle value={pgMode} onChange={setPgMode} />
+            <button type="button" onClick={() => setNotifsOpen(true)}
+              className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
+              <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
+              <span className="absolute top-[9px] right-[9px] h-[7px] w-[7px] rounded-full bg-red-500 border-[1.5px] border-background" aria-hidden />
             </button>
+          </div>
+        </div>
+      ) : activeTab === "txns" ? (
+        <div className="flex items-center justify-between px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
+          <h1 className="text-[20px] font-bold text-foreground tracking-tight">Payments</h1>
+          <div className="flex items-center gap-2">
+            <PGMCAToggle value={pgMode} onChange={setPgMode} />
             <button type="button" onClick={() => setNotifsOpen(true)}
               className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
               <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
@@ -214,7 +261,7 @@ function AppStage() {
       ) : (
         <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">
-            {activeTab === "analytics" ? "Analytics" : activeTab === "txns" ? "Payments" : "International"}
+            {activeTab === "analytics" ? "Analytics" : "International"}
           </h1>
         </div>
       )}
@@ -229,11 +276,19 @@ function AppStage() {
               { id: "invoice",       label: "Invoice"       },
               { id: "mca-links",     label: "MCA Links"     },
             ].map((tab) => {
-              const active = tab.id === "transactions";
+              const active = tab.id === paymentsSubTab;
               return (
                 <button
                   key={tab.id}
                   type="button"
+                  onClick={() => {
+                    if (tab.id === "transactions" || tab.id === "payment-links" || tab.id === "invoice") {
+                      const newIdx = PAYMENTS_SUB_TABS.indexOf(tab.id);
+                      const oldIdx = PAYMENTS_SUB_TABS.indexOf(paymentsSubTab);
+                      setSwipeDir(newIdx >= oldIdx ? 1 : -1);
+                      setPaymentsSubTab(tab.id);
+                    }
+                  }}
                   className={cn(
                     "relative shrink-0 px-4 h-10 text-[13.5px] whitespace-nowrap transition-colors",
                     active ? "font-semibold text-primary" : "font-normal text-muted-foreground"
@@ -250,35 +305,62 @@ function AppStage() {
         </div>
       )}
 
-      {/* Scrollable content — extra bottom padding on Home tab to clear sticky banner */}
-      <div
-        className={cn(
-          "flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden",
-          activeTab === "home" ? "pb-[180px]" : "pb-[76px]"
-        )}
-        style={{ scrollbarWidth: "none" }}
-      >
-        {activeTab === "analytics" ? <MobileAnalytics /> :
-         activeTab === "txns" ? (
-           <MobileTransactions
-             externalFilterState={txnFilterApplied}
-             onFilterButtonTap={() => setTxnFilterOpen(true)}
+      {/* Scrollable content — non-txns tabs */}
+      {activeTab !== "txns" && (
+        <div
+          className={cn(
+            "flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden",
+            activeTab === "home" ? "pb-[180px]" : "pb-[76px]"
+          )}
+          style={{ scrollbarWidth: "none" }}
+        >
+          {activeTab === "analytics" ? <MobileAnalytics /> :
+           activeTab === "intl" ? (
+             <MobileInternational
+               onOpenCountrySheet={() => setIntlSheetOpen(true)}
+               externalCountry={intlCountry}
+               onCountryChange={setIntlCountry}
+             />
+           ) :
+           <MobileDashboardHome
+             onCreatePaymentLink={() => setPaymentLinkOpen(true)}
+             onTapToPay={() => setTapToPayOpen(true)}
              onTxnTap={setSelectedTxn}
-           />
-         ) :
-         activeTab === "intl" ? (
-           <MobileInternational
-             onOpenCountrySheet={() => setIntlSheetOpen(true)}
-             externalCountry={intlCountry}
-             onCountryChange={setIntlCountry}
-           />
-         ) :
-         <MobileDashboardHome
-           onCreatePaymentLink={() => setPaymentLinkOpen(true)}
-           onTapToPay={() => setTapToPayOpen(true)}
-           onTxnTap={setSelectedTxn}
-         />}
-      </div>
+             onSeeAllTransactions={() => setActiveTab("txns")}
+           />}
+        </div>
+      )}
+
+      {/* Payments tab — horizontally animated sub-tab content */}
+      {activeTab === "txns" && (
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+          <AnimatePresence initial={false} custom={swipeDir}>
+            <motion.div
+              key={paymentsSubTab}
+              custom={swipeDir}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.28, ease: "easeInOut" }}
+              className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:hidden pb-[76px]"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {paymentsSubTab === "payment-links"
+                ? <MobilePaymentLinks onCardTap={setSelectedPaymentLink} />
+                : paymentsSubTab === "invoice"
+                ? <MobileInvoices />
+                : (
+                  <MobileTransactions
+                    externalFilterState={txnFilterApplied}
+                    onFilterButtonTap={() => setTxnFilterOpen(true)}
+                    onTxnTap={setSelectedTxn}
+                  />
+                )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Echo FAB — absolute so it stays inside the phone frame */}
       <button type="button" onClick={() => setEchoOpen(true)} aria-label="Open Echo"
@@ -500,6 +582,51 @@ function AppStage() {
               txn={selectedTxn}
               onClose={() => setSelectedTxn(null)}
               onOpenTransaction={setSelectedTxn}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Payment Link Detail — blur backdrop ── */}
+      <AnimatePresence>
+        {selectedPaymentLink && (
+          <motion.div
+            key="pl-backdrop"
+            className="absolute inset-0 z-[79]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setSelectedPaymentLink(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Payment Link Detail — bottom sheet ── */}
+      <AnimatePresence>
+        {selectedPaymentLink && (
+          <motion.div
+            key={selectedPaymentLink}
+            className="absolute inset-x-0 bottom-0 z-[80] flex flex-col bg-background overflow-hidden"
+            style={{
+              height: "93%",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobilePaymentLinkDetail
+              linkId={selectedPaymentLink}
+              onClose={() => setSelectedPaymentLink(null)}
+              onOpenTransaction={(txn) => { setSelectedPaymentLink(null); setSelectedTxn(txn); }}
             />
           </motion.div>
         )}
