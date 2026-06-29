@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
@@ -801,7 +802,15 @@ const QUICK_ACTIONS = [
   },
 ] as const;
 
-function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: () => void }) {
+function QuickActionsSection({
+  onCreatePaymentLink,
+  onSettlementsOpen,
+  onDisputesOpen,
+}: {
+  onCreatePaymentLink?: () => void;
+  onSettlementsOpen?: () => void;
+  onDisputesOpen?: () => void;
+}) {
   return (
     <div className="mx-4">
       {/* Section header */}
@@ -811,7 +820,9 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
       <div className="flex justify-between gap-1">
         {QUICK_ACTIONS.map((item) => {
           const Icon = item.icon;
-          const isPaymentLink = item.key === "payment-link" && onCreatePaymentLink;
+          const isPaymentLink  = item.key === "payment-link"  && onCreatePaymentLink;
+          const isSettlements = item.key === "settlements"    && onSettlementsOpen;
+          const isDisputes    = item.key === "disputes"       && onDisputesOpen;
 
           const inner = (
             <div className="flex flex-col items-center gap-2">
@@ -828,12 +839,17 @@ function QuickActionsSection({ onCreatePaymentLink }: { onCreatePaymentLink?: ()
             </div>
           );
 
-          if (isPaymentLink) {
+          const onTap = isPaymentLink  ? onCreatePaymentLink
+                      : isSettlements ? onSettlementsOpen
+                      : isDisputes    ? onDisputesOpen
+                      : null;
+
+          if (onTap) {
             return (
               <button
                 key={item.key}
                 type="button"
-                onClick={onCreatePaymentLink}
+                onClick={onTap}
                 className="flex flex-col items-center transition-transform duration-100 active:scale-[0.94]"
               >
                 {inner}
@@ -995,23 +1011,41 @@ export function MobileDashboardHome({
   onTapToPay,
   onTxnTap,
   onSeeAllTransactions,
-}: { onCreatePaymentLink?: () => void; onTapToPay?: () => void; onTxnTap?: (txn: RecentTxnItem) => void; onSeeAllTransactions?: () => void } = {}) {
+  onSettlementsOpen,
+  onDisputesOpen,
+}: {
+  onCreatePaymentLink?: () => void;
+  onTapToPay?: () => void;
+  onTxnTap?: (txn: RecentTxnItem) => void;
+  onSeeAllTransactions?: () => void;
+  onSettlementsOpen?: () => void;
+  onDisputesOpen?: () => void;
+} = {}) {
   const [metric, setMetric] = useState<MetricKey>("gross");
 
   return (
-    <div className="flex flex-col gap-4 pb-4 pt-1.5">
+    <div className="flex flex-col gap-8 pt-1.5">
 
       {/* ① Hero carousel — Gross Volume · Referral (2 slides) */}
       <HeroCarousel metric={metric} setMetric={setMetric} />
 
       {/* ④ Quick actions — icon + label only, no containers */}
-      <QuickActionsSection onCreatePaymentLink={onCreatePaymentLink} />
+      <QuickActionsSection onCreatePaymentLink={onCreatePaymentLink} onSettlementsOpen={onSettlementsOpen} onDisputesOpen={onDisputesOpen} />
 
       {/* ④ Needs attention */}
       <NeedsAttentionSection />
 
       {/* ⑤ Recent transactions */}
       <RecentTransactionsCard onTxnTap={onTxnTap} onSeeAll={onSeeAllTransactions} />
+
+      {/* Footer */}
+      <Image
+        src="/Footer_new.png"
+        alt=""
+        width={1203}
+        height={627}
+        className="w-full h-auto block"
+      />
 
     </div>
   );

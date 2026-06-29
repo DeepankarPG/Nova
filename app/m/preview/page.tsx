@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import Image from "next/image";
 import {
   House, ArrowUpDown, ArrowLeft, BarChart3, Globe,
-  Bell, Eye, EyeClosed, Plus, Link2, Nfc, Settings2,
+  Bell, Eye, EyeClosed, Plus, Link2, Nfc, Settings2, FilePlus2, Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MobileSplashScreen }        from "@/components/layout/mobile/MobileSplashScreen";
@@ -19,11 +20,22 @@ import { MobileFilterSheet }         from "@/components/layout/mobile/MobileFilt
 import { MobileDashboardHome, BannerCarousel, CriticalNotificationsSheet } from "@/components/dashboard/mobile/MobileDashboardHome";
 import { MobileTransactionDetail } from "@/components/dashboard/mobile/MobileTransactionDetail";
 import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
-import { MobileAnalytics }           from "@/components/dashboard/mobile/MobileAnalytics";
+import {
+  MobileAnalytics, AnalyticsEditOverlay,
+  loadAnalyticsCharts, saveAnalyticsCharts,
+} from "@/components/dashboard/mobile/MobileAnalytics";
 import { MobileTransactions }        from "@/components/dashboard/mobile/MobileTransactions";
 import { MobilePaymentLinks }        from "@/components/dashboard/mobile/MobilePaymentLinks";
 import { MobileInvoices }            from "@/components/dashboard/mobile/MobileInvoices";
+import { MobileMcaLinks }            from "@/components/dashboard/mobile/MobileMcaLinks";
+import { MobileCreateMcaLink }       from "@/components/layout/mobile/MobileCreateMcaLink";
 import { MobilePaymentLinkDetail }   from "@/components/dashboard/mobile/MobilePaymentLinkDetail";
+import { MobileInvoicePreview }      from "@/components/dashboard/mobile/MobileInvoicePreview";
+import { MobileEditInvoice }         from "@/components/dashboard/mobile/MobileEditInvoice";
+import { MobileInvoiceStatus }       from "@/components/dashboard/mobile/MobileInvoiceStatus";
+import { MobileSettlementReports }   from "@/components/dashboard/mobile/MobileSettlementReports";
+import { MobileEbrc }               from "@/components/dashboard/mobile/MobileEbrc";
+import { MobileDisputes }           from "@/components/dashboard/mobile/MobileDisputes";
 import {
   MobileInternational,
   CountrySheet,
@@ -33,7 +45,7 @@ import type { Country as IntlCountry } from "@/components/dashboard/mobile/Mobil
 import { HideAmountsProvider } from "@/lib/hide-amounts-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
 import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
-import type { FilterState } from "@/components/dashboard/mobile/MobileFilterDrawer";
+import type { FilterState, FilterCat } from "@/components/dashboard/mobile/MobileFilterDrawer";
 import { cn } from "@/lib/utils";
 
 /* ── Phone dimensions ── */
@@ -99,27 +111,27 @@ function StatusBar() {
         pointerEvents: "none",
       }}
     >
-      <span style={{ fontSize: 15, fontWeight: 600, color: "white", letterSpacing: -0.3, fontVariantNumeric: "tabular-nums" }}>9:41</span>
+      <span style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A", letterSpacing: -0.3, fontVariantNumeric: "tabular-nums" }}>9:41</span>
       <div
         style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: 5, background: "black", width: 120, height: 34, borderRadius: 20 }}
         aria-hidden
       />
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden>
-          <rect x="0"    y="8"    width="3" height="4"   rx="1" fill="white" />
-          <rect x="4.5"  y="5.5"  width="3" height="6.5" rx="1" fill="white" />
-          <rect x="9"    y="3"    width="3" height="9"   rx="1" fill="white" />
-          <rect x="13.5" y="0"    width="3" height="12"  rx="1" fill="white" opacity="0.3" />
+          <rect x="0"    y="8"    width="3" height="4"   rx="1" fill="#0A0A0A" />
+          <rect x="4.5"  y="5.5"  width="3" height="6.5" rx="1" fill="#0A0A0A" />
+          <rect x="9"    y="3"    width="3" height="9"   rx="1" fill="#0A0A0A" />
+          <rect x="13.5" y="0"    width="3" height="12"  rx="1" fill="#0A0A0A" opacity="0.3" />
         </svg>
         <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden>
-          <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="white" />
-          <path d="M3.5 6.5C4.9 5.1 6.35 4.4 8 4.4s3.1.7 4.5 2.1" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-          <path d="M1 4C3.1 1.9 5.4 1 8 1s4.9.9 7 3" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.5" />
+          <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="#0A0A0A" />
+          <path d="M3.5 6.5C4.9 5.1 6.35 4.4 8 4.4s3.1.7 4.5 2.1" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          <path d="M1 4C3.1 1.9 5.4 1 8 1s4.9.9 7 3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.5" />
         </svg>
         <svg width="25" height="13" viewBox="0 0 25 13" fill="none" aria-hidden>
-          <rect x="0.5" y="1" width="21" height="11" rx="3.5" stroke="white" strokeWidth="1.2" />
-          <rect x="22" y="4.5" width="2.5" height="4" rx="1" fill="white" opacity="0.4" />
-          <rect x="2" y="2.5" width="17" height="8" rx="2" fill="white" />
+          <rect x="0.5" y="1" width="21" height="11" rx="3.5" stroke="#0A0A0A" strokeWidth="1.2" />
+          <rect x="22" y="4.5" width="2.5" height="4" rx="1" fill="#0A0A0A" opacity="0.4" />
+          <rect x="2" y="2.5" width="17" height="8" rx="2" fill="#0A0A0A" />
         </svg>
       </div>
     </div>
@@ -158,29 +170,6 @@ function getSubtitle() {
   return "Here's your end-of-day recap";
 }
 
-/* ── PG / MCA toggle ── */
-type PGMode = "PG" | "MCA";
-function PGMCAToggle({ value, onChange }: { value: PGMode; onChange: (v: PGMode) => void }) {
-  return (
-    <div className="flex items-center bg-black/[0.08] rounded-full p-0.5">
-      {(["PG", "MCA"] as const).map(v => (
-        <button
-          key={v}
-          type="button"
-          onClick={() => onChange(v)}
-          className={cn(
-            "px-2.5 py-[5px] text-[12px] font-semibold rounded-full transition-colors",
-            value === v
-              ? "bg-white text-foreground shadow-sm"
-              : "text-foreground/50 active:bg-white/40"
-          )}
-        >
-          {v}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /* ── App stage: full dashboard inside the phone frame ── */
 function AppStage() {
@@ -189,21 +178,49 @@ function AppStage() {
   const [echoOpen,         setEchoOpen]         = useState(false);
   const [notifsOpen,       setNotifsOpen]       = useState(false);
   const [paymentLinkOpen,  setPaymentLinkOpen]  = useState(false);
+  const [mcaLinkOpen,      setMcaLinkOpen]      = useState(false);
   const [tapToPayOpen,     setTapToPayOpen]     = useState(false);
   const [filterOpen,       setFilterOpen]       = useState<FilterId | null>(null);
   const [appliedFilters,   setAppliedFilters]   = useState<Partial<Record<FilterId, string>>>({});
   const [txnFilterOpen,    setTxnFilterOpen]    = useState(false);
+  const [txnFilterCat,     setTxnFilterCat]     = useState<FilterCat | null>(null);
   const [txnFilterApplied, setTxnFilterApplied] = useState<FilterState>(emptyFilters());
   const [plusOpen,         setPlusOpen]         = useState(false);
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
-  const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice">("transactions");
+  const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice" | "mca-links">("transactions");
   const [swipeDir,             setSwipeDir]             = useState(0);
   const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
+  const [selectedInvoice,      setSelectedInvoice]      = useState<string | null>(null);
+  const [invoicePreviewFromEdit, setInvoicePreviewFromEdit] = useState(false);
+  const [editInvoiceId,        setEditInvoiceId]        = useState<string | null>(null);
+  const [statusInvoiceId,      setStatusInvoiceId]      = useState<string | null>(null);
+  const [statusToast,          setStatusToast]          = useState(false);
+  const [analyticsChartIds,    setAnalyticsChartIds]    = useState<string[]>(() => loadAnalyticsCharts());
+  const [analyticsEditOpen,    setAnalyticsEditOpen]    = useState(false);
   const [intlSheetOpen,       setIntlSheetOpen]       = useState(false);
   const [intlCountry,         setIntlCountry]         = useState<IntlCountry>(COUNTRIES[0]);
   const [criticalSheetOpen,   setCriticalSheetOpen]   = useState(false);
   const [selectedTxn,         setSelectedTxn]         = useState<RecentTxnItem | null>(null);
-  const [pgMode,              setPgMode]              = useState<PGMode>("PG");
+  const [settlementOpen,      setSettlementOpen]      = useState(false);
+  const [settlementFilter,    setSettlementFilter]    = useState<string | null>(null);
+  const [ebrcOpen,            setEbrcOpen]            = useState(false);
+  const [disputesOpen,        setDisputesOpen]        = useState(false);
+
+  /* ── In-frame toast ── */
+  type FrameToast = { id: number; message: string; type: "success" | "error" };
+  const [frameToasts,    setFrameToasts]    = useState<FrameToast[]>([]);
+  const toastCounter                        = useRef(0);
+
+  function showFrameToast(message: string, type: "success" | "error") {
+    const id = ++toastCounter.current;
+    setFrameToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setFrameToasts(prev => prev.filter(t => t.id !== id)), 3000);
+  }
+
+  /* ── MCA disable confirmation ── */
+  const [mcaDisable, setMcaDisable] = useState<{ id: string; onConfirm: () => void } | null>(null);
+
+  const subTabsScrollRef = useHorizontalScroll<HTMLDivElement>();
 
   useEffect(() => {
     const t = setTimeout(() => setCriticalSheetOpen(true), 600);
@@ -215,7 +232,7 @@ function AppStage() {
       className="relative flex flex-col w-full h-full overflow-hidden bg-no-repeat"
       style={{
         backgroundColor: "#f6f8fa",
-        backgroundImage: activeTab === "home" ? "linear-gradient(to bottom, #dbeafe 0%, #f6f8fa 380px)" : "none",
+        backgroundImage: activeTab === "home" ? "linear-gradient(to bottom, #f6f8fa 44px, #dbeafe 180px, #f6f8fa 380px)" : "none",
         backgroundSize: "100% 380px",
       }}
     >
@@ -238,7 +255,6 @@ function AppStage() {
             <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{getSubtitle()}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <PGMCAToggle value={pgMode} onChange={setPgMode} />
             <button type="button" onClick={() => setNotifsOpen(true)}
               className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
               <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
@@ -250,7 +266,6 @@ function AppStage() {
         <div className="flex items-center justify-between px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">Payments</h1>
           <div className="flex items-center gap-2">
-            <PGMCAToggle value={pgMode} onChange={setPgMode} />
             <button type="button" onClick={() => setNotifsOpen(true)}
               className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
               <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
@@ -258,49 +273,58 @@ function AppStage() {
             </button>
           </div>
         </div>
+      ) : activeTab === "analytics" ? (
+        <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
+          <h1 className="text-[20px] font-bold text-foreground tracking-tight">Analytics</h1>
+          <button type="button" onClick={() => setAnalyticsEditOpen(true)}
+            className="text-[14px] font-medium text-primary active:opacity-60"
+          >
+            Edit
+          </button>
+        </div>
       ) : (
         <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
-          <h1 className="text-[20px] font-bold text-foreground tracking-tight">
-            {activeTab === "analytics" ? "Analytics" : "International"}
-          </h1>
+          <h1 className="text-[20px] font-bold text-foreground tracking-tight">International</h1>
         </div>
       )}
 
       {/* Payments sub-tab bar */}
       {activeTab === "txns" && (
         <div className="shrink-0 bg-transparent border-b border-border/50">
-          <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-            {[
-              { id: "transactions",  label: "Transactions"  },
-              { id: "payment-links", label: "Payment Links" },
-              { id: "invoice",       label: "Invoice"       },
-              { id: "mca-links",     label: "MCA Links"     },
-            ].map((tab) => {
-              const active = tab.id === paymentsSubTab;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    if (tab.id === "transactions" || tab.id === "payment-links" || tab.id === "invoice") {
-                      const newIdx = PAYMENTS_SUB_TABS.indexOf(tab.id);
-                      const oldIdx = PAYMENTS_SUB_TABS.indexOf(paymentsSubTab);
-                      setSwipeDir(newIdx >= oldIdx ? 1 : -1);
-                      setPaymentsSubTab(tab.id);
-                    }
-                  }}
-                  className={cn(
-                    "relative shrink-0 px-4 h-10 text-[13.5px] whitespace-nowrap transition-colors",
-                    active ? "font-semibold text-primary" : "font-normal text-muted-foreground"
-                  )}
-                >
-                  {tab.label}
-                  {active && (
-                    <span className="absolute inset-x-4 bottom-0 h-[2.5px] bg-primary rounded-full" />
-                  )}
-                </button>
-              );
-            })}
+          <div ref={subTabsScrollRef} className="[&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
+            <div className="flex w-max">
+              {[
+                { id: "transactions",  label: "Transactions"  },
+                { id: "payment-links", label: "Payment Links" },
+                { id: "invoice",       label: "Invoice"       },
+                { id: "mca-links",     label: "MCA Links"     },
+              ].map((tab) => {
+                const active = tab.id === paymentsSubTab;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      if (tab.id === "transactions" || tab.id === "payment-links" || tab.id === "invoice" || tab.id === "mca-links") {
+                        const newIdx = PAYMENTS_SUB_TABS.indexOf(tab.id);
+                        const oldIdx = PAYMENTS_SUB_TABS.indexOf(paymentsSubTab);
+                        setSwipeDir(newIdx >= oldIdx ? 1 : -1);
+                        setPaymentsSubTab(tab.id);
+                      }
+                    }}
+                    className={cn(
+                      "relative shrink-0 px-4 h-10 text-[13.5px] whitespace-nowrap transition-colors",
+                      active ? "font-semibold text-primary" : "font-normal text-muted-foreground"
+                    )}
+                  >
+                    {tab.label}
+                    {active && (
+                      <span className="absolute inset-x-4 bottom-0 h-[2.5px] bg-primary rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -310,11 +334,11 @@ function AppStage() {
         <div
           className={cn(
             "flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden",
-            activeTab === "home" ? "pb-[180px]" : "pb-[76px]"
+            activeTab === "home" ? "pb-[160px]" : "pb-[76px]"
           )}
           style={{ scrollbarWidth: "none" }}
         >
-          {activeTab === "analytics" ? <MobileAnalytics /> :
+          {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} /> :
            activeTab === "intl" ? (
              <MobileInternational
                onOpenCountrySheet={() => setIntlSheetOpen(true)}
@@ -327,6 +351,8 @@ function AppStage() {
              onTapToPay={() => setTapToPayOpen(true)}
              onTxnTap={setSelectedTxn}
              onSeeAllTransactions={() => setActiveTab("txns")}
+             onSettlementsOpen={() => setSettlementOpen(true)}
+             onDisputesOpen={() => setDisputesOpen(true)}
            />}
         </div>
       )}
@@ -347,14 +373,23 @@ function AppStage() {
               style={{ scrollbarWidth: "none" }}
             >
               {paymentsSubTab === "payment-links"
-                ? <MobilePaymentLinks onCardTap={setSelectedPaymentLink} />
+                ? <MobilePaymentLinks onCardTap={setSelectedPaymentLink} onCreatePaymentLink={() => setPaymentLinkOpen(true)} />
                 : paymentsSubTab === "invoice"
-                ? <MobileInvoices />
+                ? <MobileInvoices onPreview={setSelectedInvoice} onEdit={setEditInvoiceId} onCreateInvoice={() => setEditInvoiceId("new")} onStatus={setStatusInvoiceId} />
+                : paymentsSubTab === "mca-links"
+                ? <MobileMcaLinks
+                    onCreateMcaLink={() => setMcaLinkOpen(true)}
+                    onDisableRequest={(id, onConfirm) => setMcaDisable({ id, onConfirm })}
+                    onToast={showFrameToast}
+                  />
                 : (
                   <MobileTransactions
                     externalFilterState={txnFilterApplied}
-                    onFilterButtonTap={() => setTxnFilterOpen(true)}
+                    onFilterButtonTap={() => { setTxnFilterCat(null); setTxnFilterOpen(true); }}
+                    onChipTap={(cat) => { setTxnFilterCat(cat); setTxnFilterOpen(true); }}
                     onTxnTap={setSelectedTxn}
+                    settlementFilter={settlementFilter}
+                    onClearSettlementFilter={() => setSettlementFilter(null)}
                   />
                 )}
             </motion.div>
@@ -401,9 +436,9 @@ function AppStage() {
               transition={{ type: "spring", stiffness: 460, damping: 34 }}
             >
               {[
-                { label: "Payment link", Icon: Link2,     iconBg: "bg-primary/10", iconColor: "text-primary",          action: () => { setPaymentLinkOpen(true); setPlusOpen(false); } },
-                { label: "Tap to Pay",   Icon: Nfc,       iconBg: "bg-sky-50",     iconColor: "text-sky-500",          action: () => { setTapToPayOpen(true);    setPlusOpen(false); } },
-                { label: "Settings",     Icon: Settings2, iconBg: "bg-muted",      iconColor: "text-muted-foreground", action: () => { setMoreOpen(true);        setPlusOpen(false); } },
+                { label: "Payment link",    Icon: Link2,     iconBg: "bg-primary/10",    iconColor: "text-primary",          action: () => { setPaymentLinkOpen(true);      setPlusOpen(false); } },
+                { label: "Create Invoice",  Icon: FilePlus2, iconBg: "bg-violet-50",    iconColor: "text-violet-500",       action: () => { setEditInvoiceId("new");       setPlusOpen(false); } },
+                { label: "Create MCA link", Icon: Zap,       iconBg: "bg-amber-50",     iconColor: "text-amber-500",        action: () => { setMcaLinkOpen(true);          setPlusOpen(false); } },
               ].map((item, i) => {
                 const Icon = item.Icon;
                 return (
@@ -475,11 +510,12 @@ function AppStage() {
       </div>{/* /absolute bottom-0 z-40 */}
 
       {/* Sheets — all with contained so they stay inside the phone frame */}
-      <MobileMoreSheet             open={moreOpen}            onClose={() => setMoreOpen(false)}            contained />
+      <MobileMoreSheet             open={moreOpen}            onClose={() => setMoreOpen(false)}            contained onSettlementTap={() => { setMoreOpen(false); setSettlementOpen(true); }} />
       <MobileEchoSheet             open={echoOpen}            onClose={() => setEchoOpen(false)}            contained />
       <MobileNotifications         open={notifsOpen}          onClose={() => setNotifsOpen(false)}          contained />
       <CriticalNotificationsSheet  open={criticalSheetOpen}   onClose={() => setCriticalSheetOpen(false)}   contained />
       <MobileCreatePaymentLink open={paymentLinkOpen} onClose={() => setPaymentLinkOpen(false)}  contained />
+      <MobileCreateMcaLink     open={mcaLinkOpen}     onClose={() => setMcaLinkOpen(false)}       contained />
       <MobileTapToPay          open={tapToPayOpen}    onClose={() => setTapToPayOpen(false)}     contained />
       <CountrySheet
         open={intlSheetOpen}
@@ -494,7 +530,23 @@ function AppStage() {
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
         contained
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} />
+      <MobileEbrc open={ebrcOpen} onClose={() => setEbrcOpen(false)} contained />
+      <MobileDisputes open={disputesOpen} onClose={() => setDisputesOpen(false)} contained />
+      <MobileSettlementReports
+        open={settlementOpen}
+        onClose={() => setSettlementOpen(false)}
+        contained
+        onTxnLinkTap={(id) => {
+          setSettlementOpen(false);
+          setActiveTab("txns");
+          const newIdx = PAYMENTS_SUB_TABS.indexOf("transactions");
+          const oldIdx = PAYMENTS_SUB_TABS.indexOf(paymentsSubTab);
+          setSwipeDir(newIdx >= oldIdx ? 1 : -1);
+          setPaymentsSubTab("transactions");
+          setSettlementFilter(id);
+        }}
+      />
 
       {/* ── Filter Drawer — backdrop ── */}
       <AnimatePresence>
@@ -534,9 +586,10 @@ function AppStage() {
           >
             <MobileFilterDrawer
               initialFilters={txnFilterApplied}
-              onApply={(filters) => { setTxnFilterApplied(filters); setTxnFilterOpen(false); }}
+              initialCategory={txnFilterCat ?? undefined}
+              onApply={(filters) => { setTxnFilterApplied(filters); setTxnFilterOpen(false); setTxnFilterCat(null); }}
               onReset={() => setTxnFilterApplied(emptyFilters())}
-              onClose={() => setTxnFilterOpen(false)}
+              onClose={() => { setTxnFilterOpen(false); setTxnFilterCat(null); }}
             />
           </motion.div>
         )}
@@ -631,6 +684,245 @@ function AppStage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Edit Invoice — blur backdrop ── */}
+      <AnimatePresence>
+        {editInvoiceId && (
+          <motion.div
+            key="edit-inv-backdrop"
+            className="absolute inset-0 z-[79]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setEditInvoiceId(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Edit Invoice — bottom sheet ── */}
+      <AnimatePresence>
+        {editInvoiceId && (
+          <motion.div
+            key={`edit-${editInvoiceId}`}
+            className="absolute inset-x-0 bottom-0 z-[80] flex flex-col bg-background overflow-hidden"
+            style={{
+              height: "93%",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobileEditInvoice
+              invId={editInvoiceId === "new" ? null : editInvoiceId}
+              onClose={() => setEditInvoiceId(null)}
+              onPreview={(id) => { setInvoicePreviewFromEdit(true); setSelectedInvoice(id); }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Analytics Edit overlay ── */}
+      <AnalyticsEditOverlay
+        open={analyticsEditOpen}
+        chartIds={analyticsChartIds}
+        onClose={() => setAnalyticsEditOpen(false)}
+        onApply={(ids) => {
+          setAnalyticsChartIds(ids);
+          saveAnalyticsCharts(ids);
+          setAnalyticsEditOpen(false);
+        }}
+      />
+
+      {/* ── Invoice Status — blur backdrop ── */}
+      <AnimatePresence>
+        {statusInvoiceId && (
+          <motion.div
+            key="status-inv-backdrop"
+            className="absolute inset-0 z-[79]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setStatusInvoiceId(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Invoice Status — bottom sheet ── */}
+      <AnimatePresence>
+        {statusInvoiceId && (
+          <motion.div
+            key={`status-${statusInvoiceId}`}
+            className="absolute inset-x-0 bottom-0 z-[80] flex flex-col bg-background overflow-hidden"
+            style={{
+              height: "93%",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobileInvoiceStatus
+              invId={statusInvoiceId}
+              onClose={() => setStatusInvoiceId(null)}
+              onSuccess={() => {
+                setStatusInvoiceId(null);
+                setStatusToast(true);
+                setTimeout(() => setStatusToast(false), 2500);
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Invoice Status — success toast ── */}
+      <AnimatePresence>
+        {statusToast && (
+          <motion.div
+            key="status-toast"
+            className="absolute inset-x-4 z-90 flex items-center gap-2.5 bg-foreground text-background rounded-2xl px-4 py-3 shadow-lg"
+            style={{ bottom: 90 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <span className="text-[13px] font-medium">Invoice marked as paid</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Invoice Preview — blur backdrop ── */}
+      <AnimatePresence>
+        {selectedInvoice && !invoicePreviewFromEdit && (
+          <motion.div
+            key="inv-backdrop"
+            className="absolute inset-0 z-[79]"
+            style={{
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setSelectedInvoice(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* ── Invoice Preview — bottom sheet ── */}
+      <AnimatePresence>
+        {selectedInvoice && (
+          <motion.div
+            key={selectedInvoice}
+            className={`absolute inset-x-0 bottom-0 flex flex-col bg-background overflow-hidden ${invoicePreviewFromEdit ? "z-[84]" : "z-[80]"}`}
+            style={{
+              height: "93%",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <MobileInvoicePreview
+              invId={selectedInvoice}
+              onClose={() => { setSelectedInvoice(null); setInvoicePreviewFromEdit(false); }}
+              onBack={invoicePreviewFromEdit ? () => { setSelectedInvoice(null); setInvoicePreviewFromEdit(false); } : undefined}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MCA disable confirmation sheet — absolute, stays inside phone frame ── */}
+      <AnimatePresence>
+        {mcaDisable && (
+          <>
+            <motion.div
+              key="mca-disable-backdrop"
+              className="absolute inset-0 z-110 bg-black/30"
+              style={{ backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMcaDisable(null)}
+            />
+            <motion.div
+              key="mca-disable-sheet"
+              className="absolute inset-x-0 bottom-0 z-111 bg-background rounded-t-3xl px-4 pt-5 pb-8"
+              style={{ boxShadow: "0 -4px 24px rgba(0,0,0,0.12)" }}
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            >
+              <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-5" />
+              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-red-50 mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              </div>
+              <p className="text-[16px] font-bold text-foreground text-center mb-2">Disable this link?</p>
+              <p className="text-[13px] text-muted-foreground text-center leading-relaxed mb-6 px-2">
+                The customer will no longer be able to use this link to make a payment.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMcaDisable(null)}
+                  className="flex-1 py-3.5 rounded-2xl border border-border text-[14.5px] font-semibold text-foreground active:bg-muted/30 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { mcaDisable.onConfirm(); setMcaDisable(null); }}
+                  className="flex-1 py-3.5 rounded-2xl bg-red-500 text-[14.5px] font-semibold text-white active:bg-red-600 transition-colors"
+                >
+                  Disable link
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── In-frame toasts — absolute, stays inside phone frame ── */}
+      <div className="absolute inset-x-3 top-4 z-120 flex flex-col gap-2 pointer-events-none">
+        <AnimatePresence>
+          {frameToasts.map(t => (
+            <motion.div
+              key={t.id}
+              className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl border border-border shadow-lg bg-popover text-popover-foreground"
+              initial={{ opacity: 0, y: -12, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {t.type === "success" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              )}
+              <span className="text-[13px] font-medium flex-1">{t.message}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 }

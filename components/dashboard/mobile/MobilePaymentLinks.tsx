@@ -156,7 +156,7 @@ function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: nu
 }
 
 /* ── Component ────────────────────────────────────────────────────── */
-export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => void }) {
+export function MobilePaymentLinks({ onCardTap, onCreatePaymentLink }: { onCardTap?: (id: string) => void; onCreatePaymentLink?: () => void }) {
   const [tab,          setTab]          = useState<PLTab>("all");
   const [search,       setSearch]       = useState("");
   const [period,       setPeriod]       = useState<Period>("1D");
@@ -312,6 +312,7 @@ export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => 
             </button>
             <button
               type="button"
+              onClick={onCreatePaymentLink}
               className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
             >
               <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
@@ -371,8 +372,17 @@ export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => 
                 onClick={() => onCardTap?.(pl.id)}
                 className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
               >
-                {/* Left block — amount + date */}
-                <div className="shrink-0 flex flex-col items-start gap-1">
+                {/* Left block — customer info */}
+                <div className="flex-1 min-w-0 flex flex-col items-start">
+                  <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{pl.customerName}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{pl.customerEmail}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">
+                    {pl.paymentFor.length > 28 ? `${pl.paymentFor.slice(0, 28)}...` : pl.paymentFor}
+                  </p>
+                </div>
+
+                {/* Right block — amount + date */}
+                <div className="shrink-0 flex flex-col items-end gap-1">
                   <div className="flex items-center gap-1">
                     {cfg.iconType === "pulse" && (
                       <span className="relative inline-flex h-[6px] w-[6px] shrink-0">
@@ -395,15 +405,6 @@ export function MobilePaymentLinks({ onCardTap }: { onCardTap?: (id: string) => 
                     <span className="text-[11px] text-muted-foreground">{pl.currency}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-snug">{pl.createdAt}</p>
-                </div>
-
-                {/* Right block — customer info */}
-                <div className="flex-1 min-w-0 text-right">
-                  <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{pl.customerName}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{pl.customerEmail}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">
-                    {pl.paymentFor.length > 28 ? `${pl.paymentFor.slice(0, 28)}...` : pl.paymentFor}
-                  </p>
                 </div>
               </button>
             );

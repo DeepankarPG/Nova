@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Search, X, Download, Check, MoreHorizontal, Copy, Send, Trash2, Plus, ChevronDown } from "lucide-react";
+import { Search, X, Download, Check, Ban, Circle, Eye, Pencil, RefreshCw, Plus, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ── Types ────────────────────────────────────────────────────────── */
@@ -112,15 +112,13 @@ const INV_SPARK = {
 
 /* ── Status config ────────────────────────────────────────────────── */
 const STATUS_CFG: Record<InvStatus, {
-  label: string;
-  color: string;
   amountColor: string;
-  showCheck: boolean;
+  iconType: "pulse" | "check" | "ban" | "circle";
 }> = {
-  paid:    { label: "Paid",    color: "text-emerald-600",      amountColor: "text-emerald-600",      showCheck: true  },
-  active:  { label: "Active",  color: "text-emerald-600",      amountColor: "text-emerald-600",      showCheck: false },
-  overdue: { label: "Overdue", color: "text-red-600",          amountColor: "text-red-600",          showCheck: false },
-  draft:   { label: "Draft",   color: "text-muted-foreground", amountColor: "text-muted-foreground", showCheck: false },
+  paid:    { amountColor: "text-emerald-600",      iconType: "check"  },
+  active:  { amountColor: "text-primary",           iconType: "pulse"  },
+  overdue: { amountColor: "text-red-600",           iconType: "ban"    },
+  draft:   { amountColor: "text-muted-foreground",  iconType: "circle" },
 };
 
 /* ── Tab definitions ──────────────────────────────────────────────── */
@@ -157,17 +155,133 @@ function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: nu
   );
 }
 
+/* ── Swipe-to-reveal card ─────────────────────────────────────────── */
+const SWIPE_WIDTH = 225; // 3 actions × 75 px each
+
+function SwipeCard({
+  isOpen, onOpen, onClose, onTap, onPreview, onEdit, onStatus, children,
+}: {
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onTap:  () => void;
+  onPreview: () => void;
+  onEdit: () => void;
+  onStatus: () => void;
+  children: React.ReactNode;
+}) {
+  const [dragX,      setDragX]      = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX     = useRef(0);
+  const startY     = useRef(0);
+  const gestureDir = useRef<"h" | "v" | null>(null);
+  const didMove    = useRef(false);
+
+  const baseX      = isOpen ? -SWIPE_WIDTH : 0;
+  const translateX = isDragging
+    ? Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX))
+    : baseX;
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    startX.current     = e.clientX;
+    startY.current     = e.clientY;
+    gestureDir.current = null;
+    didMove.current    = false;
+    setDragX(0);
+    setIsDragging(true);
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDragging) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    if (!gestureDir.current) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      didMove.current    = true;
+      gestureDir.current = Math.abs(dx) >= Math.abs(dy) * 2 ? "h" : "v";
+      if (gestureDir.current === "v") { setIsDragging(false); return; }
+    }
+    if (gestureDir.current === "h") setDragX(dx);
+  }
+
+  function onPointerUp() {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (!didMove.current) {
+      setDragX(0);
+      if (isOpen) onClose(); else onTap();
+      return;
+    }
+    const finalX = Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX));
+    setDragX(0);
+    if (isOpen) {
+      finalX > -(SWIPE_WIDTH * 0.5) ? onClose() : onOpen();
+    } else {
+      finalX < -(SWIPE_WIDTH * 0.3) ? onOpen() : onClose();
+    }
+  }
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Action buttons — fixed behind the card */}
+      <div className="absolute right-0 top-0 bottom-0 flex" style={{ width: SWIPE_WIDTH }}>
+        <button type="button" onClick={onPreview}
+          className="flex flex-col items-center justify-center flex-1 bg-primary"
+        >
+          <Eye className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-white mt-1">Preview</span>
+        </button>
+        <button type="button" onClick={onEdit}
+          className="flex flex-col items-center justify-center flex-1 bg-amber-500"
+        >
+          <Pencil className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-white mt-1">Edit</span>
+        </button>
+        <button type="button" onClick={onStatus}
+          className="flex flex-col items-center justify-center flex-1 bg-muted"
+        >
+          <RefreshCw className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-muted-foreground mt-1">Status</span>
+        </button>
+      </div>
+
+      {/* Card content — slides left on swipe */}
+      <div
+        className="relative z-[1] bg-card"
+        style={{
+          transform:   `translateX(${translateX}px)`,
+          transition:  isDragging ? "none" : "transform 0.22s cubic-bezier(0.22,1,0.36,1)",
+          touchAction: "pan-y",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ── Component ────────────────────────────────────────────────────── */
-export function MobileInvoices() {
+export function MobileInvoices({
+  onPreview,
+  onEdit,
+  onCreateInvoice,
+  onStatus,
+}: {
+  onPreview?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onCreateInvoice?: () => void;
+  onStatus?: (invoiceId: string) => void;
+}) {
   const [tab,          setTab]          = useState<InvTab>("all");
   const [search,       setSearch]       = useState("");
   const [period,       setPeriod]       = useState<Period>("1D");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [openMenuId,   setOpenMenuId]   = useState<string | null>(null);
-  const [menuPos,      setMenuPos]      = useState({ top: 0, right: 0 });
-
-  const rootRef     = useRef<HTMLDivElement>(null);
-  const menuBtnRefs = useRef<Partial<Record<string, HTMLButtonElement | null>>>({});
+  const [swipedId,     setSwipedId]     = useState<string | null>(null);
 
   const q = search.trim().toLowerCase();
   const filtered = INVOICES
@@ -182,33 +296,14 @@ export function MobileInvoices() {
   const totalCount = INVOICES.length;
   const m = INV_METRICS[period];
 
-  function openMenu(id: string) {
-    if (openMenuId === id) { setOpenMenuId(null); return; }
-    const btn  = menuBtnRefs.current[id];
-    const root = rootRef.current;
-    if (btn && root) {
-      const btnRect  = btn.getBoundingClientRect();
-      const rootRect = root.getBoundingClientRect();
-      setMenuPos({
-        top:   btnRect.bottom - rootRect.top + 4,
-        right: rootRect.right - btnRect.right,
-      });
-    }
-    setOpenMenuId(id);
-  }
-
-  function closeMenu() { setOpenMenuId(null); }
-
-  const openInv = INVOICES.find(i => i.id === openMenuId);
-
   return (
-    <div ref={rootRef} className="space-y-3 pb-10 bg-background min-h-full relative">
+    <div className="space-y-3 pb-10 bg-background min-h-full relative">
 
-      {/* Click-outside backdrops */}
-      {(dropdownOpen || openMenuId !== null) && (
+      {/* Click-outside backdrop (period dropdown) */}
+      {dropdownOpen && (
         <div
           className="absolute inset-0 z-[19]"
-          onClick={() => { setDropdownOpen(false); closeMenu(); }}
+          onClick={() => { setDropdownOpen(false); setSwipedId(null); }}
         />
       )}
 
@@ -345,6 +440,7 @@ export function MobileInvoices() {
             </button>
             <button
               type="button"
+              onClick={onCreateInvoice}
               className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
             >
               <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
@@ -402,106 +498,59 @@ export function MobileInvoices() {
           ) : filtered.map(inv => {
             const cfg = STATUS_CFG[inv.status];
             return (
-              <div key={inv.id} className="flex items-stretch">
-
-                {/* Card body */}
-                <button
-                  type="button"
-                  className="flex-1 flex items-center gap-3 pl-4 pr-2 py-3.5 text-left active:bg-muted/30 transition-colors duration-100 min-w-0"
-                >
+              <SwipeCard
+                key={inv.id}
+                isOpen={swipedId === inv.id}
+                onOpen={() => setSwipedId(inv.id)}
+                onClose={() => setSwipedId(null)}
+                onTap={() => {}}
+                onPreview={() => { setSwipedId(null); onPreview?.(inv.id); }}
+                onEdit={() => { setSwipedId(null); onEdit?.(inv.id); }}
+                onStatus={() => { setSwipedId(null); onStatus?.(inv.invoiceId); }}
+              >
+                <div className="flex items-start gap-3 px-4 py-3.5 min-w-0 active:bg-muted/30 transition-colors duration-100">
                   {/* Left block */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-bold text-foreground leading-snug truncate">{inv.customerName}</p>
+                    <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{inv.customerName}</p>
                     <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{inv.customerEmail}</p>
                     <p className="text-[12px] text-primary mt-0.5 leading-snug font-medium">{inv.invoiceId}</p>
                   </div>
 
                   {/* Right block */}
-                  <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
-                    <p className="leading-snug">
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1">
+                      {cfg.iconType === "pulse" && (
+                        <span className="relative inline-flex h-[6px] w-[6px] shrink-0">
+                          <span
+                            className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60 animate-ping"
+                            style={{ animationDuration: "1.5s" }}
+                          />
+                          <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-primary" />
+                        </span>
+                      )}
+                      {cfg.iconType === "check" && (
+                        <Check className="h-[12px] w-[12px] text-emerald-600 shrink-0" strokeWidth={2.5} />
+                      )}
+                      {cfg.iconType === "ban" && (
+                        <Ban className="h-[12px] w-[12px] text-red-600 shrink-0" strokeWidth={2} />
+                      )}
+                      {cfg.iconType === "circle" && (
+                        <Circle className="h-[12px] w-[12px] text-muted-foreground shrink-0" strokeWidth={2} />
+                      )}
                       <span className={cn("text-[13.5px] font-bold tabular-nums", cfg.amountColor)}>
                         {fmtAmount(inv.amount)}
                       </span>
-                      <span className="text-[11px] text-muted-foreground ml-1">{inv.currency}</span>
-                    </p>
-                    <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium leading-snug", cfg.color)}>
-                      <span className="h-[5px] w-[5px] rounded-full bg-current shrink-0" />
-                      {cfg.label}
-                      {cfg.showCheck && <Check className="h-[9px] w-[9px] shrink-0" strokeWidth={2.5} />}
-                    </span>
+                      <span className="text-[11px] text-muted-foreground">{inv.currency}</span>
+                    </div>
                     <p className="text-[11px] text-muted-foreground leading-snug">{inv.createdAt}</p>
                   </div>
-                </button>
-
-                {/* ··· button */}
-                <button
-                  type="button"
-                  ref={el => { menuBtnRefs.current[inv.id] = el; }}
-                  onClick={() => openMenu(inv.id)}
-                  className="flex items-center justify-center w-[44px] shrink-0 text-muted-foreground active:bg-muted/30 transition-colors duration-100"
-                  aria-label="More options"
-                >
-                  <MoreHorizontal className="h-[20px] w-[20px]" strokeWidth={1.75} />
-                </button>
-
-              </div>
+                </div>
+              </SwipeCard>
             );
           })}
         </div>
 
       </div>
-
-      {/* Context menu */}
-      {openMenuId !== null && (
-        <div
-          className="absolute z-[30] bg-white rounded-2xl border border-border overflow-hidden"
-          style={{
-            top: menuPos.top,
-            right: menuPos.right,
-            minWidth: 180,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              if (openInv) navigator.clipboard.writeText(openInv.paymentLink).catch(() => {});
-              closeMenu();
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/30 transition-colors border-b border-border/50"
-          >
-            <Copy className="h-[15px] w-[15px] text-muted-foreground shrink-0" strokeWidth={1.75} />
-            <span className="text-[13px] font-medium text-foreground">Copy link</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={closeMenu}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/30 transition-colors border-b border-border/50"
-          >
-            <Send className="h-[15px] w-[15px] text-muted-foreground shrink-0" strokeWidth={1.75} />
-            <span className="text-[13px] font-medium text-foreground">Send</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={closeMenu}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/30 transition-colors border-b border-border/50"
-          >
-            <Download className="h-[15px] w-[15px] text-muted-foreground shrink-0" strokeWidth={1.75} />
-            <span className="text-[13px] font-medium text-foreground">Download PDF</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={closeMenu}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-red-50/60 transition-colors"
-          >
-            <Trash2 className="h-[15px] w-[15px] text-red-600 shrink-0" strokeWidth={1.75} />
-            <span className="text-[13px] font-medium text-red-600">Deactivate</span>
-          </button>
-        </div>
-      )}
 
     </div>
   );

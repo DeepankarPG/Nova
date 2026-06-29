@@ -34,7 +34,7 @@ const successAnim = recolor(
 import {
   X, ChevronRight, Search, Delete,
   Check, Copy, Share2, User, Mail, Phone,
-  ChevronDown,
+  ChevronDown, Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,16 @@ const DIAL_CODES = [
   { code:"+63",  flag:"🇵🇭", country:"Philippines"   },
   { code:"+966", flag:"🇸🇦", country:"Saudi Arabia"  },
 ] as const;
+
+/* ─── Currency flag map ───────────────────────────────────────────── */
+const CURRENCY_FLAGS: Partial<Record<CurrencyCode, string>> = {
+  INR: "🇮🇳",
+  USD: "🇺🇸",
+  EUR: "🇪🇺",
+  GBP: "🇬🇧",
+  AED: "🇦🇪",
+  SGD: "🇸🇬",
+};
 
 /* ─── Expiry chips ────────────────────────────────────────────────── */
 const EXPIRY_OPTS = [
@@ -351,14 +361,19 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
 
                 {/* Scrollable form */}
                 <div className="flex-1 overflow-y-auto">
-                  {/* Currency selector */}
+                  {/* Currency chip */}
                   <div className="flex justify-center pt-5 pb-1">
-                    <button type="button" onClick={() => setStep("currency")}
-                      className="flex items-center gap-1.5"
+                    <button
+                      type="button"
+                      onClick={() => setStep("currency")}
+                      className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-white border border-border"
                     >
-                      <span className="text-[13px] text-muted-foreground">Currency:</span>
-                      <span className="text-[13px] font-semibold text-primary">{currency}</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
+                      {CURRENCY_FLAGS[currency]
+                        ? <span className="text-[18px] leading-none">{CURRENCY_FLAGS[currency]}</span>
+                        : <Globe className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                      }
+                      <span className="text-[14px] font-semibold text-foreground">{currency}</span>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                     </button>
                   </div>
 
@@ -366,7 +381,7 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                   <button
                     type="button"
                     onClick={() => setFocusMode("amount")}
-                    className="w-full flex items-baseline justify-center gap-2 px-6 py-5"
+                    className="w-full flex items-baseline justify-center gap-2 px-6 py-4"
                   >
                     <span className="text-[32px] font-semibold text-muted-foreground/60 tabular-nums">{sym}</span>
                     <span
@@ -380,7 +395,20 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                     </span>
                   </button>
 
-                  <div className="mb-5" />
+                  {/* Description input */}
+                  <div className="flex justify-center px-5 pb-1">
+                    <input
+                      ref={descRef}
+                      type="text"
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      onFocus={() => setFocusMode("description")}
+                      placeholder="Add description"
+                      className="w-[220px] rounded-xl border border-border bg-card px-3.5 py-2.5 text-[14px] text-center text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+                    />
+                  </div>
+
+                  <div className="mb-4" />
 
                   {/* Customer — always visible, mandatory */}
                   <div className="px-5 mb-4">
@@ -420,24 +448,6 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                         />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Description */}
-                  <div className="px-5 mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="text-[13.5px] font-semibold text-foreground">Description</p>
-                      <span className="text-[11px] text-muted-foreground bg-transparent border border-border/70 px-2 py-0.5 rounded-md">Optional</span>
-                    </div>
-                    <input
-                      ref={descRef}
-                      type="text"
-                      inputMode="text"
-                      value={description}
-                      onFocus={() => setFocusMode("description")}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder="Add description"
-                      className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
-                    />
                   </div>
 
                   {/* Expiry */}

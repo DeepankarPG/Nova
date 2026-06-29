@@ -10,9 +10,10 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ─── Types ───────────────────────────────────────────────────────── */
-type NCategory = "payment" | "update";
-type NGroup    = "today" | "yesterday" | "last_week";
-type FilterTab = "all" | "payments" | "updates";
+type NCategory    = "payment" | "update";
+type NGroup       = "today" | "yesterday" | "last_week";
+type FilterTab    = "all" | "payments" | "updates" | "alerts";
+type AlertSeverity = "critical" | "warning";
 
 interface Notif {
   id: string;
@@ -26,6 +27,7 @@ interface Notif {
   time: string;
   unread?: boolean;
   action?: { label: string; href: string };
+  alertSeverity?: AlertSeverity;
 }
 
 /* ─── Notification data ───────────────────────────────────────────── */
@@ -53,6 +55,7 @@ const NOTIFS: Notif[] = [
     body:"₹890 from SwiftPay Ltd via Net Banking could not be processed.",
     time:"1h ago", unread:true,
     action:{ label:"View transaction", href:"/transactions" },
+    alertSeverity:"critical",
   },
   {
     id:"n4", category:"payment", group:"today",
@@ -61,6 +64,7 @@ const NOTIFS: Notif[] = [
     body:"Globaltech Inc has filed a dispute for ₹14,200 (TXN #8817). Respond before Jun 10.",
     time:"2h ago", unread:true,
     action:{ label:"Respond to dispute", href:"/dispute-management" },
+    alertSeverity:"warning",
   },
   {
     id:"n5", category:"payment", group:"today",
@@ -130,6 +134,7 @@ const NOTIFS: Notif[] = [
 
 const FILTERS: { id: FilterTab; label: string }[] = [
   { id:"all",      label:"All"      },
+  { id:"alerts",   label:"Alerts"   },
   { id:"payments", label:"Payments" },
   { id:"updates",  label:"Updates"  },
 ];
@@ -153,8 +158,10 @@ export function MobileNotifications({ open, onClose, contained = false }: Mobile
   const pos = contained ? "absolute" : "fixed";
 
   const visible = NOTIFS.filter((n) =>
-    filter === "all" ? true :
-    filter === "payments" ? n.category === "payment" : n.category === "update"
+    filter === "all"      ? true :
+    filter === "payments" ? n.category === "payment" :
+    filter === "updates"  ? n.category === "update" :
+    /* alerts */            !!n.alertSeverity
   );
 
   const grouped = GROUP_ORDER.map((g) => ({
@@ -248,9 +255,14 @@ export function MobileNotifications({ open, onClose, contained = false }: Mobile
                           className={cn(
                             "rounded-2xl border px-4 py-3.5",
                             n.unread
-                              ? "border-primary/20 bg-primary/[0.03]"
-                              : "border-border/70 bg-card"
+                              ? "border-primary/20"
+                              : "border-border/70"
                           )}
+                          style={
+                            filter === "alerts" && n.alertSeverity
+                              ? { background: n.alertSeverity === "critical" ? "#FCEBEB" : "#FAEEDA" }
+                              : { background: n.unread ? "rgba(var(--primary-rgb, 59 130 246) / 0.03)" : "var(--card)" }
+                          }
                         >
                           <div className="flex items-start gap-3">
                             {/* Icon */}

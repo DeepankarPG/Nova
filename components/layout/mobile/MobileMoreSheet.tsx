@@ -34,9 +34,11 @@ interface MobileMoreSheetProps {
    * contained inside a parent with `overflow-hidden` (e.g. the preview frame).
    */
   contained?: boolean;
+  /** When provided, intercepts the Settlement Reports quick action and fires this instead of navigating. */
+  onSettlementTap?: () => void;
 }
 
-export function MobileMoreSheet({ open, onClose, contained = false }: MobileMoreSheetProps) {
+export function MobileMoreSheet({ open, onClose, contained = false, onSettlementTap }: MobileMoreSheetProps) {
   const pos = contained ? "absolute" : "fixed";
 
   return (
@@ -87,6 +89,26 @@ export function MobileMoreSheet({ open, onClose, contained = false }: MobileMore
               <div className="grid grid-cols-4 gap-x-3 gap-y-4">
                 {QUICK_ACTIONS.map((item) => {
                   const Icon = item.icon;
+                  const inner = (
+                    <>
+                      <div className="h-14 w-14 rounded-2xl border border-border bg-muted/40 flex items-center justify-center">
+                        <Icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                      </div>
+                      <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-2">
+                        {item.label}
+                      </span>
+                    </>
+                  );
+                  if (item.href === "/settlement-reports" && onSettlementTap) {
+                    return (
+                      <button key={item.label} type="button"
+                        onClick={() => { onClose(); onSettlementTap(); }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        {inner}
+                      </button>
+                    );
+                  }
                   return (
                     <Link
                       key={item.label}
@@ -94,12 +116,7 @@ export function MobileMoreSheet({ open, onClose, contained = false }: MobileMore
                       onClick={onClose}
                       className="flex flex-col items-center gap-2"
                     >
-                      <div className="h-14 w-14 rounded-2xl border border-border bg-muted/40 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
-                      </div>
-                      <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-2">
-                        {item.label}
-                      </span>
+                      {inner}
                     </Link>
                   );
                 })}

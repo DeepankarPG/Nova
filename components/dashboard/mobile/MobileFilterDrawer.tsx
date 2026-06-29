@@ -118,16 +118,18 @@ function catHasFilter(f: FilterState, cat: FilterCat): boolean {
 /* ── Component ──────────────────────────────────────────────────────── */
 export function MobileFilterDrawer({
   initialFilters,
+  initialCategory,
   onApply,
   onReset,
   onClose,
 }: {
   initialFilters: FilterState;
+  initialCategory?: FilterCat;
   onApply: (filters: FilterState) => void;
   onReset?: () => void;
   onClose?: () => void;
 }) {
-  const [activeCategory, setActiveCategory] = useState<FilterCat>("status");
+  const [activeCategory, setActiveCategory] = useState<FilterCat>(initialCategory ?? "status");
   const [draft, setDraft] = useState<FilterState>(() => cloneFilters(initialFilters));
 
   const resetDraft = () => setDraft(emptyFilters());

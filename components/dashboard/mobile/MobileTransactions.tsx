@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import {
   Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download, Plus,
 } from "lucide-react";
@@ -8,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
 import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
 import { emptyFilters, hasAnyFilter } from "@/components/dashboard/mobile/MobileFilterDrawer";
-import type { FilterState } from "@/components/dashboard/mobile/MobileFilterDrawer";
+import type { FilterState, FilterCat } from "@/components/dashboard/mobile/MobileFilterDrawer";
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 type TxnStatus = "success" | "failed" | "pending" | "refunded";
@@ -262,11 +263,23 @@ interface Props {
   /* New props */
   externalFilterState?: FilterState;
   onFilterButtonTap?: () => void;
+  onChipTap?: (cat: FilterCat) => void;
   onTxnTap?: (txn: RecentTxnItem) => void;
+  /* Settlement deep-link filter */
+  settlementFilter?: string | null;
+  onClearSettlementFilter?: () => void;
 }
 
 /* ── Root ───────────────────────────────────────────────────────────── */
-export function MobileTransactions({ externalFilterState, onFilterButtonTap, onTxnTap }: Props = {}) {
+const CHIP_TO_CAT: Record<ChipId, FilterCat> = {
+  status:   "status",
+  datetime: "datetime",
+  method:   "details",
+  amount:   "amount",
+  currency: "country",
+};
+
+export function MobileTransactions({ externalFilterState, onFilterButtonTap, onChipTap, onTxnTap, settlementFilter, onClearSettlementFilter }: Props = {}) {
   const [period,       setPeriod]       = useState<Period>("1D");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [tab,          setTab]          = useState<TxnTab>("all");
@@ -276,8 +289,10 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
   const [chipDraft,    setChipDraft]    = useState<ChipFilters>(emptyChipFilters());
   const [dropdownPos,  setDropdownPos]  = useState<{ left: number; top: number }>({ left: 16, top: 0 });
 
-  const rootRef     = useRef<HTMLDivElement>(null);
-  const chipBtnRefs = useRef<Partial<Record<ChipId, HTMLButtonElement | null>>>({});
+  const rootRef        = useRef<HTMLDivElement>(null);
+  const chipBtnRefs    = useRef<Partial<Record<ChipId, HTMLButtonElement | null>>>({});
+  const chipsScrollRef = useHorizontalScroll<HTMLDivElement>();
+  const tabScrollRef   = useHorizontalScroll<HTMLDivElement>();
 
   useEffect(() => { setDropdownOpen(false); }, [period]);
 
@@ -598,7 +613,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
       </div>
 
       {/* Zone 3 — All Transactions container */}
-      <div className="mx-4 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="mx-4 rounded-2xl border border-border bg-card shadow-sm">
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
@@ -640,7 +655,20 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
         </div>
 
         {/* Filter chips — active chips float to the left */}
-        <div className="flex gap-2 px-4 pb-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+        <div ref={chipsScrollRef} className="[&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
+        <div className="flex gap-2 px-4 w-max">
+          {settlementFilter && (
+            <button
+              type="button"
+              onClick={() => onClearSettlementFilter?.()}
+              className="flex items-center gap-1 h-8 text-[12px] font-medium bg-primary text-white rounded-xl pl-3 pr-1.5 whitespace-nowrap shrink-0"
+            >
+              <span>Settlement: {`${settlementFilter.slice(0, 4)}....${settlementFilter.slice(-4)}`}</span>
+              <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white/20 shrink-0 ml-0.5">
+                <X className="h-[10px] w-[10px] text-white" strokeWidth={2.5} />
+              </span>
+            </button>
+          )}
           {[...CHIPS].sort((a, b) => {
             const aActive = isChipActive(chipFilters, a.id) ? 0 : 1;
             const bActive = isChipActive(chipFilters, b.id) ? 0 : 1;
@@ -652,7 +680,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
                 key={chip.id}
                 ref={el => { chipBtnRefs.current[chip.id] = el; }}
                 type="button"
-                onClick={() => openChipPanel(chip.id)}
+                onClick={() => onChipTap ? onChipTap(CHIP_TO_CAT[chip.id]) : openChipPanel(chip.id)}
                 className={cn(
                   "flex items-center gap-1 h-8 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0",
                   active
@@ -677,18 +705,21 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
             );
           })}
         </div>
+        </div>
 
         {/* Tab strip */}
-        <div className="flex gap-1 mx-4 mb-3 bg-muted/60 p-1 rounded-xl">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)}
-              className={cn(
-                "flex-1 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors",
-                tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              )}>
-              {t.label}
-            </button>
-          ))}
+        <div ref={tabScrollRef} className="mx-4 mt-4 mb-3 [&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
+          <div className="flex gap-1 bg-muted/60 p-1 rounded-xl w-max min-w-full">
+            {TABS.map((t) => (
+              <button key={t.id} type="button" onClick={() => setTab(t.id)}
+                className={cn(
+                  "flex-1 shrink-0 py-1.5 px-4 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
+                  tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                )}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Transaction rows */}
@@ -706,7 +737,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onT
               >
                 {/* Left block */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">{row.customerName}</p>
+                  <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{row.customerName}</p>
                   <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{row.customerEmail}</p>
                   <div className="mt-1">
                     {row.paymentMethod === "card" && row.cardNetwork ? (

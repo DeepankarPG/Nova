@@ -15,7 +15,6 @@ import {
   Receipt,
   BadgeCheck,
   Settings,
-  Store,
   ShoppingCart,
   LogOut,
 } from "lucide-react";
@@ -38,9 +37,7 @@ const DRAWER_NAV = [
     items: [
       { label: "Transactions",         href: "/transactions",                              icon: ArrowUpDown },
       { label: "Payment Links",        href: "/payment-products/payment-links",            icon: Link2 },
-      { label: "Invoice Links",        href: "/payment-products/invoice-links",            icon: Receipt },
       { label: "International Accounts", href: "/payment-products/international-accounts", icon: Globe },
-      { label: "Payment Products",     href: "/payment-products",                          icon: ShoppingCart },
     ],
   },
   {
@@ -60,7 +57,6 @@ const DRAWER_NAV = [
   {
     label: "Products",
     items: [
-      { label: "AI Storefront",        href: "/ai-storefront",         icon: Store,          badge: "NEW" },
       { label: "Client Management",    href: "/client-management",     icon: Users },
     ],
   },
@@ -77,13 +73,19 @@ interface MobileHamburgerDrawerProps {
   onClose: () => void;
   /** Use absolute positioning (for preview frame). Default: fixed. */
   contained?: boolean;
+  /** When provided, intercepts the Settlement Reports nav item and fires this instead of navigating. */
+  onSettlementTap?: () => void;
+  /** When provided, intercepts the eBRC nav item and fires this instead of navigating. */
+  onEbrcTap?: () => void;
+  /** When provided, intercepts the Dispute Management nav item and fires this instead of navigating. */
+  onDisputesTap?: () => void;
 }
 
 function getInitials(name: string) {
   return name.trim().split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
-export function MobileHamburgerDrawer({ open, onClose, contained = false }: MobileHamburgerDrawerProps) {
+export function MobileHamburgerDrawer({ open, onClose, contained = false, onSettlementTap, onEbrcTap, onDisputesTap }: MobileHamburgerDrawerProps) {
   const pathname = usePathname();
   const router   = useRouter();
   const pos      = contained ? "absolute" : "fixed";
@@ -148,18 +150,12 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false }: Mobi
                     {section.items.map((item) => {
                       const Icon   = item.icon;
                       const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={onClose}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
-                            active
-                              ? "bg-primary/[0.08] text-primary"
-                              : "text-foreground hover:bg-muted"
-                          )}
-                        >
+                      const sharedClass = cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors w-full text-left",
+                        active ? "bg-primary/[0.08] text-primary" : "text-foreground hover:bg-muted"
+                      );
+                      const inner = (
+                        <>
                           <Icon
                             className={cn("h-[17px] w-[17px] shrink-0", active ? "text-primary" : "text-muted-foreground")}
                             strokeWidth={1.75}
@@ -172,6 +168,46 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false }: Mobi
                               {item.badge}
                             </span>
                           ) : null}
+                        </>
+                      );
+                      if (item.href === "/settlement-reports" && onSettlementTap) {
+                        return (
+                          <button key={item.href} type="button"
+                            onClick={() => { onClose(); onSettlementTap(); }}
+                            className={sharedClass}
+                          >
+                            {inner}
+                          </button>
+                        );
+                      }
+                      if (item.href === "/ebrc" && onEbrcTap) {
+                        return (
+                          <button key={item.href} type="button"
+                            onClick={() => { onClose(); onEbrcTap(); }}
+                            className={sharedClass}
+                          >
+                            {inner}
+                          </button>
+                        );
+                      }
+                      if (item.href === "/dispute-management" && onDisputesTap) {
+                        return (
+                          <button key={item.href} type="button"
+                            onClick={() => { onClose(); onDisputesTap(); }}
+                            className={sharedClass}
+                          >
+                            {inner}
+                          </button>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={onClose}
+                          className={sharedClass}
+                        >
+                          {inner}
                         </Link>
                       );
                     })}
