@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import {
-  ArrowLeft, BadgeCheck, FileText, Calendar, CheckCircle2,
-  Check, Copy, Monitor, X, ChevronLeft, ChevronRight, Plus,
+  ArrowLeft, FileText, Calendar, CheckCircle2,
+  Check, Copy, Monitor, X, Plus, Info,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -84,7 +84,7 @@ function PairedRow({
   );
 }
 
-/* ─── StatusPill ──────────────────────────────────────────────────────────── */
+/* ─── StatusPill (detail overlay only) ───────────────────────────────────── */
 function StatusPill({ status }: { status: string }) {
   if (status === "issued") {
     return (
@@ -108,8 +108,8 @@ function EbrcDetail({ entry, onClose }: { entry: EbrcEntry; onClose: () => void 
 
   return (
     <motion.div
-      className="absolute inset-0 z-10 flex flex-col bg-[#f6f8fa] overflow-hidden"
-      style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+      className="absolute inset-x-0 bottom-0 z-11 flex flex-col bg-[#f6f8fa] overflow-hidden"
+      style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "90%" }}
       initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
       transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
     >
@@ -133,7 +133,7 @@ function EbrcDetail({ entry, onClose }: { entry: EbrcEntry; onClose: () => void 
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+      <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
         <div className="flex flex-col gap-5 pt-4 pb-10">
 
           {/* Summary card */}
@@ -191,6 +191,15 @@ function EbrcDetail({ entry, onClose }: { entry: EbrcEntry; onClose: () => void 
   );
 }
 
+/* ─── Tab filter ──────────────────────────────────────────────────────────── */
+type EbrcTab = "all" | "issued" | "pending";
+
+const EBRC_TABS: { id: EbrcTab; label: string }[] = [
+  { id: "all",     label: "All"     },
+  { id: "issued",  label: "Issued"  },
+  { id: "pending", label: "Pending" },
+];
+
 /* ─── Root ────────────────────────────────────────────────────────────────── */
 export interface MobileEbrcProps {
   open: boolean;
@@ -198,20 +207,20 @@ export interface MobileEbrcProps {
   contained?: boolean;
 }
 
-const PAGE_SIZE = 10;
-
 export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage]             = useState(0);
+  const [infoOpen,   setInfoOpen]   = useState(false);
+  const [ebrcTab,    setEbrcTab]    = useState<EbrcTab>("all");
   const statCardsRef                = useHorizontalScroll();
 
   const pos      = contained ? "absolute" : "fixed";
-  const total    = ebrcEntries.length;
-  const paged    = ebrcEntries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selected = selectedId ? (ebrcEntries.find(e => e.id === selectedId) ?? null) : null;
 
   const issued  = ebrcEntries.filter(e => e.status === "issued").length;
   const pending = ebrcEntries.filter(e => e.status === "pending").length;
+  const total   = ebrcEntries.length;
+
+  const filtered = ebrcTab === "all" ? ebrcEntries : ebrcEntries.filter(e => e.status === ebrcTab);
 
   const STAT_CARDS = [
     { icon: CheckCircle2, iconColor: "text-[#0047b0]", iconBg: "bg-[#eff4ff]", label: "ISSUED",  value: issued.toString()  },
@@ -238,7 +247,13 @@ export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
-            <p className="text-[17px] font-bold text-foreground tracking-tight">eBRC</p>
+            <p className="text-[17px] font-bold text-foreground tracking-tight flex-1">eBRC</p>
+            <button type="button" onClick={() => setInfoOpen(true)}
+              className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground active:bg-muted/60 transition-colors shrink-0"
+              aria-label="What is eBRC?"
+            >
+              <Info className="h-[18px] w-[18px]" strokeWidth={1.75} />
+            </button>
           </div>
 
           {/* Scrollable body */}
@@ -258,17 +273,6 @@ export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps
               >
                 Open desktop ↗
               </button>
-            </div>
-
-            {/* Info banner */}
-            <div className="mx-4 mt-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
-              <BadgeCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" strokeWidth={1.75} />
-              <div>
-                <p className="text-[13px] font-bold text-blue-800 leading-snug">What is eBRC?</p>
-                <p className="text-[12px] text-blue-700 mt-1 leading-relaxed">
-                  Electronic Bank Realisation Certificate (eBRC) is issued by banks to exporters as proof of foreign exchange realisation against export shipments. Required for DGFT benefits and export incentives.
-                </p>
-              </div>
             </div>
 
             {/* Stat cards — horizontal scroll */}
@@ -303,14 +307,41 @@ export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps
             <div className="mx-4 mt-4 bg-card border border-border rounded-xl overflow-hidden">
 
               {/* List header */}
-              <div className="px-4 pt-4 pb-3 border-b border-border/40">
-                <p className="text-[14px] font-medium text-foreground">All eBRC Entries</p>
+              <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border/40">
+                <p className="text-[14px] font-bold text-foreground">All eBRC Entries</p>
+                <button
+                  type="button"
+                  onClick={() => toast.success("Coming soon")}
+                  className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shrink-0 active:opacity-80 transition-opacity"
+                >
+                  <Plus className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+                </button>
+              </div>
+
+              {/* Segmented tab bar */}
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex gap-1 bg-muted/60 p-1 rounded-xl">
+                  {EBRC_TABS.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setEbrcTab(t.id)}
+                      className={cn(
+                        "flex-1 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
+                        ebrcTab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Rows */}
               <div className="divide-y divide-border/50">
-                {paged.map(entry => {
-                  const sym = CURRENCY_SYM[entry.currency] ?? "";
+                {filtered.map(entry => {
+                  const sym         = CURRENCY_SYM[entry.currency] ?? "";
+                  const amountColor = entry.status === "issued" ? "text-emerald-600" : "text-amber-600";
                   return (
                     <div
                       key={entry.id}
@@ -324,17 +355,15 @@ export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps
                         {/* Left */}
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-bold text-foreground leading-snug truncate">{entry.sbNumber}</p>
-                          <p className="text-[12px] text-primary/80 font-medium mt-0.5 leading-snug">{entry.bankRefNumber}</p>
+                          <p className="text-[12px] text-primary font-medium mt-0.5 leading-snug">{entry.bankRefNumber}</p>
                           <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{entry.exporterName}</p>
                         </div>
                         {/* Right */}
                         <div className="shrink-0 text-right">
-                          <p className="text-[14px] font-bold text-foreground leading-snug tabular-nums whitespace-nowrap">
-                            {sym}{entry.amount.toLocaleString("en-IN")} {entry.currency}
+                          <p className={cn("text-[14px] font-bold leading-snug tabular-nums whitespace-nowrap", amountColor)}>
+                            {sym}{entry.amount.toLocaleString("en-IN")}
+                            <span className="text-[11px] font-normal text-muted-foreground ml-1">{entry.currency}</span>
                           </p>
-                          <div className="mt-1 flex justify-end">
-                            <StatusPill status={entry.status} />
-                          </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
                             {fmtDate(entry.issueDate)}
                           </p>
@@ -349,53 +378,70 @@ export function MobileEbrc({ open, onClose, contained = false }: MobileEbrcProps
                 })}
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                <span className="text-[12px] text-muted-foreground">
-                  Showing {page * PAGE_SIZE + 1}&#8211;{Math.min((page + 1) * PAGE_SIZE, total)} of {total} results
-                </span>
-                <div className="flex items-center gap-1">
-                  <button type="button" disabled={page === 0} onClick={() => setPage(p => p - 1)}
-                    className={cn(
-                      "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
-                      page === 0 ? "text-muted-foreground/30" : "text-foreground active:bg-muted",
-                    )}>
-                    <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                  <button type="button" disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage(p => p + 1)}
-                    className={cn(
-                      "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
-                      (page + 1) * PAGE_SIZE >= total ? "text-muted-foreground/30" : "text-foreground active:bg-muted",
-                    )}>
-                    <ChevronRight className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
+              {/* Item count */}
+              <p className="px-4 py-3 border-t border-border/40 text-[12px] text-muted-foreground">
+                {filtered.length} item{filtered.length !== 1 ? "s" : ""}
+              </p>
             </div>
 
-            {/* Spacer for fixed bottom bar */}
-            <div style={{ height: 88 }} />
-          </div>
-
-          {/* Fixed bottom bar */}
-          <div
-            className="shrink-0 bg-background border-t border-border/50 px-4"
-            style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))", paddingTop: 12 }}
-          >
-            <button
-              type="button"
-              onClick={() => toast.success("Coming soon")}
-              className="w-full h-12 rounded-2xl bg-primary text-primary-foreground text-[15px] font-semibold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
-            >
-              <Plus className="h-4 w-4" strokeWidth={2.5} />
-              New eBRC
-            </button>
+            <div style={{ height: 32 }} />
           </div>
 
           {/* EbrcDetail slide-up */}
           <AnimatePresence>
             {selected && (
-              <EbrcDetail key={selected.id} entry={selected} onClose={() => setSelectedId(null)} />
+              <>
+                <motion.div
+                  key="ebrc-detail-backdrop"
+                  className="absolute inset-0 z-10"
+                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", background: "rgba(0,0,0,0.2)" }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.22 }}
+                  onClick={() => setSelectedId(null)}
+                />
+                <EbrcDetail key={selected.id} entry={selected} onClose={() => setSelectedId(null)} />
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Info overlay */}
+          <AnimatePresence>
+            {infoOpen && (
+              <>
+                <motion.div
+                  key="info-backdrop"
+                  className="absolute inset-0 z-20"
+                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", background: "rgba(0,0,0,0.2)" }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.22 }}
+                  onClick={() => setInfoOpen(false)}
+                />
+                <motion.div
+                  key="info-sheet"
+                  className="absolute inset-x-0 bottom-0 z-[21] flex flex-col bg-[#f6f8fa] overflow-hidden"
+                  style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                  transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  <div className="flex justify-center pt-2.5 pb-0.5 shrink-0">
+                    <div className="h-1 w-9 rounded-full bg-muted-foreground/25" />
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background shrink-0">
+                    <p className="text-[16px] font-medium text-foreground">What is eBRC?</p>
+                    <button type="button" onClick={() => setInfoOpen(false)}
+                      className="h-9 w-9 flex items-center justify-center rounded-full bg-muted text-foreground shrink-0"
+                      aria-label="Close"
+                    >
+                      <X className="h-[17px] w-[17px]" strokeWidth={2.25} />
+                    </button>
+                  </div>
+                  <div className="px-4 py-5">
+                    <p className="text-[14px] text-muted-foreground leading-relaxed">
+                      Electronic Bank Realisation Certificate (eBRC) is issued by banks to exporters as proof of foreign exchange realisation against export shipments. Required for DGFT benefits and export incentives.
+                    </p>
+                  </div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
         </motion.div>

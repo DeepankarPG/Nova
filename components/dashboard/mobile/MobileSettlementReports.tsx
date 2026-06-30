@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   ArrowLeft, Banknote,
-  Download, Copy, Check, X, ChevronDown,
+  Download, Copy, Check, X, ChevronDown, Info,
   Landmark, RefreshCw,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -392,11 +392,13 @@ export function MobileSettlementReports({ open, onClose, contained = false, onTx
   const [settlePeriod,        setSettlePeriod]        = useState<SettlePeriod>("1D");
   const [settleDropdownOpen,  setSettleDropdownOpen]  = useState(false);
   const [settleTab,           setSettleTab]           = useState<SettleTab>("all");
+  const [cycleDetailsOpen,    setCycleDetailsOpen]    = useState(false);
 
   const pos        = contained ? "absolute" : "fixed";
   const filtered = settleTab === "all" ? allSettlements : allSettlements.filter(s => s.status === settleTab);
   const selected = selectedId ? (allSettlements.find(s => s.id === selectedId) ?? null) : null;
   const sm      = SETTLE_METRICS[settlePeriod];
+  const todayProcessing = SETTLE_METRICS["1D"].processing;
 
   return (
     <AnimatePresence>
@@ -417,7 +419,15 @@ export function MobileSettlementReports({ open, onClose, contained = false, onTx
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
-            <p className="text-[17px] font-bold text-foreground tracking-tight">Settlement Reports</p>
+            <p className="flex-1 text-[17px] font-bold text-foreground tracking-tight">Settlement Reports</p>
+            <button
+              type="button"
+              onClick={() => setCycleDetailsOpen(true)}
+              aria-label="Settlement details"
+              className="h-9 w-9 rounded-xl border border-border bg-muted flex items-center justify-center text-muted-foreground active:bg-muted/60 transition-colors shrink-0"
+            >
+              <Info className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
           </div>
 
           {/* Scrollable body */}
@@ -477,70 +487,30 @@ export function MobileSettlementReports({ open, onClose, contained = false, onTx
                 </div>
               </div>
 
-              {/* Tier 1 — two equal dynamic metric cards */}
-              <div className="grid grid-cols-2 gap-2.5">
-
-                {/* Total Settled */}
-                <div className="rounded-xl border border-border bg-card px-3.5 py-3 flex flex-col">
-                  <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1.5">Total settled</p>
-                  <p className="text-[20px] font-medium text-foreground tabular-nums leading-tight">{sm.totalSettled}</p>
-                  <p className={cn("text-[11px] font-medium mt-1", sm.settleDeltaPos ? "text-emerald-600" : "text-red-600")}>
-                    {sm.settleDelta}
-                  </p>
-                  <div className="mt-2 -mx-0.5">
-                    <Sparkline data={SETTLE_SPARK[settlePeriod].settled} color="#10b981" w={130} h={36} />
-                  </div>
+              {/* Total Settled — full-width primary metric */}
+              <div className="rounded-xl border border-border bg-card px-3.5 py-3 flex flex-col">
+                <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1.5">Total settled</p>
+                <p className="text-[20px] font-medium text-foreground tabular-nums leading-tight">{sm.totalSettled}</p>
+                <p className={cn("text-[11px] font-medium mt-1", sm.settleDeltaPos ? "text-emerald-600" : "text-red-600")}>
+                  {sm.settleDelta}
+                </p>
+                <div className="mt-2">
+                  <Sparkline data={SETTLE_SPARK[settlePeriod].settled} color="#10b981" w={280} h={36} />
                 </div>
-
-                {/* Processing */}
-                <div className="rounded-xl border border-border bg-card px-3.5 py-3 flex flex-col">
-                  <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1.5">Processing</p>
-                  <p className="text-[20px] font-medium text-foreground tabular-nums leading-tight">{sm.processing}</p>
-                  <p className={cn("text-[11px] font-medium mt-1", sm.procDeltaPos ? "text-amber-600" : "text-red-600")}>
-                    {sm.procDelta} vs last
-                  </p>
-                  <div className="mt-2 -mx-0.5">
-                    <Sparkline data={SETTLE_SPARK[settlePeriod].processing} color="#f59e0b" w={130} h={36} />
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Tier 2 — two compact static info strips */}
-              <div className="grid grid-cols-2 gap-2.5">
-
-                {/* Cycle */}
-                <div className="rounded-xl border border-border bg-card px-3 py-2.5 flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
-                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-muted-foreground leading-none mb-0.5">Cycle</p>
-                    <p className="text-[13px] font-medium text-foreground leading-snug">T+1</p>
-                    <p className="text-[10px] font-medium text-emerald-600 mt-0.5">Daily</p>
-                  </div>
-                </div>
-
-                {/* Bank account */}
-                <div className="rounded-xl border border-border bg-card px-3 py-2.5 flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
-                    <Landmark className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-muted-foreground leading-none mb-0.5">Bank account</p>
-                    <p className="text-[13px] font-medium text-foreground leading-snug truncate">HDFC ****4521</p>
-                    <p className="text-[10px] font-medium text-emerald-600 mt-0.5">Active</p>
-                  </div>
-                </div>
-
               </div>
             </div>
 
             {/* Today's Settlement Cycle */}
             <div className="mx-4 mt-4 bg-card border border-border rounded-xl px-4 pt-4 pb-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-[14px] font-medium text-foreground">Today&apos;s Settlement Cycle</p>
-                <span className="text-[11px] text-muted-foreground font-medium">Settles at 11:59 PM IST</span>
+                <div>
+                  <p className="text-[14px] font-medium text-foreground">Today&apos;s Settlement Cycle</p>
+                  <span className="text-[11px] text-muted-foreground font-medium">Settles at 11:59 PM IST</span>
+                </div>
+                <div className="text-right shrink-0 ml-3">
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1">Processing</p>
+                  <p className="text-[16px] font-semibold text-foreground tabular-nums leading-tight">{todayProcessing}</p>
+                </div>
               </div>
               <SettlementStepper />
             </div>
@@ -654,6 +624,75 @@ export function MobileSettlementReports({ open, onClose, contained = false, onTx
                     onTxnLinkTap(selected.id);
                   } : undefined}
                 />
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Cycle & bank account details overlay */}
+          <AnimatePresence>
+            {cycleDetailsOpen && (
+              <>
+                <motion.div
+                  key="cycle-backdrop"
+                  className="absolute inset-0 z-10"
+                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", background: "rgba(0,0,0,0.2)" }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.22 }}
+                  onClick={() => setCycleDetailsOpen(false)}
+                />
+                <motion.div
+                  key="cycle-sheet"
+                  className="absolute inset-x-0 bottom-0 z-11 flex flex-col bg-[#f6f8fa] overflow-hidden"
+                  style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "90%" }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                  transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  {/* Drag handle */}
+                  <div className="flex justify-center pt-2.5 pb-0.5 shrink-0">
+                    <div className="h-1 w-9 rounded-full bg-muted-foreground/25" />
+                  </div>
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background shrink-0">
+                    <p className="text-[16px] font-bold text-foreground">Settlement details</p>
+                    <button type="button" onClick={() => setCycleDetailsOpen(false)}
+                      className="h-9 w-9 flex items-center justify-center rounded-full bg-muted text-foreground shrink-0"
+                      aria-label="Close">
+                      <X className="h-[17px] w-[17px]" strokeWidth={2.25} />
+                    </button>
+                  </div>
+
+                  {/* Detail rows */}
+                  <div className="px-4 pt-4 pb-8">
+                    <div className="bg-card border border-border rounded-2xl overflow-hidden">
+
+                      {/* Cycle */}
+                      <div className="flex items-center gap-3 px-4 py-4 border-b border-border/50">
+                        <div className="h-9 w-9 rounded-xl bg-muted/60 flex items-center justify-center shrink-0">
+                          <RefreshCw className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1">Cycle</p>
+                          <p className="text-[14px] font-semibold text-foreground leading-snug">T+1</p>
+                          <p className="text-[11px] font-medium text-emerald-600 mt-0.5">Daily</p>
+                        </div>
+                      </div>
+
+                      {/* Bank account */}
+                      <div className="flex items-center gap-3 px-4 py-4">
+                        <div className="h-9 w-9 rounded-xl bg-muted/60 flex items-center justify-center shrink-0">
+                          <Landmark className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1">Bank account</p>
+                          <p className="text-[14px] font-semibold text-foreground leading-snug">HDFC ****4521</p>
+                          <p className="text-[11px] font-medium text-emerald-600 mt-0.5">Active</p>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </motion.div>
               </>
             )}
           </AnimatePresence>

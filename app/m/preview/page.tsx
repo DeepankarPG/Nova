@@ -43,6 +43,7 @@ import {
 } from "@/components/dashboard/mobile/MobileInternational";
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider } from "@/lib/hide-amounts-context";
+import { WorkspaceProvider } from "@/lib/workspace-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
 import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
 import type { FilterState, FilterCat } from "@/components/dashboard/mobile/MobileFilterDrawer";
@@ -1391,9 +1392,11 @@ export default function MobilePreviewPage() {
           className="relative flex flex-col w-full h-full overflow-hidden"
           style={{ borderRadius: 42 }}
         >
-          <HideAmountsProvider>
-            <PreviewScreen />
-          </HideAmountsProvider>
+          <WorkspaceProvider>
+            <HideAmountsProvider>
+              <PreviewScreen />
+            </HideAmountsProvider>
+          </WorkspaceProvider>
         </div>
       </div>
     </div>
