@@ -5,10 +5,27 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsToggleSection } from "@/components/settings/SettingsToggleSection";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 export default function SettingsSecurityPage() {
   const [accountKey, setAccountKey] = useState(0);
   const [kycKey, setKycKey] = useState(0);
+  const [dirty, setDirty] = useState(false);
+
+  const markDirty = () => setDirty(true);
+
+  const save = () => {
+    toast.success("Security settings saved");
+    setDirty(false);
+  };
+
+  const cancel = () => {
+    setAccountKey((k) => k + 1);
+    setKycKey((k) => k + 1);
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, onSave: save, onCancel: cancel });
 
   return (
     <div className="space-y-8">
@@ -21,7 +38,7 @@ export default function SettingsSecurityPage() {
         title="Account security"
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setAccountKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setAccountKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Security settings saved")}>
@@ -32,6 +49,7 @@ export default function SettingsSecurityPage() {
       >
         <SettingsToggleSection
           key={accountKey}
+          onAnyChange={markDirty}
           items={[
             { label: "Two-factor authentication", description: "Require OTP on every login", on: true },
             { label: "IP allowlisting", description: "Restrict API access to approved IP addresses", on: false },
@@ -46,7 +64,7 @@ export default function SettingsSecurityPage() {
         description="Verification documents and compliance toggles. eBRC workflows stay under Finance."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setKycKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setKycKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Compliance settings saved")}>
@@ -57,6 +75,7 @@ export default function SettingsSecurityPage() {
       >
         <SettingsToggleSection
           key={kycKey}
+          onAnyChange={markDirty}
           items={[
             { label: "eBRC auto-generation", description: "Auto-generate export benefit certificates", on: true },
             { label: "KYC reminders", description: "Notify team when documents are expiring", on: true },

@@ -1040,11 +1040,11 @@ export function MobileDashboardHome({
 
       {/* Footer */}
       <Image
-        src="/Footer_new.png"
+        src="/Footer.svg"
         alt=""
-        width={1203}
-        height={627}
-        className="w-full h-auto block"
+        width={2087}
+        height={1301}
+        className="w-full h-auto block -mb-5"
       />
 
     </div>

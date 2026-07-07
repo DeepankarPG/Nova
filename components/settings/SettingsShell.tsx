@@ -81,7 +81,7 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="flex min-h-0 w-full min-w-0 max-w-none flex-col px-3 pb-8 pt-4 md:px-5 md:pb-10 md:pt-6 lg:pl-8 lg:pr-6">
+        <div className="flex min-h-0 w-full min-w-0 max-w-none flex-col @container px-3 pb-8 pt-4 md:px-5 md:pb-10 md:pt-6 lg:pl-8 lg:pr-6">
           {children}
         </div>
       </motion.div>

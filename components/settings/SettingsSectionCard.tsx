@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useContext } from "react";
 import { cn } from "@/lib/utils";
+import { SettingsPageActionsContext } from "@/components/settings/SettingsPageActionsContext";
 
 export function SettingsSectionCard({
   title,
@@ -12,14 +16,17 @@ export function SettingsSectionCard({
 }: {
   title: string;
   description?: ReactNode;
-  /** e.g. Edit — rendered top-right of the header */
   headerActions?: ReactNode;
   children: ReactNode;
-  /** Cancel / Save — rendered in a dedicated footer row */
   footerActions?: ReactNode;
   className?: string;
   bodyClassName?: string;
 }) {
+  // When rendered inside the mobile settings shell, the shell's bottom action bar
+  // replaces the inline footer — suppress it here to avoid duplication.
+  const inMobileShell = useContext(SettingsPageActionsContext) !== null;
+  const showInlineFooter = !inMobileShell && !!footerActions;
+
   return (
     <section
       className={cn(
@@ -37,7 +44,7 @@ export function SettingsSectionCard({
         </div>
       </div>
       <div className={cn("bg-muted/25 px-4 py-4 sm:px-5 dark:bg-zinc-900/40", bodyClassName)}>{children}</div>
-      {footerActions ? (
+      {showInlineFooter ? (
         <div className="flex flex-wrap justify-end gap-2 border-t border-border/60 bg-card px-4 py-3 sm:px-5 dark:border-border/80">
           {footerActions}
         </div>

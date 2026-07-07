@@ -30,8 +30,8 @@ export function WorkspaceSection({ onOpenSwitcher }: WorkspaceSectionProps) {
   const selectedOpt = VIEW_OPTS.find(o => o.id === productView) ?? VIEW_OPTS[0];
 
   return (
-    <div className="px-3 pt-3 pb-3 border-b border-border/60 shrink-0">
-      <p className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-muted-foreground px-0.5 mb-2">
+    <div className="px-5 pt-1 pb-5 shrink-0">
+      <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
         Current Workspace
       </p>
 
@@ -39,27 +39,27 @@ export function WorkspaceSection({ onOpenSwitcher }: WorkspaceSectionProps) {
       <button
         type="button"
         onClick={onOpenSwitcher}
-        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-muted/40 active:bg-muted/70 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/40 active:bg-muted/60 transition-colors text-left"
       >
-        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-primary leading-none">
+        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <span className="text-[11px] font-bold text-primary leading-none">
             {selectedMid.name.slice(0, 2).toUpperCase()}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12.5px] font-semibold text-foreground truncate leading-tight">
+          <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
             {selectedMid.name}
           </p>
-          <p className="text-[10.5px] text-muted-foreground leading-tight mt-0.5">
+          <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
             MID &bull;&bull;&bull;{selectedMid.maskedId}
           </p>
         </div>
-        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" strokeWidth={2} />
       </button>
 
       {/* Viewing selector */}
-      <div className="mt-2.5">
-        <p className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-muted-foreground px-0.5 mb-1.5">
+      <div className="mt-2">
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50 mb-1.5">
           Viewing
         </p>
         {hasBoth ? (
@@ -68,13 +68,13 @@ export function WorkspaceSection({ onOpenSwitcher }: WorkspaceSectionProps) {
             <button
               type="button"
               onClick={() => setViewDropOpen(v => !v)}
-              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-muted/40 active:bg-muted/70 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/40 active:bg-muted/60 transition-colors text-left"
             >
-              <selectedOpt.Icon className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
-              <span className="flex-1 text-[12.5px] font-medium text-foreground">{selectedOpt.label}</span>
+              <selectedOpt.Icon className="h-4.5 w-4.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+              <span className="flex-1 text-[13px] font-medium text-foreground">{selectedOpt.label}</span>
               {viewDropOpen
-                ? <ChevronUp   className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
-                : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
+                ? <ChevronUp   className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" strokeWidth={2} />
+                : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" strokeWidth={2} />
               }
             </button>
 

@@ -5,10 +5,27 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsToggleSection } from "@/components/settings/SettingsToggleSection";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 export default function SettingsNotificationsPage() {
   const [emailKey, setEmailKey] = useState(0);
   const [inAppKey, setInAppKey] = useState(0);
+  const [dirty, setDirty] = useState(false);
+
+  const markDirty = () => setDirty(true);
+
+  const save = () => {
+    toast.success("Notification preferences saved");
+    setDirty(false);
+  };
+
+  const cancel = () => {
+    setEmailKey((k) => k + 1);
+    setInAppKey((k) => k + 1);
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, onSave: save, onCancel: cancel });
 
   return (
     <div className="space-y-8">
@@ -22,7 +39,7 @@ export default function SettingsNotificationsPage() {
         description="Choose which events trigger email notifications."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setEmailKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setEmailKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Email preferences saved")}>
@@ -33,6 +50,7 @@ export default function SettingsNotificationsPage() {
       >
         <SettingsToggleSection
           key={emailKey}
+          onAnyChange={markDirty}
           items={[
             { label: "Successful payments", description: "Email on every successful capture", on: true },
             { label: "Failed payments", description: "Alert when a payment is declined", on: true },
@@ -49,7 +67,7 @@ export default function SettingsNotificationsPage() {
         description="Real-time alerts inside the dashboard and via SMS."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setInAppKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setInAppKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Notification preferences saved")}>
@@ -60,6 +78,7 @@ export default function SettingsNotificationsPage() {
       >
         <SettingsToggleSection
           key={inAppKey}
+          onAnyChange={markDirty}
           items={[
             { label: "In-app notifications", description: "Show alerts in the dashboard notification tray", on: true },
             { label: "SMS on failures", description: "SMS alert for payment failures", on: true },

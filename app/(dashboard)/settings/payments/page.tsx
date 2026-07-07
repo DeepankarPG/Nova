@@ -5,11 +5,29 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsToggleSection } from "@/components/settings/SettingsToggleSection";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 export default function SettingsPaymentsPage() {
   const [methodsKey, setMethodsKey] = useState(0);
   const [currenciesKey, setCurrenciesKey] = useState(0);
   const [refundsKey, setRefundsKey] = useState(0);
+  const [dirty, setDirty] = useState(false);
+
+  const markDirty = () => setDirty(true);
+
+  const save = () => {
+    toast.success("Payment settings saved");
+    setDirty(false);
+  };
+
+  const cancel = () => {
+    setMethodsKey((k) => k + 1);
+    setCurrenciesKey((k) => k + 1);
+    setRefundsKey((k) => k + 1);
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, onSave: save, onCancel: cancel });
 
   return (
     <div className="space-y-8">
@@ -23,7 +41,7 @@ export default function SettingsPaymentsPage() {
         description="Enable or disable rails for Indian and international buyers."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setMethodsKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setMethodsKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Payment methods saved")}>
@@ -34,6 +52,7 @@ export default function SettingsPaymentsPage() {
       >
         <SettingsToggleSection
           key={methodsKey}
+          onAnyChange={markDirty}
           items={[
             { label: "Cards (Visa / Mastercard / Amex)", description: "Domestic and international card payments", on: true },
             { label: "UPI", description: "Real-time bank transfers via UPI", on: true },
@@ -49,7 +68,7 @@ export default function SettingsPaymentsPage() {
         description="Settlement currencies and FX behaviour (mock)."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setCurrenciesKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setCurrenciesKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Currency settings saved")}>
@@ -60,6 +79,7 @@ export default function SettingsPaymentsPage() {
       >
         <SettingsToggleSection
           key={currenciesKey}
+          onAnyChange={markDirty}
           items={[
             { label: "INR settlement", description: "Receive payouts in Indian rupees", on: true },
             { label: "USD settlement", description: "Receive payouts in US dollars", on: true },
@@ -74,7 +94,7 @@ export default function SettingsPaymentsPage() {
         description="How and when refunds are processed."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setRefundsKey((k) => k + 1)}>
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setRefundsKey((k) => k + 1); setDirty(false); }}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={() => toast.success("Refund policy saved")}>
@@ -85,6 +105,7 @@ export default function SettingsPaymentsPage() {
       >
         <SettingsToggleSection
           key={refundsKey}
+          onAnyChange={markDirty}
           items={[
             { label: "Instant refunds", description: "Refund to source within minutes for UPI", on: false },
             { label: "Auto-refund on failure", description: "Automatically refund failed captures", on: true },

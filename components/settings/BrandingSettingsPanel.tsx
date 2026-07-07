@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { ChevronDown, ImagePlus, Minus, Monitor, Plus, Smartphone, Trash2 } from "lucide-react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { SettingsPageActionsContext, useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
+import { Building2, ChevronDown, ImagePlus, Mail, Minus, Monitor, Palette, Plus, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -97,7 +98,7 @@ function BrandAssetUpload({
 
       {expanded ? (
         <div id={`${inputId}-panel`} role="region" aria-labelledby={toggleId} className="mt-3 space-y-2">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-3 @md:flex-row @md:items-start">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
@@ -179,6 +180,9 @@ export function BrandingSettingsPanel() {
   }));
   const [radiusPx, setRadiusPx] = useState(12);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  const isInMobileShell = useContext(SettingsPageActionsContext) !== null;
 
   const merchantNamePreview = brandName.trim() || "Acme Corp";
 
@@ -201,10 +205,12 @@ export function BrandingSettingsPanel() {
   const syncBrandFromPicker = (hex: string) => {
     setBrandColor(hex);
     setBrandHexInput(hex.toUpperCase());
+    setDirty(true);
   };
   const syncAccentFromPicker = (hex: string) => {
     setAccentColor(hex);
     setAccentHexInput(hex.toUpperCase());
+    setDirty(true);
   };
 
   const onBrandHexBlur = () => {
@@ -241,8 +247,26 @@ export function BrandingSettingsPanel() {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 700));
     setSaving(false);
+    setDirty(false);
     toast.success("Branding saved");
   };
+
+  const cancelBranding = () => {
+    setBrandColor("#0061E3");
+    setAccentColor("#0061E3");
+    setBrandHexInput("#0061E3");
+    setAccentHexInput("#0061E3");
+    setPreferLogo(true);
+    setIconUrlTracked(null);
+    setLogoUrlTracked(null);
+    setBrandName("Acme Corp");
+    setShowLogoBrandDivider(true);
+    setEnabledPaymentMethods({ ...DEFAULT_ENABLED_METHODS });
+    setRadiusPx(12);
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, isSaving: saving, onSave: save, onCancel: cancelBranding });
 
   const onAssetFile = (setter: (u: string | null) => void) => (file: File) => {
     if (file.size > MAX_ASSET_BYTES) {
@@ -250,6 +274,7 @@ export function BrandingSettingsPanel() {
       return;
     }
     setter(URL.createObjectURL(file));
+    setDirty(true);
     toast.success("Asset updated (mock)");
   };
 
@@ -262,6 +287,7 @@ export function BrandingSettingsPanel() {
       }
       return { ...prev, [id]: !prev[id] };
     });
+    setDirty(true);
   };
 
   const payflowProps = {
@@ -283,23 +309,88 @@ export function BrandingSettingsPanel() {
     merchantName: merchantNamePreview,
   };
 
+  if (isInMobileShell) {
+    return (
+      <div className="w-full min-w-0 max-w-none space-y-5">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <Monitor className="h-[18px] w-[18px] text-amber-600 shrink-0 mt-0.5" strokeWidth={1.75} />
+          <p className="text-[13px] font-medium text-foreground leading-snug flex-1 min-w-0">
+            This page is optimised for desktop. For the full experience, open PayGlocal on a larger screen.
+          </p>
+        </div>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          Customise how your brand appears across the payment experience.
+        </p>
+        <div
+          className="bg-card rounded-2xl overflow-hidden"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04)" }}
+        >
+          <div className="flex items-center gap-3.5 px-4 py-3" style={{ minHeight: 52 }}>
+            <ImagePlus className="h-5.5 w-5.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-medium text-foreground leading-tight">Logo & Icon</p>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Upload your brand mark and wide logo</p>
+            </div>
+          </div>
+          <div className="h-px bg-border/40 ml-13" />
+          <div className="flex items-center gap-3.5 px-4 py-3" style={{ minHeight: 52 }}>
+            <Palette className="h-5.5 w-5.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-medium text-foreground leading-tight">Brand Colors</p>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Primary and accent colors for checkout</p>
+            </div>
+          </div>
+          <div className="h-px bg-border/40 ml-13" />
+          <div className="flex items-center gap-3.5 px-4 py-3" style={{ minHeight: 52 }}>
+            <Building2 className="h-5.5 w-5.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-medium text-foreground leading-tight">Business Name</p>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Displayed on checkout and payment emails</p>
+            </div>
+          </div>
+          <div className="h-px bg-border/40 ml-13" />
+          <div className="flex items-center gap-3.5 px-4 py-3" style={{ minHeight: 52 }}>
+            <Smartphone className="h-5.5 w-5.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-medium text-foreground leading-tight">Checkout Page</p>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Preview your branded payment page</p>
+            </div>
+          </div>
+          <div className="h-px bg-border/40 ml-13" />
+          <div className="flex items-center gap-3.5 px-4 py-3" style={{ minHeight: 52 }}>
+            <Mail className="h-5.5 w-5.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-medium text-foreground leading-tight">Payment Emails</p>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Customise confirmation email templates</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-[12px] text-muted-foreground text-center pb-2">
+          Switch to desktop for the full experience.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-w-0 max-w-none space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="flex flex-col gap-4 @md:flex-row @md:items-start @md:justify-between @md:gap-6">
         <div className="min-w-0 flex-1 space-y-1">
           <h2 className="text-xl font-semibold tracking-tight text-foreground md:text-[22px]">Branding</h2>
           <p className="text-sm text-muted-foreground">
             Configure how your brand appears on checkout and payment emails—the preview updates as you edit.
           </p>
         </div>
-        <div className="flex shrink-0 sm:pt-1">
-          <Button variant="primary" size="sm" type="button" isLoading={saving} onClick={save}>
-            Save branding
-          </Button>
-        </div>
+        {!isInMobileShell && (
+          <div className="flex shrink-0 sm:pt-1">
+            <Button variant="primary" size="sm" type="button" isLoading={saving} onClick={save}>
+              Save branding
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="grid w-full min-w-0 max-w-none grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-12">
+      <div className="grid w-full min-w-0 max-w-none grid-cols-1 gap-8 @lg:grid-cols-2 @lg:gap-10 @xl:gap-12">
         <div className="min-w-0 space-y-4 pb-14">
           <section className="overflow-hidden rounded-xl border border-border bg-card/50" aria-labelledby="branding-section-trigger">
             <h3 className="border-b border-border text-base font-semibold leading-none text-foreground">
@@ -328,7 +419,7 @@ export function BrandingSettingsPanel() {
                   <SettingsTextInput
                     id="branding-brand-name"
                     value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
+                    onChange={(e) => { setBrandName(e.target.value); setDirty(true); }}
                     placeholder="Acme Corp"
                     autoComplete="organization"
                     maxLength={120}
@@ -343,7 +434,7 @@ export function BrandingSettingsPanel() {
                     url={iconUrl}
                     inputId="branding-icon"
                     onPick={onAssetFile(setIconUrlTracked)}
-                    onRemove={() => setIconUrlTracked(null)}
+                    onRemove={() => { setIconUrlTracked(null); setDirty(true); }}
                   />
                 </div>
                 <div className="border-t border-border pt-6">
@@ -354,7 +445,7 @@ export function BrandingSettingsPanel() {
                     url={logoUrl}
                     inputId="branding-logo"
                     onPick={onAssetFile(setLogoUrlTracked)}
-                    onRemove={() => setLogoUrlTracked(null)}
+                    onRemove={() => { setLogoUrlTracked(null); setDirty(true); }}
                   />
                 </div>
                 <div className="border-t border-border pt-5">
@@ -366,7 +457,7 @@ export function BrandingSettingsPanel() {
                     <Switch
                       id="branding-logo-brand-divider"
                       checked={showLogoBrandDivider}
-                      onCheckedChange={setShowLogoBrandDivider}
+                      onCheckedChange={(v) => { setShowLogoBrandDivider(v); setDirty(true); }}
                       aria-label="Show divider between logo and brand name"
                       className="mt-0.5 shrink-0"
                     />
@@ -374,7 +465,7 @@ export function BrandingSettingsPanel() {
                 </div>
                 <div className="space-y-1.5 border-t border-border pt-5">
                   <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-                    <input type="checkbox" checked={preferLogo} onChange={() => setPreferLogo((v) => !v)} className="rounded border-border" />
+                    <input type="checkbox" checked={preferLogo} onChange={() => { setPreferLogo((v) => !v); setDirty(true); }} className="rounded border-border" />
                     Prefer logo over icon
                   </label>
                   <p className="text-xs text-muted-foreground">If both are uploaded: on uses the logo in the header; off uses the icon.</p>
@@ -397,7 +488,7 @@ export function BrandingSettingsPanel() {
                       value={brandHexInput}
                       onChange={(e) => setBrandHexInput(e.target.value)}
                       onBlur={onBrandHexBlur}
-                      className="max-w-[7rem] font-mono text-xs"
+                      className="max-w-28 font-mono text-xs"
                     />
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -413,7 +504,7 @@ export function BrandingSettingsPanel() {
                       value={accentHexInput}
                       onChange={(e) => setAccentHexInput(e.target.value)}
                       onBlur={onAccentHexBlur}
-                      className="max-w-[7rem] font-mono text-xs"
+                      className="max-w-28 font-mono text-xs"
                     />
                   </div>
                 </div>
@@ -429,7 +520,7 @@ export function BrandingSettingsPanel() {
                   >
                     <button
                       type="button"
-                      onClick={() => setRadiusPx(0)}
+                      onClick={() => { setRadiusPx(0); setDirty(true); }}
                       className={cn(
                         "rounded-md px-3 py-1.5 text-sm transition-colors",
                         radiusPx === 0 ? "bg-white font-semibold text-foreground shadow-sm dark:bg-zinc-700" : "text-muted-foreground hover:text-foreground"
@@ -439,7 +530,7 @@ export function BrandingSettingsPanel() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRadiusPx(12)}
+                      onClick={() => { setRadiusPx(12); setDirty(true); }}
                       className={cn(
                         "rounded-md px-3 py-1.5 text-sm transition-colors",
                         radiusPx !== 0 ? "bg-white font-semibold text-foreground shadow-sm dark:bg-zinc-700" : "text-muted-foreground hover:text-foreground"
@@ -492,10 +583,10 @@ export function BrandingSettingsPanel() {
           </section>
         </div>
 
-      <div className="flex min-h-0 w-full min-w-0 max-w-none flex-col space-y-3 pb-12 lg:sticky lg:top-4 lg:self-start">
+      <div className="flex min-h-0 w-full min-w-0 max-w-none flex-col space-y-3 pb-12 @lg:sticky @lg:top-4 @lg:self-start">
         <h3 className="text-base font-semibold text-foreground">Preview</h3>
 
-        <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex flex-col gap-2 border-b border-border pb-2 @md:flex-row @md:items-center @md:justify-between @md:gap-3">
           <div className="flex flex-wrap gap-1.5">
             {previewTabs.map((t) => (
               <button

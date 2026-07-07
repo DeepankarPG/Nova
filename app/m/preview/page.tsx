@@ -36,6 +36,8 @@ import { MobileInvoiceStatus }       from "@/components/dashboard/mobile/MobileI
 import { MobileSettlementReports }   from "@/components/dashboard/mobile/MobileSettlementReports";
 import { MobileEbrc }               from "@/components/dashboard/mobile/MobileEbrc";
 import { MobileDisputes }           from "@/components/dashboard/mobile/MobileDisputes";
+import { MobileAppSettings }        from "@/components/dashboard/mobile/MobileAppSettings";
+import { MobileAccountSettings }   from "@/components/dashboard/mobile/MobileAccountSettings";
 import {
   MobileInternational,
   CountrySheet,
@@ -95,7 +97,7 @@ function GoogleIcon() {
 
 
 /* ── Status bar — used across all stages ── */
-function StatusBar() {
+function StatusBar({ color = "#0A0A0A" }: { color?: string }) {
   return (
     <div
       style={{
@@ -112,27 +114,23 @@ function StatusBar() {
         pointerEvents: "none",
       }}
     >
-      <span style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A", letterSpacing: -0.3, fontVariantNumeric: "tabular-nums" }}>9:41</span>
-      <div
-        style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: 5, background: "black", width: 120, height: 34, borderRadius: 20 }}
-        aria-hidden
-      />
+      <span style={{ fontSize: 15, fontWeight: 600, color, letterSpacing: -0.3, fontVariantNumeric: "tabular-nums" }}>9:41</span>
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden>
-          <rect x="0"    y="8"    width="3" height="4"   rx="1" fill="#0A0A0A" />
-          <rect x="4.5"  y="5.5"  width="3" height="6.5" rx="1" fill="#0A0A0A" />
-          <rect x="9"    y="3"    width="3" height="9"   rx="1" fill="#0A0A0A" />
-          <rect x="13.5" y="0"    width="3" height="12"  rx="1" fill="#0A0A0A" opacity="0.3" />
+          <rect x="0"    y="8"    width="3" height="4"   rx="1" fill={color} />
+          <rect x="4.5"  y="5.5"  width="3" height="6.5" rx="1" fill={color} />
+          <rect x="9"    y="3"    width="3" height="9"   rx="1" fill={color} />
+          <rect x="13.5" y="0"    width="3" height="12"  rx="1" fill={color} opacity="0.3" />
         </svg>
         <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden>
-          <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="#0A0A0A" />
-          <path d="M3.5 6.5C4.9 5.1 6.35 4.4 8 4.4s3.1.7 4.5 2.1" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-          <path d="M1 4C3.1 1.9 5.4 1 8 1s4.9.9 7 3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.5" />
+          <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill={color} />
+          <path d="M3.5 6.5C4.9 5.1 6.35 4.4 8 4.4s3.1.7 4.5 2.1" stroke={color} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          <path d="M1 4C3.1 1.9 5.4 1 8 1s4.9.9 7 3" stroke={color} strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.5" />
         </svg>
         <svg width="25" height="13" viewBox="0 0 25 13" fill="none" aria-hidden>
-          <rect x="0.5" y="1" width="21" height="11" rx="3.5" stroke="#0A0A0A" strokeWidth="1.2" />
-          <rect x="22" y="4.5" width="2.5" height="4" rx="1" fill="#0A0A0A" opacity="0.4" />
-          <rect x="2" y="2.5" width="17" height="8" rx="2" fill="#0A0A0A" />
+          <rect x="0.5" y="1" width="21" height="11" rx="3.5" stroke={color} strokeWidth="1.2" />
+          <rect x="22" y="4.5" width="2.5" height="4" rx="1" fill={color} opacity="0.4" />
+          <rect x="2" y="2.5" width="17" height="8" rx="2" fill={color} />
         </svg>
       </div>
     </div>
@@ -206,6 +204,9 @@ function AppStage() {
   const [settlementFilter,    setSettlementFilter]    = useState<string | null>(null);
   const [ebrcOpen,            setEbrcOpen]            = useState(false);
   const [disputesOpen,        setDisputesOpen]        = useState(false);
+  const [appSettingsOpen,        setAppSettingsOpen]        = useState(false);
+  const [accountSettingsOpen,    setAccountSettingsOpen]    = useState(false);
+  const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | undefined>(undefined);
 
   /* ── In-frame toast ── */
   type FrameToast = { id: number; message: string; type: "success" | "error" };
@@ -531,9 +532,11 @@ function AppStage() {
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
         contained
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} />
       <MobileEbrc open={ebrcOpen} onClose={() => setEbrcOpen(false)} contained />
       <MobileDisputes open={disputesOpen} onClose={() => setDisputesOpen(false)} contained />
+      <MobileAppSettings open={appSettingsOpen} onClose={() => setAppSettingsOpen(false)} contained />
+      <MobileAccountSettings open={accountSettingsOpen} onClose={() => { setAccountSettingsOpen(false); setAccountSettingsDirectDetail(undefined); setDrawerOpen(true); }} contained directDetail={accountSettingsDirectDetail} />
       <MobileSettlementReports
         open={settlementOpen}
         onClose={() => setSettlementOpen(false)}
@@ -984,10 +987,10 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
 
       {/* Title + subtitle */}
       <div style={{ padding: "20px 24px 0", flexShrink: 0 }}>
-        <p style={{ fontSize: 22, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.2 }}>
+        <p style={{ fontSize: 22, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.2, textAlign: "center" }}>
           Sign in to your Account
         </p>
-        <p style={{ fontSize: 13, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5, textAlign: "center" }}>
           Enter your email and password to log in
         </p>
       </div>
@@ -1112,6 +1115,11 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
 function PreviewScreen() {
   type Stage = "splash" | "login" | "form" | "app";
   const [stage, setStage] = useState<Stage>("splash");
+  // Keep GIF mounted as the backdrop while the onboarding slides up over it.
+  // Only cleared after the slide-up animation fully completes.
+  const [showGif, setShowGif] = useState(true);
+  // true only on the very first login mount — drives the y slide-up animation.
+  const loginFromSplashRef = useRef(true);
 
   /* Carousel state (login stage) */
   const [activeIdx, setActiveIdx] = useState(0);
@@ -1125,14 +1133,24 @@ function PreviewScreen() {
     return () => clearInterval(t);
   }, [stage]);
 
+  // Once the login background is visible, drop the GIF from underneath
+  useEffect(() => {
+    if (stage !== "login" || !showGif) return;
+    const t = setTimeout(() => {
+      loginFromSplashRef.current = false;
+      setShowGif(false);
+    }, 50);
+    return () => clearTimeout(t);
+  }, [stage, showGif]);
+
   return (
     <div className="relative w-full h-full" style={{ background: "white" }}>
 
       {/* Status bar — always visible, floats above all stages */}
-      <StatusBar />
+      <StatusBar color={stage === "login" ? "white" : "#0A0A0A"} />
 
-      {/* Splash — not animated, handles its own exit bloom */}
-      {stage === "splash" && (
+      {/* GIF splash — z-0, sits beneath the onboarding which slides up on top */}
+      {showGif && (
         <MobileSplashScreen contained onDone={() => setStage("login")} />
       )}
 
@@ -1143,20 +1161,18 @@ function PreviewScreen() {
           <motion.div
             key="login"
             className="absolute inset-0 flex flex-col"
-            style={{ background: "white" }}
-            initial={{ opacity: 0 }}
+            style={{ background: "linear-gradient(to bottom, #396EEA 0%, #9BCEF9 50%, #FFFFFF 100%)" }}
+            initial={{ opacity: loginFromSplashRef.current ? 1 : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
           >
-            {/* Gradient carousel — illustration + dots at bottom */}
+            {/* Carousel — illustration + dots at bottom */}
             <div
               style={{
                 height: 455,
                 flexShrink: 0,
                 overflow: "hidden",
-                background:
-  "linear-gradient(to bottom, #006FFD 0%, #BFD2F3 80%, #FFFFFF 100%)",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -1164,13 +1180,23 @@ function PreviewScreen() {
               onTouchEnd={() => setTimeout(() => { pausedRef.current = false; }, 3000)}
             >
               {/* Logo */}
-              <div style={{ height: 156, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <motion.div
+                style={{ height: 156, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+                initial={{ y: loginFromSplashRef.current ? 48 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0 : 0 }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.svg" alt="PayGlocal" width={115} height={21} />
-              </div>
+              </motion.div>
 
               {/* Illustration slides */}
-              <div style={{ flex: 1, position: "relative" }}>
+              <motion.div
+                style={{ flex: 1, position: "relative" }}
+                initial={{ y: loginFromSplashRef.current ? 48 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.05 : 0 }}
+              >
                 {slides.map((slide, i) => (
                   <div
                     key={slide.id}
@@ -1187,10 +1213,15 @@ function PreviewScreen() {
                     {slide.illustration}
                   </div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* Pagination dots — centred, inside blue gradient */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "24px 24px 26px" }}>
+              <motion.div
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "24px 24px 26px" }}
+                initial={{ y: loginFromSplashRef.current ? 40 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.10 : 0 }}
+              >
                 {slides.map((_, i) => (
                   <div
                     key={i}
@@ -1205,7 +1236,7 @@ function PreviewScreen() {
                     }}
                   />
                 ))}
-              </div>
+              </motion.div>
             </div>
 
             {/* Below-carousel: text + buttons */}
@@ -1213,7 +1244,12 @@ function PreviewScreen() {
               <div style={{ flex: 0.4 }} />
 
               {/* Slide headline only — no description */}
-              <div style={{ position: "relative", minHeight: 90, flexShrink: 0 }}>
+              <motion.div
+                style={{ position: "relative", minHeight: 90, flexShrink: 0 }}
+                initial={{ y: loginFromSplashRef.current ? 40 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.14 : 0 }}
+              >
                 {slides.map((slide, i) => (
                   <div
                     key={slide.id}
@@ -1232,12 +1268,16 @@ function PreviewScreen() {
                     </p>
                   </div>
                 ))}
-              </div>
+              </motion.div>
 
               <div style={{ flex: 0.35 }} />
 
               {/* Button block */}
-              <div>
+              <motion.div
+                initial={{ y: loginFromSplashRef.current ? 40 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.18 : 0 }}
+              >
                 {/* Login → opens form screen */}
                 <button
                   type="button"
@@ -1317,7 +1357,7 @@ function PreviewScreen() {
                   Don&apos;t have an account?{" "}
                   <span style={{ color: "#007AFF", fontWeight: 500, cursor: "pointer" }}>Sign up</span>
                 </p>
-              </div>
+              </motion.div>
 
               <div style={{ flex: 1 }} />
             </div>

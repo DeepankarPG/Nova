@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SettingsFieldRow } from "@/components/settings/SettingsFieldRow";
 import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsTextInput } from "@/components/settings/SettingsTextInput";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 export default function BusinessDetailsPage() {
   const [legalName, setLegalName] = useState("MCATEST123 PRIVATE LIMITED");
@@ -16,13 +17,22 @@ export default function BusinessDetailsPage() {
   const [supportEmail, setSupportEmail] = useState("support@mcatest123.com");
   const [supportPhone, setSupportPhone] = useState("+91 98765 43210");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
   const save = async () => {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 900));
     setSaving(false);
+    setDirty(false);
     toast.success("Business details saved");
   };
+
+  const cancel = () => {
+    toast.message("Changes discarded (mock)");
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, isSaving: saving, onSave: save, onCancel: cancel });
 
   return (
     <div className="space-y-8">
@@ -36,7 +46,7 @@ export default function BusinessDetailsPage() {
         description="Details shown where required for compliance and customer support."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => toast.message("Changes discarded (mock)")}>
+            <Button variant="ghost" size="sm" type="button" onClick={cancel}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" isLoading={saving} onClick={save}>
@@ -47,30 +57,30 @@ export default function BusinessDetailsPage() {
       >
         <div>
           <SettingsFieldRow label="Legal business name" description="As on your incorporation / GST records.">
-            <SettingsTextInput value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+            <SettingsTextInput value={legalName} onChange={(e) => { setLegalName(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="GSTIN" description="15-character GST identification number.">
-            <SettingsTextInput value={gstin} onChange={(e) => setGstin(e.target.value)} />
+            <SettingsTextInput value={gstin} onChange={(e) => { setGstin(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="Registered address" description="Principal place of business in India.">
             <textarea
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => { setAddress(e.target.value); setDirty(true); }}
               rows={3}
               className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </SettingsFieldRow>
           <SettingsFieldRow label="Business category" description="Helps us tune risk and reporting templates.">
-            <SettingsTextInput value={category} onChange={(e) => setCategory(e.target.value)} />
+            <SettingsTextInput value={category} onChange={(e) => { setCategory(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="Website" description="Your public-facing business website.">
-            <SettingsTextInput value={website} onChange={(e) => setWebsite(e.target.value)} />
+            <SettingsTextInput value={website} onChange={(e) => { setWebsite(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="Support email" description="Where customer queries are directed.">
-            <SettingsTextInput type="email" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} />
+            <SettingsTextInput type="email" value={supportEmail} onChange={(e) => { setSupportEmail(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="Support phone" description="Shown on receipts and payment pages where applicable.">
-            <SettingsTextInput value={supportPhone} onChange={(e) => setSupportPhone(e.target.value)} />
+            <SettingsTextInput value={supportPhone} onChange={(e) => { setSupportPhone(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
         </div>
       </SettingsSectionCard>

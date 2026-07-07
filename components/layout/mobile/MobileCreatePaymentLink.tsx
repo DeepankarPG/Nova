@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion, useAnimate } from "framer-motion";
 import dynamic from "next/dynamic";
 import _successAnim from "@/public/6f797eea-116b-11ee-a5f2-539c765ca237.json";
@@ -32,8 +32,8 @@ const successAnim = recolor(
   [0.0863, 0.3961, 0.2039, 1],   // #166534 dark green
 ) as typeof _successAnim;
 import {
-  X, ChevronRight, Search, Delete,
-  Check, Copy, Share2, User, Mail, Phone,
+  X, Search, Delete,
+  Check, Copy, Share2, User, Mail,
   ChevronDown, Globe,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -173,11 +173,11 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
     ), [searchQ]
   );
 
-  const bounce = () => {
+  const bounce = useCallback(() => {
     void animateAmount(amountScope.current, { scale:[1,1.1,1] }, { duration:0.18, ease:"easeOut" });
-  };
+  }, [animateAmount, amountScope]);
 
-  const onKey = (k: string) => {
+  const onKey = useCallback((k: string) => {
     if (k === "⌫") { setAmountRaw(p => p.slice(0,-1)); bounce(); return; }
     if (k === "." && amountRaw.includes(".")) return;
     if (k === "." && amountRaw === "") { setAmountRaw("0."); bounce(); return; }
@@ -185,7 +185,19 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
     if (amountRaw === "0" && k !== ".") { setAmountRaw(k); bounce(); return; }
     setAmountRaw(p => p + k);
     bounce();
-  };
+  }, [amountRaw, bounce]);
+
+  // Allow keyboard input when the numpad is active (desktop browser support)
+  useEffect(() => {
+    if (!open || focusMode !== "amount") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Backspace") { e.preventDefault(); onKey("⌫"); }
+      else if (e.key === "." || e.key === ",") { e.preventDefault(); onKey("."); }
+      else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); onKey(e.key); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, focusMode, onKey]);
 
   const handleCreate = () => {
     setGeneratedLink(`https://pay.payglocal.in/l/${mockLinkId()}`);

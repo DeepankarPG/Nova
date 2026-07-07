@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { WorkspaceSection, MerchantSwitcherBottomSheet } from "./WorkspaceSection";
+import { AccountManagerSheet } from "./AccountManagerSheet";
 import {
   X,
   LayoutDashboard,
@@ -13,49 +13,46 @@ import {
   AlertTriangle,
   Users,
   BadgeCheck,
-  UserCog,
   Settings2,
+  MessageCircle,
   LogOut,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useProfileAvatar } from "@/hooks/useProfileAvatar";
+import { useWorkspace } from "@/lib/workspace-context";
 
 const USER_NAME = "Deepankar Raj";
 const USER_ROLE = "Admin · Instamart";
+
+function getInitials(name: string) {
+  return name.trim().split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
+}
 
 const DRAWER_NAV = [
   {
     label: "Home",
     items: [
-      { label: "Dashboard",              href: "/",                                          icon: LayoutDashboard },
+      { label: "Dashboard", href: "/", icon: LayoutDashboard },
     ],
   },
   {
-    label: "Finance",
+    label: "Business",
     items: [
-      { label: "International Accounts", href: "/payment-products/international-accounts",  icon: Globe },
-      { label: "Settlement Reports",     href: "/settlement-reports",                        icon: FileText },
-    ],
-  },
-  {
-    label: "Customer",
-    items: [
-      { label: "Client Management",      href: "/client-management",                         icon: Users },
-    ],
-  },
-  {
-    label: "Risk & Compliance",
-    items: [
-      { label: "Dispute Management",     href: "/dispute-management",  icon: AlertTriangle,  badge: "NEW" },
-      { label: "eBRC",                   href: "/ebrc",                icon: BadgeCheck },
+      { label: "International Accounts", href: "/payment-products/international-accounts", icon: Globe },
+      { label: "Settlement Reports",     href: "/settlement-reports",                       icon: FileText },
+      { label: "Client Management",      href: "/client-management",                        icon: Users },
+      { label: "Dispute Management",     href: "/dispute-management", icon: AlertTriangle,   badge: "NEW" },
+      { label: "eBRC",                   href: "/ebrc",               icon: BadgeCheck },
     ],
   },
   {
     label: "Settings",
     items: [
-      { label: "Account settings",       href: "/settings/account",    icon: UserCog },
-      { label: "App settings",           href: "/settings/app",        icon: Settings2 },
+      { label: "Settings",         href: "/settings/app",      icon: Settings2     },
+      { label: "Contact Support",  href: "/contact-support",   icon: MessageCircle },
     ],
   },
 ] as const;
@@ -63,30 +60,43 @@ const DRAWER_NAV = [
 interface MobileHamburgerDrawerProps {
   open: boolean;
   onClose: () => void;
-  /** Use absolute positioning (for preview frame). Default: fixed. */
   contained?: boolean;
-  /** When provided, intercepts the Settlement Reports nav item and fires this instead of navigating. */
   onSettlementTap?: () => void;
-  /** When provided, intercepts the eBRC nav item and fires this instead of navigating. */
   onEbrcTap?: () => void;
-  /** When provided, intercepts the Dispute Management nav item and fires this instead of navigating. */
   onDisputesTap?: () => void;
+  onAppSettingsTap?: () => void;
+  onContactSupportTap?: () => void;
 }
 
-function getInitials(name: string) {
-  return name.trim().split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
-}
-
-export function MobileHamburgerDrawer({ open, onClose, contained = false, onSettlementTap, onEbrcTap, onDisputesTap }: MobileHamburgerDrawerProps) {
-  const [switcherOpen, setSwitcherOpen] = useState(false);
-  const pathname = usePathname();
-  const router   = useRouter();
-  const pos      = contained ? "absolute" : "fixed";
-  const { avatarUrl } = useProfileAvatar();
+export function MobileHamburgerDrawer({
+  open,
+  onClose,
+  contained = false,
+  onSettlementTap,
+  onEbrcTap,
+  onDisputesTap,
+  onAppSettingsTap,
+  onContactSupportTap,
+}: MobileHamburgerDrawerProps) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const pathname       = usePathname();
+  const router         = useRouter();
+  const pos            = contained ? "absolute" : "fixed";
+  const { avatarUrl }  = useProfileAvatar();
+  const { selectedMid } = useWorkspace();
 
   useEffect(() => {
-    if (!open) setSwitcherOpen(false);
+    if (!open) setSheetOpen(false);
   }, [open]);
+
+  const handleSignOut = () => {
+    setSheetOpen(false);
+    onClose();
+    toast.success("Signed out");
+    router.push("/");
+  };
+
+  const itemStyle: React.CSSProperties = { minHeight: 52 };
 
   return (
     <>
@@ -96,7 +106,7 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false, onSett
             {/* Backdrop */}
             <motion.div
               key="backdrop"
-              className={`${pos} inset-0 z-50 bg-black/45`}
+              className={`${pos} inset-0 z-50 bg-black/40`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -104,110 +114,152 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false, onSett
               onClick={onClose}
             />
 
-            {/* Drawer — slides from left */}
+            {/* Drawer */}
             <motion.aside
               key="drawer"
-              className={`${pos} left-0 top-0 bottom-0 z-51 w-70 bg-card flex flex-col shadow-2xl`}
+              className={`${pos} left-0 top-0 bottom-0 z-51 w-72 bg-card flex flex-col`}
+              style={{ boxShadow: "4px 0 40px rgba(0,0,0,0.12)" }}
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
             >
-              {/* Profile section */}
-              <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border shrink-0">
-                <div className="h-11 w-11 rounded-full overflow-hidden shrink-0 ring-2 ring-border bg-muted flex items-center justify-center">
+              {/* Status bar spacer */}
+              <div style={{ height: 44, flexShrink: 0 }} />
+
+              {/* ── Profile header ── */}
+              <div className="flex items-center gap-3 px-4 pt-3 pb-4 shrink-0">
+                <div className="h-11 w-11 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-[13px] font-bold text-foreground">{getInitials(USER_NAME)}</span>
+                    <span className="text-[14px] font-bold text-foreground">{getInitials(USER_NAME)}</span>
                   )}
                 </div>
+
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-foreground truncate">{USER_NAME}</p>
-                  <p className="text-[12px] text-muted-foreground truncate">{USER_ROLE}</p>
+                  <p className="text-[17px] font-bold text-foreground leading-tight truncate">{USER_NAME}</p>
+                  <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{USER_ROLE}</p>
                 </div>
+
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="Close menu"
-                  className="h-7 w-7 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors shrink-0"
+                  className="h-8 w-8 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground active:bg-muted transition-colors shrink-0"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              {/* Workspace section */}
-              <WorkspaceSection onOpenSwitcher={() => setSwitcherOpen(true)} />
+              {/* ── Workspace selector ── */}
+              <div className="px-4 pb-4 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(true)}
+                  className="w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left active:opacity-70 transition-opacity"
+                  style={{ backgroundColor: "#F5F5F5" }}
+                >
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-[11px] font-bold text-primary leading-none">
+                      {selectedMid.name.slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-foreground truncate leading-tight">{selectedMid.name}</p>
+                    <p className="text-[11.5px] text-muted-foreground leading-tight mt-0.5">MID ····{selectedMid.maskedId}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground/50 shrink-0" strokeWidth={2} />
+                </button>
+              </div>
 
-              {/* Nav */}
-              <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
-                {DRAWER_NAV.map((section) => (
+              {/* ── Nav — scrollable ── */}
+              <nav
+                className="flex-1 overflow-y-auto px-3 pb-3 space-y-5 [&::-webkit-scrollbar]:hidden"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {DRAWER_NAV.map(section => (
                   <div key={section.label}>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground px-3 mb-1">
+                    <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50 px-3 mb-1.5">
                       {section.label}
                     </p>
-                    <div className="space-y-0.5">
-                      {section.items.map((item) => {
+                    <div>
+                      {section.items.map(item => {
                         const Icon   = item.icon;
                         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-                        const sharedClass = cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors w-full text-left",
-                          active ? "bg-primary/8 text-primary" : "text-foreground hover:bg-muted"
+                        const rowClass = cn(
+                          "flex items-center gap-3.5 px-3 w-full text-left transition-colors rounded-xl",
+                          active ? "text-primary" : "active:bg-muted/50"
                         );
                         const inner = (
                           <>
                             <Icon
-                              className={cn("h-4.25 w-4.25 shrink-0", active ? "text-primary" : "text-muted-foreground")}
+                              className={cn("shrink-0", active ? "text-primary" : "text-[#666666]")}
+                              style={{ height: 22, width: 22 }}
                               strokeWidth={1.75}
                             />
-                            <span className={cn("text-[13.5px] flex-1 min-w-0 truncate", active ? "font-semibold" : "font-medium")}>
+                            <span className={cn(
+                              "flex-1 min-w-0 truncate text-[15px]",
+                              active ? "font-semibold text-primary" : "font-medium text-foreground"
+                            )}>
                               {item.label}
                             </span>
                             {"badge" in item && item.badge ? (
-                              <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
+                              <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
                                 {item.badge}
                               </span>
                             ) : null}
+                            <ChevronRight
+                              className={cn("h-4 w-4 shrink-0", active ? "text-primary/40" : "text-foreground/20")}
+                              strokeWidth={2}
+                            />
                           </>
                         );
+
                         if (item.href === "/settlement-reports" && onSettlementTap) {
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onSettlementTap(); }}
-                              className={sharedClass}
-                            >
-                              {inner}
-                            </button>
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
                           );
                         }
                         if (item.href === "/ebrc" && onEbrcTap) {
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onEbrcTap(); }}
-                              className={sharedClass}
-                            >
-                              {inner}
-                            </button>
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
                           );
                         }
                         if (item.href === "/dispute-management" && onDisputesTap) {
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onDisputesTap(); }}
-                              className={sharedClass}
-                            >
-                              {inner}
-                            </button>
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/settings/app" && onAppSettingsTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onAppSettingsTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/contact-support" && onContactSupportTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onContactSupportTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
                           );
                         }
                         return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={onClose}
-                            className={sharedClass}
-                          >
+                          <Link key={item.href} href={item.href} onClick={onClose}
+                            className={rowClass} style={itemStyle}>
                             {inner}
                           </Link>
                         );
@@ -217,27 +269,29 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false, onSett
                 ))}
               </nav>
 
-              {/* Logout */}
-              <div className="px-2 py-3 border-t border-border shrink-0">
+              {/* ── Sign out — pinned outside scroll ── */}
+              <div className="shrink-0 border-t border-border/30">
                 <button
                   type="button"
-                  onClick={() => { onClose(); toast.success("Signed out"); router.push("/"); }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/6 transition-colors"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3.5 px-6 text-left text-destructive active:bg-destructive/5 transition-colors"
+                  style={{ minHeight: 52 }}
                 >
-                  <LogOut className="h-4.25 w-4.25 shrink-0" strokeWidth={1.75} />
-                  <span className="text-[13.5px] font-medium">Sign out</span>
+                  <LogOut style={{ height: 22, width: 22 }} className="shrink-0" strokeWidth={1.75} />
+                  <span className="text-[15px] font-medium">Sign out</span>
                 </button>
+                <div style={{ height: 24, flexShrink: 0 }} />
               </div>
             </motion.aside>
           </>
         )}
       </AnimatePresence>
 
-      {/* Merchant switcher — rendered outside the drawer so it spans the full frame width */}
-      <MerchantSwitcherBottomSheet
-        open={switcherOpen}
-        onClose={() => setSwitcherOpen(false)}
+      <AccountManagerSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
         contained={contained}
+        onSignOut={handleSignOut}
       />
     </>
   );

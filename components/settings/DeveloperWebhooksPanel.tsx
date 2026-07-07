@@ -12,7 +12,7 @@ export function DeveloperWebhooksPanel() {
         </Button>
       </div>
       <div className="rounded-xl border border-border p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-4 @md:flex-row @md:items-start @md:justify-between">
           <div className="min-w-0">
             <code className="break-all text-[11px] font-mono text-foreground">
               https://api.mcatest123.com/webhooks/payglocal

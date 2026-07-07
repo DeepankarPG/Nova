@@ -289,20 +289,12 @@ export function MobileDisputes({
             className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden pb-6"
             style={{ scrollbarWidth: "none" }}
           >
-            {/* Desktop version banner — above the card */}
-            <div className="mx-4 mt-3 mb-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
-              <Monitor className="h-[18px] w-[18px] text-amber-600 shrink-0" strokeWidth={1.75} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-foreground leading-snug">Switch to desktop for the best experience</p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Some features are limited on mobile.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => window.open("/", "_blank")}
-                className="text-[13px] font-medium text-primary shrink-0 whitespace-nowrap active:opacity-70 transition-opacity"
-              >
-                Open desktop ↗
-              </button>
+            {/* Desktop version banner */}
+            <div className="mx-4 mt-3 mb-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <Monitor className="h-[18px] w-[18px] text-amber-600 shrink-0 mt-0.5" strokeWidth={1.75} />
+              <p className="text-[13px] font-medium text-foreground leading-snug flex-1 min-w-0">
+                This page is optimised for desktop. For the full experience, open PayGlocal on a larger screen.
+              </p>
             </div>
 
             {/* All Disputes card */}

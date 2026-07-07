@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SettingsFieldRow } from "@/components/settings/SettingsFieldRow";
 import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsTextInput } from "@/components/settings/SettingsTextInput";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 const ACCOUNT_ID = "acct_mcatest123_in";
 
@@ -14,6 +15,7 @@ export default function BusinessAccountPage() {
   const [merchantName, setMerchantName] = useState("mcatest123 Pvt Ltd");
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
   const copyId = () => {
     void navigator.clipboard.writeText(ACCOUNT_ID);
@@ -24,8 +26,16 @@ export default function BusinessAccountPage() {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 800));
     setSaving(false);
+    setDirty(false);
     toast.success("Account settings saved");
   };
+
+  const cancel = () => {
+    toast.message("Changes discarded (mock)");
+    setDirty(false);
+  };
+
+  useSettingsPageActions({ isDirty: dirty, isSaving: saving, onSave: save, onCancel: cancel });
 
   return (
     <div className="space-y-8">
@@ -39,7 +49,7 @@ export default function BusinessAccountPage() {
         description="Merchant name, account ID, verification, and timezone."
         footerActions={
           <>
-            <Button variant="ghost" size="sm" type="button" onClick={() => toast.message("Changes discarded (mock)")}>
+            <Button variant="ghost" size="sm" type="button" onClick={cancel}>
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="button" isLoading={saving} onClick={save}>
@@ -50,7 +60,7 @@ export default function BusinessAccountPage() {
       >
         <div>
           <SettingsFieldRow label="Account / merchant name" description="Shown in the dashboard and on internal documents.">
-            <SettingsTextInput value={merchantName} onChange={(e) => setMerchantName(e.target.value)} />
+            <SettingsTextInput value={merchantName} onChange={(e) => { setMerchantName(e.target.value); setDirty(true); }} />
           </SettingsFieldRow>
           <SettingsFieldRow label="Account ID" description="Use this when talking to PayGlocal support.">
             <div className="flex items-center gap-2">
@@ -64,7 +74,7 @@ export default function BusinessAccountPage() {
           </SettingsFieldRow>
           <SettingsFieldRow
             label="Phone verification"
-            description="We’ll use this number for high-risk changes (mock — no SMS sent)."
+            description="We'll use this number for high-risk changes (mock — no SMS sent)."
           >
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
@@ -78,7 +88,7 @@ export default function BusinessAccountPage() {
           <SettingsFieldRow label="Timezone" description="Used for settlement cutoffs and scheduled reports.">
             <select
               value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
+              onChange={(e) => { setTimezone(e.target.value); setDirty(true); }}
               className="h-9 w-full rounded-lg border border-border bg-muted/40 px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>

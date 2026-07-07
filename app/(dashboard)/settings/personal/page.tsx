@@ -8,6 +8,7 @@ import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { SettingsTextInput } from "@/components/settings/SettingsTextInput";
 import { cn } from "@/lib/utils";
 import { useProfileAvatar } from "@/hooks/useProfileAvatar";
+import { useSettingsPageActions } from "@/components/settings/SettingsPageActionsContext";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
@@ -30,6 +31,9 @@ export default function PersonalSettingsPage() {
   const [phone, setPhone] = useState("");
   const { avatarUrl, setFromFile } = useProfileAvatar();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = () => { setEditing(false); toast.success("Personal details saved"); };
+  useSettingsPageActions({ isDirty: editing, onSave: handleSave, onCancel: () => setEditing(false) });
 
   const onPickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -81,10 +85,10 @@ export default function PersonalSettingsPage() {
         }
       >
         <div className="space-y-6">
-          <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center">
+          <div className="flex flex-row items-center gap-5 border-b border-border py-4">
             <div
               className={cn(
-                "flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-lg font-semibold text-foreground"
+                "flex h-18 w-18 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-lg font-semibold text-foreground"
               )}
             >
               {avatarUrl ? (
@@ -94,7 +98,7 @@ export default function PersonalSettingsPage() {
                 initials(fullName)
               )}
             </div>
-            <div className="min-w-0">
+            <div className="flex flex-1 flex-col items-start gap-2.5">
               <input
                 ref={fileRef}
                 type="file"
@@ -102,11 +106,15 @@ export default function PersonalSettingsPage() {
                 className="hidden"
                 onChange={onPickPhoto}
               />
-              <Button variant="outline" size="sm" type="button" onClick={() => fileRef.current?.click()}>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="px-4 py-2.5 rounded-xl border border-[#E2E8F2] bg-white text-sm font-semibold text-foreground active:bg-muted/40 transition-colors"
+              >
                 Change photo
-              </Button>
-              <p className="mt-2 text-xs text-muted-foreground">
-                JPG or PNG, up to 5 MB. Saved in this browser session until you replace it.
+              </button>
+              <p className="text-[12px] leading-4.5" style={{ color: "#8A97AB" }}>
+                JPG or PNG, up to 5 MB.
               </p>
             </div>
           </div>
@@ -161,7 +169,7 @@ export default function PersonalSettingsPage() {
                   </Button>
                 </div>
               ) : (
-                <Button variant="secondary" size="sm" type="button" onClick={() => setPhone("+91 98765 43210")}>
+                <Button variant="outline" size="sm" type="button" onClick={() => setPhone("+91 98765 43210")}>
                   Add contact phone number
                 </Button>
               )}
