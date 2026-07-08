@@ -22,9 +22,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useProfileAvatar } from "@/hooks/useProfileAvatar";
-
-const USER_NAME = "Deepankar Raj";
-const USER_ROLE = "Admin · Instamart";
+import { useWorkspace } from "@/lib/workspace-context";
+import { portalRoleLabel } from "@/lib/workspace-types";
 
 const DRAWER_NAV = [
   {
@@ -88,6 +87,11 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false }: Mobi
   const router   = useRouter();
   const pos      = contained ? "absolute" : "fixed";
   const { avatarUrl } = useProfileAvatar();
+  const { user, activeBusiness } = useWorkspace();
+  const userName = user.name;
+  const userRole = activeBusiness
+    ? `${portalRoleLabel(user.role)} · ${activeBusiness.name}`
+    : portalRoleLabel(user.role);
 
   return (
     <AnimatePresence>
@@ -120,12 +124,12 @@ export function MobileHamburgerDrawer({ open, onClose, contained = false }: Mobi
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-[13px] font-bold text-foreground">{getInitials(USER_NAME)}</span>
+                  <span className="text-[13px] font-bold text-foreground">{getInitials(userName)}</span>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-foreground truncate">{USER_NAME}</p>
-                <p className="text-[12px] text-muted-foreground truncate">{USER_ROLE}</p>
+                <p className="text-[14px] font-semibold text-foreground truncate">{userName}</p>
+                <p className="text-[12px] text-muted-foreground truncate">{userRole}</p>
               </div>
               <button
                 type="button"

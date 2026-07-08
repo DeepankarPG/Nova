@@ -190,6 +190,41 @@ export const DISPUTE_TABLE_DATA_COLUMNS: Column<DisputeRow>[] = [
         );
       },
     },
+    {
+      key: "resolutionOwner",
+      header: "Resolution",
+      width: "12%",
+      minWidth: 110,
+      render: (row) => {
+        const owner = row.resolutionOwner;
+        if (!owner) return <span className="text-muted-foreground text-[13px]">—</span>;
+        const config = {
+          merchant: {
+            label: "Action needed",
+            className: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-700/40",
+          },
+          customer: {
+            label: "Awaiting customer",
+            className: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-700/40",
+          },
+          bank: {
+            label: "Under review",
+            className: "bg-slate-50 text-slate-600 border border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700/40",
+          },
+        }[owner];
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap",
+              config.className
+            )}
+            title={owner === "merchant" ? "You need to submit evidence or take action" : owner === "customer" ? "Waiting on the customer to respond" : "The bank is reviewing this dispute"}
+          >
+            {config.label}
+          </span>
+        );
+      },
+    },
 ];
 
 export function buildDisputeTableColumns(opts: {

@@ -9,6 +9,7 @@
 
 export const ATLAS_NAME = "Atlas";
 export const ATLAS_SUBTITLE = "PayGlocal UI";
+export const ATLAS_VERSION = "0.2.0";
 
 export function getAtlasGitHubUrl(): string {
   if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ATLAS_GITHUB_URL) {

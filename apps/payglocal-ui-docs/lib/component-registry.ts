@@ -302,7 +302,7 @@ const [amount, setAmount] = useState("");
     importSnippet: `import { PageHeader, Button } from "@payglocal/ui";`,
     usageSnippet: `<PageHeader
   title="Transactions"
-  subtitle="Recent activity"
+  subtitle="Recent transactions"
   actions={<Button size="sm">Export</Button>}
 />`,
     toc: baseToc,

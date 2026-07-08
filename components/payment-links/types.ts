@@ -13,4 +13,6 @@ export interface PaymentLink {
   expiresAt: string | null;
   notifyVia: string[];
   transactions: { id: string; status: string; cardLast4: string; date: string }[];
+  shortUrl?: string;
+  partial?: { enabled: boolean; minAmount: number; maxInstallments: number };
 }

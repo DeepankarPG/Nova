@@ -1,17 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, TrendingUp, CheckCircle2, Clock, Banknote } from "lucide-react";
+import { Download, TrendingUp, CheckCircle2, Clock, Banknote, FileText } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Shimmer } from "@/components/ui/skeleton";
 import { cn, formatDate } from "@/lib/utils";
-import { allSettlements } from "@/lib/mock-data";
+import { allSettlements, fircDocuments } from "@/lib/mock-data";
 import { toast } from "sonner";
+import { useWorkspace } from "@/lib/workspace-context";
 
 type Settlement = typeof allSettlements[number];
+type FircDoc = typeof fircDocuments[number];
+type PageTab = "settlements" | "firc";
+
+const fircColumns: Column<FircDoc>[] = [
+  {
+    key: "settlementId",
+    header: "Settlement ID",
+    render: (row) => (
+      <code className="text-[13px] font-mono text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+        {row.settlementId}
+      </code>
+    ),
+  },
+  {
+    key: "amountUsd",
+    header: "Amount (USD)",
+    render: (row) => (
+      <span className="text-[13px] font-semibold text-foreground tabular-nums">
+        ${row.amountUsd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+      </span>
+    ),
+  },
+  {
+    key: "fxRate",
+    header: "FX Rate",
+    render: (row) => (
+      <span className="text-[13px] text-muted-foreground tabular-nums">₹{row.fxRate}</span>
+    ),
+  },
+  {
+    key: "issuedDate",
+    header: "Issue Date",
+    render: (row) => (
+      <span className="text-[13px] text-muted-foreground whitespace-nowrap">{row.issuedDate}</span>
+    ),
+  },
+  {
+    key: "id",
+    header: "FIRC Certificate",
+    render: (row) => (
+      <Button
+        variant="outline"
+        size="sm"
+        leftIcon={<Download className="w-3.5 h-3.5" />}
+        onClick={() => toast.success("Download started", { description: `FIRC ${row.id}.pdf` })}
+        className="h-7 px-2.5 text-xs"
+      >
+        Download
+      </Button>
+    ),
+  },
+];
 
 const columns: Column<Settlement>[] = [
   {
@@ -75,6 +128,11 @@ const columns: Column<Settlement>[] = [
 export default function SettlementReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<PageTab>("settlements");
+  const { activeBusiness, group } = useWorkspace();
+  const scopeSubtitle = activeBusiness
+    ? `${activeBusiness.name} · ${activeBusiness.primaryAccount.mid}`
+    : `${group.name} · All Businesses`;
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 1200);
@@ -100,7 +158,7 @@ export default function SettlementReportsPage() {
     <div className="max-w-[1400px] mx-auto space-y-5">
       <PageHeader
         title="Settlement Reports"
-        subtitle="Daily settlement activity and bank transfers"
+        subtitle={scopeSubtitle}
         actions={
           <Button
             variant="outline"
@@ -201,17 +259,55 @@ export default function SettlementReportsPage() {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={allSettlements}
-        isLoading={isLoading}
-        skeletonRows={6}
-        emptyTitle="No settlements found"
-        emptyDescription="Settlement reports will appear here once transactions are processed"
-        rowKey={(row) => row.id}
-        pageSize={10}
-        rowCta={{ label: "View report" }}
-      />
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
+        {(
+          [
+            { id: "settlements" as const, label: "Settlements", icon: null as null | typeof FileText },
+            { id: "firc" as const, label: "FIRC Documents", icon: FileText as typeof FileText },
+          ]
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+              activeTab === tab.id
+                ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.icon ? <tab.icon className="h-3.5 w-3.5 shrink-0" /> : null}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "settlements" ? (
+        <DataTable
+          columns={columns}
+          data={allSettlements}
+          isLoading={isLoading}
+          skeletonRows={6}
+          emptyTitle="No settlements found"
+          emptyDescription="Settlement reports will appear here once transactions are processed"
+          rowKey={(row) => row.id}
+          pageSize={10}
+          rowCta={{ label: "View report" }}
+        />
+      ) : (
+        <DataTable
+          columns={fircColumns}
+          data={fircDocuments}
+          isLoading={isLoading}
+          skeletonRows={4}
+          emptyTitle="No FIRC documents"
+          emptyDescription="FIRC certificates for foreign currency settlements will appear here"
+          rowKey={(row) => row.id}
+          pageSize={10}
+        />
+      )}
     </div>
   );
 }

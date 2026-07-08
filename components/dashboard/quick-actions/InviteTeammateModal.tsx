@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail } from "lucide-react";
+import { Check, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,24 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+const PERMISSIONS = [
+  { id: "view_analytics", label: "View analytics" },
+  { id: "manage_payments", label: "Manage payments" },
+  { id: "manage_links", label: "Manage payment links" },
+  { id: "view_settlements", label: "View settlements" },
+  { id: "manage_disputes", label: "Manage disputes" },
+  { id: "manage_team", label: "Manage team members" },
+  { id: "manage_keys", label: "Manage API keys" },
+] as const;
+
+type PermissionId = typeof PERMISSIONS[number]["id"];
+
+const ROLE_PRESETS: Record<string, PermissionId[]> = {
+  Viewer: ["view_analytics", "view_settlements"],
+  Developer: ["view_analytics", "manage_payments", "manage_links", "manage_keys"],
+  Manager: ["view_analytics", "manage_payments", "manage_links", "view_settlements", "manage_disputes", "manage_team"],
+};
+
 export function InviteTeammateModal({
   open,
   onOpenChange,
@@ -21,8 +39,23 @@ export function InviteTeammateModal({
 }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Viewer");
+  const [permissions, setPermissions] = useState<Set<PermissionId>>(new Set(ROLE_PRESETS.Viewer));
   const [emailError, setEmailError] = useState("");
   const [sending, setSending] = useState(false);
+
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole);
+    setPermissions(new Set(ROLE_PRESETS[newRole] ?? []));
+  };
+
+  const togglePermission = (id: PermissionId) => {
+    setPermissions((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const validateEmail = (val: string) => {
     if (!val) { setEmailError(""); return; }
@@ -37,9 +70,10 @@ export function InviteTeammateModal({
     setSending(true);
     await new Promise((r) => setTimeout(r, 1500));
     setSending(false);
-    toast.success("Invitation sent!", { description: `Invite sent to ${email}` });
+    toast.success("Invitation sent!", { description: `Invite sent to ${email} with ${permissions.size} permission${permissions.size !== 1 ? "s" : ""}` });
     setEmail("");
     setRole("Viewer");
+    setPermissions(new Set(ROLE_PRESETS.Viewer));
     onOpenChange(false);
   };
 
@@ -57,7 +91,7 @@ export function InviteTeammateModal({
        * Header pt-4 aligns content with the close button row.
        * pr-12 on the text block keeps text clear of the × button.
        */}
-      <DialogContent className="overflow-hidden p-0 sm:max-w-[25rem]">
+      <DialogContent className="overflow-hidden p-0 sm:max-w-[26rem]">
 
         {/* ── Header ──────────────────────────────────────────────────────
             pt-4 lines up vertically with the absolute close button (top-3).
@@ -111,16 +145,48 @@ export function InviteTeammateModal({
             <select
               id="qa-invite-role"
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => handleRoleChange(e.target.value)}
               className={cn(inputBase, "h-10 cursor-pointer")}
             >
               <option value="Viewer">Viewer — read-only</option>
               <option value="Developer">Developer — API &amp; integrations</option>
               <option value="Manager">Manager — team &amp; settings</option>
             </select>
-            <p className="text-[12px] text-muted-foreground">
-              You can change this later from Client management.
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[13px] font-medium text-foreground">
+              Permissions
+              <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">(customise for this invite)</span>
             </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {PERMISSIONS.map(({ id, label }) => {
+                const checked = permissions.has(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => togglePermission(id)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
+                      checked
+                        ? "border-primary/30 bg-primary/5 text-foreground"
+                        : "border-border bg-muted/20 text-muted-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                        checked ? "border-primary bg-primary" : "border-border bg-background"
+                      )}
+                    >
+                      {checked && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                    </span>
+                    <span className="text-[11px] font-medium leading-snug">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

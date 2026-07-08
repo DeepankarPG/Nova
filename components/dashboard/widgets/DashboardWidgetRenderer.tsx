@@ -3,6 +3,8 @@
 import { useId } from "react";
 import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import { PaymentFlowSankeyWidget } from "./PaymentFlowSankeyWidget";
+import { AbandonmentRadarWidget } from "./AbandonmentRadarWidget";
 import {
   Area,
   AreaChart,
@@ -38,7 +40,9 @@ import {
   paymentFailureReasons,
   paymentMethodSplit,
   settlementSpeedBuckets,
+  todaysAnalytics,
   topCustomersBySpend,
+  walletStats,
   weeklyUpiVsCard,
 } from "@/lib/mock-data";
 import { StateInsightsList } from "./StateInsightsList";
@@ -793,6 +797,229 @@ export function DashboardWidgetRenderer({
           spark={[12, 11, 10, 9, 9, 8, 8, 7, 7, 7, 7, 7]}
         />
       );
+    case "charts_wallet_split": {
+      const appleLogoSvg = (
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden style={{ color: "#1c1c1e" }}>
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+      );
+      const googleLogoSvg = (
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden>
+          <path d="M20.66 12.2c0-.61-.06-1.21-.16-1.79H12v3.38h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.7-3.88 2.7-6.57z" fill="#4285F4"/>
+          <path d="M12 21c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.55-1.84.87-3.04.87-2.34 0-4.32-1.58-5.03-3.7H3.96v2.33A9 9 0 0 0 12 21z" fill="#34A853"/>
+          <path d="M6.97 13.73A5.42 5.42 0 0 1 6.68 12c0-.6.1-1.18.29-1.73V7.94H3.96A9 9 0 0 0 3 12c0 1.45.35 2.82.96 4.06l3.01-2.33z" fill="#FBBC05"/>
+          <path d="M12 6.58c1.32 0 2.5.45 3.43 1.35l2.57-2.57C16.46 3.89 14.43 3 12 3a9 9 0 0 0-8.04 4.94l3.01 2.33C7.68 8.16 9.66 6.58 12 6.58z" fill="#EA4335"/>
+        </svg>
+      );
+      const wallets = [
+        { label: "Apple Pay",  stats: walletStats.applePay,  successRate: 97.2, avgTime: "1.2s", color: "#1c1c1e", accentBg: "#1c1c1e", logo: appleLogoSvg },
+        { label: "Google Pay", stats: walletStats.googlePay, successRate: 95.8, avgTime: "0.9s", color: "#4285F4", accentBg: "#4285F4", logo: googleLogoSvg },
+      ] as const;
+
+      const totalVol = walletStats.applePay.volume + walletStats.googlePay.volume;
+      const appleShare = Math.round((walletStats.applePay.volume / totalVol) * 100);
+
+      return (
+        <div className={cn(cardClass, "flex flex-col p-0 h-full overflow-hidden")}>
+          {isLoading ? (
+            <div className="space-y-4 p-5">
+              <div className="h-4 w-32 shimmer rounded" />
+              <div className="h-36 shimmer rounded-xl" />
+              <div className="h-36 shimmer rounded-xl" />
+            </div>
+          ) : (
+            <>
+              {/* Card header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/60">
+                <div>
+                  <p className="text-[13px] font-semibold text-foreground">Digital Wallets</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {(walletStats.applePay.pctOfTotal + walletStats.googlePay.pctOfTotal).toFixed(1)}% of total volume today
+                  </p>
+                </div>
+              </div>
+
+              {/* Wallet rows */}
+              <div className="divide-y divide-border/60 flex-1">
+                {wallets.map(({ label, stats, successRate, avgTime, accentBg, logo }) => (
+                  <div key={label} className="flex items-start gap-3 px-5 py-4">
+                    <div className="flex h-8 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-card shadow-sm">
+                      {logo}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[13px] font-semibold text-foreground">{label}</span>
+                        <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                          ₹{(stats.volume / 1000).toFixed(1)}K
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span>{stats.transactions} transactions</span>
+                        <span className="tabular-nums">{stats.pctOfTotal}% of total</span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-3 text-[11px]">
+                        <span className="text-muted-foreground">Success <span className="font-medium text-foreground">{successRate}%</span></span>
+                        <span className="text-border">·</span>
+                        <span className="text-muted-foreground">Avg time <span className="font-medium text-foreground">{avgTime}</span></span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer split bar */}
+              <div className="px-5 pb-4 pt-3 border-t border-border/60">
+                <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Apple Pay {appleShare}%</span>
+                  <span>Google Pay {100 - appleShare}%</span>
+                </div>
+                <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-full transition-all duration-700 bg-primary" style={{ width: `${appleShare}%` }} />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    case "charts_psr_by_mode": {
+      const modes = [
+        { label: "UPI",         key: "upi"        as const, color: "#0061e3" },
+        { label: "Card",        key: "card"        as const, color: "#3b82f6" },
+        { label: "Net banking", key: "netbanking"  as const, color: "#93c5fd" },
+        { label: "Wallets",     key: "wallets"     as const, color: "#bfdbfe" },
+      ] as const;
+      const byMode = todaysAnalytics.successRate.byMode;
+      const overall = todaysAnalytics.successRate.pct;
+      return (
+        <div className={cn(cardClass, "flex flex-col p-0 h-full overflow-hidden")}>
+          {isLoading ? (
+            <div className="space-y-4 p-5">
+              <div className="h-4 w-40 shimmer rounded" />
+              <div className="h-32 shimmer rounded-xl" />
+            </div>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="px-5 pt-5 pb-4 border-b border-border/60">
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold text-foreground">Success rate by mode</p>
+                  <p className="text-[1.25rem] font-bold tabular-nums text-foreground leading-none">
+                    {overall}%
+                    <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">avg</span>
+                  </p>
+                </div>
+                {/* Stacked segment bar */}
+                <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full gap-0.5">
+                  {modes.map(({ key, color }) => (
+                    <div
+                      key={key}
+                      className="h-full transition-all duration-700"
+                      style={{ flex: byMode[key], background: color }}
+                    />
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center gap-3 flex-wrap">
+                  {modes.map(({ label, key, color }) => (
+                    <span key={key} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full shrink-0" style={{ background: color }} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mode rows — simple list */}
+              <div className="divide-y divide-border/60 flex-1 px-5">
+                {modes.map(({ label, key, color }) => {
+                  const pct = byMode[key];
+                  const barWidth = Math.round((pct / 100) * 100);
+                  return (
+                    <div key={key} className="flex items-center gap-3 py-3">
+                      <span className="w-[76px] text-[12px] text-muted-foreground shrink-0">{label}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${barWidth}%`, background: color }} />
+                      </div>
+                      <span className="w-10 text-right text-[12px] font-semibold tabular-nums text-foreground">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    case "charts_decline_breakdown": {
+      const { issuer, general } = todaysAnalytics.declineBreakdown;
+      return (
+        <div className={cn(cardClass, "flex flex-col gap-0 p-5 h-full")}>
+          {isLoading ? (
+            <div className="space-y-3">
+              <div className="h-4 w-36 shimmer rounded" />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-24 shimmer rounded-xl" />
+                <div className="h-24 shimmer rounded-xl" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[13px] font-normal text-muted-foreground">Decline breakdown</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground/70">Issuer vs general failures today</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 px-3 py-3 dark:bg-amber-950/20 dark:border-amber-700/30">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Issuer</p>
+                  <p className="mt-1 text-[1.25rem] font-bold tabular-nums text-amber-900 dark:text-amber-200 leading-none">
+                    {issuer.count}
+                    <span className="ml-1 text-[11px] font-normal text-amber-600 dark:text-amber-400">({issuer.pct}%)</span>
+                  </p>
+                  <div className="mt-2 space-y-0.5">
+                    {issuer.reasons.slice(0, 3).map(r => (
+                      <p key={r.reason} className="flex items-center justify-between text-[10px] text-amber-700 dark:text-amber-400">
+                        <span className="truncate pr-1">{r.reason}</span>
+                        <span className="shrink-0 font-semibold tabular-nums">{r.count}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/30 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">General</p>
+                  <p className="mt-1 text-[1.25rem] font-bold tabular-nums text-foreground leading-none">
+                    {general.count}
+                    <span className="ml-1 text-[11px] font-normal text-muted-foreground">({general.pct}%)</span>
+                  </p>
+                  <div className="mt-2 space-y-0.5">
+                    {general.reasons.map(r => (
+                      <p key={r.reason} className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="truncate pr-1">{r.reason}</span>
+                        <span className="shrink-0 font-semibold tabular-nums">{r.count}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Proportional bar */}
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-amber-400 transition-all duration-700"
+                  style={{ width: `${issuer.pct}%` }}
+                />
+              </div>
+              <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+                <span>Issuer {issuer.pct}%</span>
+                <span>General {general.pct}%</span>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    case "charts_payment_flow_sankey":
+      return <PaymentFlowSankeyWidget preview={preview} />;
+
+    case "charts_abandonment_radar":
+      return <AbandonmentRadarWidget preview={preview} />;
+
     default: {
       const _exhaustive: never = widgetId;
       return _exhaustive;

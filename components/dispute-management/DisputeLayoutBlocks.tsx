@@ -89,15 +89,16 @@ export function DisputeStatsGrid({
   );
 }
 
-export function DisputeActionBanner({ stats }: { stats: DisputeStats }) {
-  const n = stats.open;
+export function DisputeActionBanner({ stats, merchantActionCount }: { stats: DisputeStats; merchantActionCount?: number }) {
+  const n = merchantActionCount ?? stats.open;
+  if (n === 0) return null;
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-      <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
+    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+      <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-600" />
       <p className="text-xs text-amber-700">
-        <span className="font-semibold">Action required:</span> You have {n} open dispute
-        {n !== 1 ? "s" : ""} that need{n === 1 ? "s" : ""} a response. Chargebacks not responded to
-        within the deadline are automatically lost.
+        <span className="font-semibold">Action required on your end:</span>{" "}
+        {n} dispute{n !== 1 ? "s" : ""} require{n === 1 ? "s" : ""} you to submit evidence or respond.
+        Chargebacks not responded to within the deadline are automatically lost.
       </p>
     </div>
   );

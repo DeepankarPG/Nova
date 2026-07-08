@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, type FocusEvent } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Plus,
   RefreshCw,
@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Calendar,
   Facebook,
+  SplitSquareHorizontal,
 } from "lucide-react";
 import { CurrencyAmountInput } from "@/components/ui/currency-amount-input";
 import { ViewPortal } from "@/components/layout/ViewPortal";
@@ -38,17 +39,20 @@ function FormLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => void; onCreate: (link: PaymentLink) => void }) {
-  const [currency,    setCurrency]    = useState("USD");
-  const [amount,      setAmount]      = useState("");
-  const [description, setDescription] = useState("");
-  const [fullName,    setFullName]    = useState("");
-  const [phone,       setPhone]       = useState("");
-  const [email,       setEmail]       = useState("");
-  const [notify,      setNotify]      = useState<string[]>(["SMS", "Email"]);
-  const [showBilling, setShowBilling] = useState(false);
-  const [expiry,      setExpiry]      = useState<"none" | "24h" | "7d" | "custom">("none");
-  const [creating,    setCreating]    = useState(false);
-  const [scrolled,    setScrolled]    = useState(false);
+  const [currency,       setCurrency]       = useState("USD");
+  const [amount,         setAmount]         = useState("");
+  const [description,    setDescription]    = useState("");
+  const [fullName,       setFullName]       = useState("");
+  const [phone,          setPhone]          = useState("");
+  const [email,          setEmail]          = useState("");
+  const [notify,         setNotify]         = useState<string[]>(["SMS", "Email"]);
+  const [showBilling,    setShowBilling]    = useState(false);
+  const [expiry,         setExpiry]         = useState<"none" | "24h" | "7d" | "custom">("none");
+  const [creating,       setCreating]       = useState(false);
+  const [scrolled,       setScrolled]       = useState(false);
+  const [partialEnabled, setPartialEnabled] = useState(false);
+  const [minAmount,      setMinAmount]      = useState("");
+  const [maxInstallments, setMaxInstallments] = useState("2");
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const toggleNotify = (ch: string) =>
@@ -60,8 +64,9 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
     if (!valid) return;
     setCreating(true);
     await new Promise((r) => setTimeout(r, 1400));
+    const id = `pl_${Math.random().toString(36).slice(2, 10)}`;
     const newLink: PaymentLink = {
-      id: `pl_${Math.random().toString(36).slice(2, 10)}`,
+      id,
       amount: parseFloat(amount),
       currency,
       status: "active",
@@ -73,6 +78,8 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
       expiresAt: expiry === "24h" ? "In 24 hrs" : expiry === "7d" ? "In 7 days" : null,
       notifyVia: notify,
       transactions: [],
+      shortUrl: `https://pay.gl/${id.slice(3, 11)}`,
+      partial: partialEnabled ? { enabled: true, minAmount: parseFloat(minAmount) || 0, maxInstallments: parseInt(maxInstallments) } : undefined,
     };
     setCreating(false);
     onCreate(newLink);
@@ -239,6 +246,67 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
             </div>
           )}
 
+          {/* ── Partial payments ── */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <SplitSquareHorizontal style={{ width: 14, height: 14, color: "#6b7280" }} />
+                <FormLabel>Allow partial payments</FormLabel>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPartialEnabled((p) => !p)}
+                role="switch"
+                aria-checked={partialEnabled}
+                className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
+                style={{ background: partialEnabled ? "#0061E3" : "#d1d5db" }}
+              >
+                <span
+                  className="inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform"
+                  style={{ transform: partialEnabled ? "translateX(16px)" : "translateX(2px)" }}
+                />
+              </button>
+            </div>
+            <AnimatePresence>
+              {partialEnabled && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="grid grid-cols-2 gap-3 rounded-xl p-4 mb-3" style={{ background: "#f6f8fa", border: "1px solid #e5e7eb" }}>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Min. payment amount</label>
+                      <input
+                        value={minAmount}
+                        onChange={(e) => setMinAmount(e.target.value)}
+                        placeholder={`Min in ${currency}`}
+                        type="number"
+                        className={inputCls}
+                        onFocus={focusIn} onBlur={focusOut}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Max installments</label>
+                      <select
+                        value={maxInstallments}
+                        onChange={(e) => setMaxInstallments(e.target.value)}
+                        className={cn(inputCls, "cursor-pointer")}
+                        onFocus={focusIn} onBlur={focusOut}
+                      >
+                        {["2", "3", "4", "6", "12"].map((n) => (
+                          <option key={n} value={n}>{n} payments</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* ── Link expiry ── */}
           <div>
             <FormLabel>Link expiry</FormLabel>
@@ -302,6 +370,8 @@ export function CreatePaymentLinkModal({ onClose, onCreate }: { onClose: () => v
 /* ─── Success modal ──────────────────────────────────────────────────────── */
 export function PaymentLinkSuccessModal({ link, onClose }: { link: PaymentLink; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [copiedShort, setCopiedShort] = useState(false);
+  const shortUrl = link.shortUrl ?? `https://pay.gl/${link.id.slice(3, 11)}`;
   const fakeUrl = `https://api.uat.payglocal.in/gl/.../payments/${link.id.slice(-8)}`;
   const currSym = link.currency === "INR" ? "₹" : link.currency === "USD" ? "$" : link.currency;
 
@@ -310,6 +380,13 @@ export function PaymentLinkSuccessModal({ link, onClose }: { link: PaymentLink; 
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success("Link copied!");
+  };
+
+  const copyShort = () => {
+    navigator.clipboard.writeText(shortUrl).catch(() => {});
+    setCopiedShort(true);
+    setTimeout(() => setCopiedShort(false), 2000);
+    toast.success("Short link copied!");
   };
 
   const notifyStr  = link.notifyVia.join(" & ");
@@ -360,10 +437,27 @@ export function PaymentLinkSuccessModal({ link, onClose }: { link: PaymentLink; 
             </div>
           </div>
 
-          {/* URL row */}
+          {/* Short URL row — prominent */}
+          <div className="w-full">
+            <p className="text-[11px] text-gray-400 font-medium mb-1.5 text-center">Short link</p>
+            <button
+              onClick={copyShort}
+              className="w-full flex items-center justify-between gap-2.5 px-4 py-3.5 rounded-xl transition-all hover:opacity-90"
+              style={{ background: "#0061E3" }}
+            >
+              <span className="text-[14px] font-bold text-white font-mono">{shortUrl.replace("https://", "")}</span>
+              <span className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-white/20">
+                {copiedShort
+                  ? <Check style={{ width: 13, height: 13, color: "white" }} />
+                  : <Copy style={{ width: 13, height: 13, color: "white" }} />}
+              </span>
+            </button>
+          </div>
+
+          {/* Full URL row */}
           <div className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl"
             style={{ background: "#f0f6ff", border: "1px solid #c7d9fb" }}>
-            <span className="flex-1 text-[12.5px] font-mono text-[#0061E3] truncate">{fakeUrl}</span>
+            <span className="flex-1 text-[11px] font-mono text-[#6b7280] truncate">{fakeUrl}</span>
             <button onClick={copyLink}
               className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#dceafe] transition-colors">
               <Copy style={{ width: 13, height: 13, color: "#0061E3" }} />

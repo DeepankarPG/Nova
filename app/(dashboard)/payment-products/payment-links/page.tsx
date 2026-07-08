@@ -34,6 +34,7 @@ const MOCK_LINKS: PaymentLink[] = [
     expiresAt: "21 Feb '26, 02:00 PM",
     notifyVia: ["SMS", "Email"],
     transactions: [],
+    shortUrl: "https://pay.gl/29ab32b1",
   },
   {
     id: "pl_38cd41c2",
@@ -507,28 +508,27 @@ function PaymentLinksInner() {
                   <p className="text-[13px] font-medium text-gray-700">{link.phone}</p>
                   <p className="text-[12px] text-gray-500">{link.email}</p>
                 </td>
-                {/* Payment link */}
+                {/* Payment link — short URL */}
                 <td className="px-4 py-3 max-w-0 w-[170px]">
                   {(() => {
-                    const url = `https://pay.payglocal.in/p/${link.id.slice(-8)}`;
-                    const slug = link.id.slice(-8);        // e.g. "yiim5863"
-                    const display = `https://…/${slug}`;   // "https://…/yiim5863"
+                    const shortUrl = link.shortUrl ?? `https://pay.gl/${link.id.slice(3, 11)}`;
+                    const display = shortUrl.replace("https://", "");
                     return (
                       <div className="group/link flex items-center gap-1.5 w-full overflow-hidden">
                         <span
-                          className="text-[12px] font-mono text-[#0061E3] truncate"
-                          title={url}
+                          className="text-[12px] font-bold font-mono text-[#0061E3] truncate"
+                          title={shortUrl}
                         >
                           {display}
                         </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigator.clipboard.writeText(url).catch(() => {});
-                            toast.success("Link copied!");
+                            navigator.clipboard.writeText(shortUrl).catch(() => {});
+                            toast.success("Short link copied!");
                           }}
                           className="flex-shrink-0 opacity-0 group-hover/link:opacity-100 transition-opacity w-6 h-6 rounded-md flex items-center justify-center bg-[#eff4ff] hover:bg-[#dceafe] border border-[#c7d9fb]"
-                          title="Copy link"
+                          title="Copy short link"
                         >
                           <Copy style={{ width: 11, height: 11, color: "#0061E3" }} />
                         </button>

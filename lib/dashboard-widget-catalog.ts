@@ -12,10 +12,15 @@ import {
   RefreshCw,
   Repeat,
   ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  SplitSquareHorizontal,
   Timer,
   TrendingUp,
   Users,
   Wallet,
+  Workflow,
+  Radar,
 } from "lucide-react";
 
 export const DASHBOARD_LAYOUT_STORAGE_KEY = "payglocal_dashboard_layout";
@@ -57,7 +62,12 @@ export type WidgetId =
   | "customers_top_table"
   | "risk_open_disputes_kpi"
   | "risk_dispute_rate_kpi"
-  | "risk_blocked_kpi";
+  | "risk_blocked_kpi"
+  | "charts_wallet_split"
+  | "charts_psr_by_mode"
+  | "charts_decline_breakdown"
+  | "charts_payment_flow_sankey"
+  | "charts_abandonment_radar";
 
 export type WidgetCatalogEntry = {
   id: WidgetId;
@@ -102,6 +112,11 @@ export const WIDGET_CATALOG: WidgetCatalogEntry[] = [
   { id: "risk_open_disputes_kpi", name: "Open Disputes", category: "Risk & Disputes", icon: AlertTriangle, lgColSpan: 4 },
   { id: "risk_dispute_rate_kpi", name: "Dispute Rate", category: "Risk & Disputes", icon: ShieldAlert, lgColSpan: 4 },
   { id: "risk_blocked_kpi", name: "Blocked Transactions", category: "Risk & Disputes", icon: Ban, lgColSpan: 4 },
+  { id: "charts_wallet_split", name: "Digital Wallets (Apple Pay / GPay)", category: "Payments", icon: Smartphone, lgColSpan: 4 },
+  { id: "charts_psr_by_mode", name: "Success Rate by Payment Mode", category: "Payments", icon: ShieldCheck, lgColSpan: 4 },
+  { id: "charts_decline_breakdown", name: "Decline Breakdown (Issuer vs General)", category: "Risk & Disputes", icon: SplitSquareHorizontal, lgColSpan: 4 },
+  { id: "charts_payment_flow_sankey", name: "Payment Flow (Sankey)", category: "Charts", icon: Workflow, lgColSpan: 12 },
+  { id: "charts_abandonment_radar", name: "Abandonment Reasons (Radar)", category: "Risk & Disputes", icon: Radar, lgColSpan: 12 },
 ];
 
 export const WIDGET_BY_ID: Record<WidgetId, WidgetCatalogEntry> = WIDGET_CATALOG.reduce(

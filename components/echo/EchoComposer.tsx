@@ -15,9 +15,15 @@ import { cn } from "@/lib/utils";
 type Props = {
   onSend: (text: string, files: string[]) => void;
   disabled?: boolean;
+  /** Hide the "Add context of this page" chip (e.g. in mobile sheet). */
+  hidePageContext?: boolean;
+  /** Override the textarea placeholder. */
+  placeholder?: string;
+  /** Hide the divider line above the attachment/send toolbar row. */
+  hideToolbarDivider?: boolean;
 };
 
-export function EchoComposer({ onSend, disabled }: Props) {
+export function EchoComposer({ onSend, disabled, hidePageContext = false, placeholder, hideToolbarDivider = false }: Props) {
   const pathname = usePathname() ?? "/";
   const pageContext = getEchoPageContextLabel(pathname);
 
@@ -63,7 +69,7 @@ export function EchoComposer({ onSend, disabled }: Props) {
           "dark:bg-card/95"
         )}
       >
-        <div className="mb-2 flex justify-start">
+        {!hidePageContext && <div className="mb-2 flex justify-start">
           {pageContextActive ? (
             <span
               className={cn(
@@ -117,7 +123,7 @@ export function EchoComposer({ onSend, disabled }: Props) {
               <span>Add context of this page</span>
             </button>
           )}
-        </div>
+        </div>}
 
         {files.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">
@@ -148,11 +154,11 @@ export function EchoComposer({ onSend, disabled }: Props) {
           onKeyDown={onKeyDown}
           disabled={disabled}
           rows={2}
-          placeholder="Ask Echo anything…"
+          placeholder={placeholder ?? "Ask Echo anything…"}
           className="max-h-32 min-h-[44px] w-full resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
         />
 
-        <div className="mt-2 flex items-center gap-2 border-t border-border/60 pt-2">
+        <div className={cn("mt-2 flex items-center gap-2 pt-2", !hideToolbarDivider && "border-t border-border/60")}>
           <input
             ref={inputRef}
             type="file"
@@ -174,7 +180,7 @@ export function EchoComposer({ onSend, disabled }: Props) {
           >
             <Paperclip className="h-[17px] w-[17px]" strokeWidth={2} />
           </button>
-          {!pageContextActive && (
+          {!pageContextActive && !hidePageContext && (
             <span className="text-[12px] font-medium text-muted-foreground">
               Auto
             </span>

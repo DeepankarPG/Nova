@@ -23,6 +23,8 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { cn, formatTableDateTime } from "@/lib/utils";
 import { allTransactions } from "@/lib/mock-data";
 import { toast } from "sonner";
+import { useWorkspace } from "@/lib/workspace-context";
+import { ALL_BUSINESSES_ID } from "@/lib/workspace-types";
 
 type Transaction = typeof allTransactions[number];
 
@@ -251,11 +253,16 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [methodFilter, setMethodFilter] = useState("All");
   const [isExporting, setIsExporting] = useState(false);
+  const { activeBusinessId, activeBusiness, group } = useWorkspace();
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
+
+  const scopeSubtitle = activeBusiness
+    ? `${activeBusiness.name} · ${activeBusiness.primaryAccount.mid}`
+    : `${group.name} · All Businesses`;
 
   const filtered = useMemo(() => allTransactions.filter((tx) => {
     const matchSearch  = !search || tx.customerName.toLowerCase().includes(search.toLowerCase()) || tx.email.toLowerCase().includes(search.toLowerCase()) || tx.id.toLowerCase().includes(search.toLowerCase());
@@ -277,7 +284,7 @@ export default function TransactionsPage() {
     <div className="w-full max-w-[1400px] space-y-4">
       <PageHeader
         title="Transactions"
-        subtitle={`${allTransactions.length} total transactions`}
+        subtitle={scopeSubtitle}
         actions={
           <Button variant="outline" size="sm" leftIcon={<Download className="w-3.5 h-3.5" />}
             isLoading={isExporting} onClick={handleExport}>
@@ -396,7 +403,7 @@ export default function TransactionsPage() {
 
       {hasActive && !isLoading && (
         <p className="text-xs text-gray-400">
-          Showing <span className="font-semibold text-gray-600">{filtered.length}</span> of {allTransactions.length}
+          Showing <span className="font-semibold text-gray-600">{filtered.length}</span> of {allTransactions.length} transactions
         </p>
       )}
 

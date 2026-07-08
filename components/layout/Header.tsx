@@ -1,27 +1,14 @@
 "use client";
 
-import { Search, Bell, HelpCircle, Menu, Plus, FileText, Link2, CreditCard, Repeat2, Send } from "lucide-react";
+import { Search, Bell, HelpCircle, Menu, Plus, FileText, Link2, CreditCard, Repeat2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { MerchantSelector } from "./MerchantSelector";
 import { AskEchoButton } from "./AskEchoButton";
+import { ProductTabBar } from "@/components/layout/ProductTabBar";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-declare global {
-  interface Window {
-    figma?: {
-      captureForDesign?: (options?: {
-        selector?: string;
-        captureId?: string;
-        endpoint?: string;
-        verbose?: boolean;
-        delayMs?: number;
-      }) => Promise<{ success?: boolean; error?: string } | unknown>;
-    };
-  }
-}
 
 const SEARCH_HINTS = [
   "Search transactions…",
@@ -41,7 +28,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [notifOpen,  setNotifOpen]  = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createHover, setCreateHover] = useState(false);
-  const [figmaCaptureReady, setFigmaCaptureReady] = useState(false);
   const notifRef  = useRef<HTMLDivElement>(null);
   const createRef = useRef<HTMLDivElement>(null);
 
@@ -71,44 +57,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* Figma capture script is loaded async from app layout */
-  useEffect(() => {
-    let active = true;
-    const checkReady = () => {
-      if (!active) return false;
-      const ready = typeof window !== "undefined" && typeof window.figma?.captureForDesign === "function";
-      setFigmaCaptureReady(ready);
-      return ready;
-    };
-    if (checkReady()) return () => { active = false; };
-    const id = window.setInterval(() => {
-      if (checkReady()) window.clearInterval(id);
-    }, 400);
-    return () => {
-      active = false;
-      window.clearInterval(id);
-    };
-  }, []);
-
-  const onSendToFigma = async () => {
-    const capture = window.figma?.captureForDesign;
-    if (typeof capture !== "function") {
-      toast.error("Send to Figma is not ready yet.");
-      return;
-    }
-    try {
-      const result = await capture({ selector: "main", delayMs: 120 });
-      if (result && typeof result === "object" && "success" in result && (result as { success?: boolean }).success === false) {
-        const err = (result as { error?: string }).error ?? "Capture failed.";
-        toast.error(err);
-        return;
-      }
-      toast.success("Sent to Figma.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send to Figma.");
-    }
-  };
-
   const MOCK_NOTIFS = [
     { id: 1, title: "Settlement processed",   body: "₹1,24,890 settled to HDFC ****4521",  time: "2m ago",  dot: "bg-green-400" },
     { id: 2, title: "New dispute raised",      body: "TXN #tx_00312 — Chargeback filed",    time: "18m ago", dot: "bg-red-400" },
@@ -128,8 +76,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* ── Merchant selector ── */}
-      <MerchantSelector />
+      {/* ── Product tabs (desktop, left-aligned) ── */}
+      <ProductTabBar inHeader />
 
       {/* ── Spacer ── */}
       <div className="flex-1" />
@@ -225,18 +173,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
           className="w-9 h-9 rounded-lg bg-muted border border-border hover:bg-accent flex items-center justify-center transition-colors"
         >
           <HelpCircle className="w-[17px] h-[17px] text-muted-foreground" />
-        </button>
-
-        {/* Figma capture (MCP html-to-design script) */}
-        <button
-          type="button"
-          onClick={() => void onSendToFigma()}
-          className="w-9 h-9 rounded-lg bg-muted border border-border hover:bg-accent flex items-center justify-center transition-colors disabled:cursor-not-allowed disabled:opacity-55"
-          aria-label="Send page to Figma"
-          title={figmaCaptureReady ? "Send page to Figma" : "Figma capture is loading"}
-          disabled={!figmaCaptureReady}
-        >
-          <Send className="w-[17px] h-[17px] text-muted-foreground" />
         </button>
 
         <AskEchoButton />
