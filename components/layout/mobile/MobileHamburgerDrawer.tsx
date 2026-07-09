@@ -15,6 +15,7 @@ import {
   BadgeCheck,
   Settings2,
   MessageCircle,
+  MessageSquarePlus,
   LogOut,
   ChevronRight,
   ChevronDown,
@@ -51,8 +52,9 @@ const DRAWER_NAV = [
   {
     label: "Settings",
     items: [
-      { label: "Settings",         href: "/settings/app",      icon: Settings2     },
-      { label: "Contact Support",  href: "/contact-support",   icon: MessageCircle },
+      { label: "Settings",         href: "/settings/app",      icon: Settings2        },
+      { label: "Contact Support",  href: "/contact-support",   icon: MessageCircle    },
+      { label: "Add feedback",     href: "/add-feedback",      icon: MessageSquarePlus },
     ],
   },
 ] as const;
@@ -66,6 +68,7 @@ interface MobileHamburgerDrawerProps {
   onDisputesTap?: () => void;
   onAppSettingsTap?: () => void;
   onContactSupportTap?: () => void;
+  onAddFeedbackTap?:    () => void;
 }
 
 export function MobileHamburgerDrawer({
@@ -77,6 +80,7 @@ export function MobileHamburgerDrawer({
   onDisputesTap,
   onAppSettingsTap,
   onContactSupportTap,
+  onAddFeedbackTap,
 }: MobileHamburgerDrawerProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const pathname       = usePathname();
@@ -253,6 +257,14 @@ export function MobileHamburgerDrawer({
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onContactSupportTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/add-feedback" && onAddFeedbackTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onAddFeedbackTap(); }}
                               className={rowClass} style={itemStyle}
                             >{inner}</button>
                           );

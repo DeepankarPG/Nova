@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useProfileAvatar } from "@/hooks/useProfileAvatar";
 import { useWorkspace } from "@/lib/workspace-context";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 
 // Existing settings page components — rendered as-is inside the mobile overlay.
 // NOTE: These pages are designed for desktop widths and may overflow the 393px phone frame.
@@ -43,6 +44,7 @@ import { MobileInviteTeamMember }      from "@/components/dashboard/mobile/Mobil
 import { MobileShareFeedback }         from "@/components/dashboard/mobile/MobileShareFeedback";
 import { MobileIntegrations }          from "@/components/dashboard/mobile/MobileIntegrations";
 import { MobileWebhooks }              from "@/components/dashboard/mobile/MobileWebhooks";
+import { MobileAddFeedback }           from "@/components/dashboard/mobile/MobileAddFeedback";
 import {
   HeaderActionsContext,
   useHeaderActionsProvider,
@@ -72,7 +74,8 @@ type DetailKey =
   | "invite_team_member"
   | "share_feedback"
   | "integrations"
-  | "webhooks";
+  | "webhooks"
+  | "add_feedback";
 
 const DETAIL_TITLES: Record<DetailKey, string> = {
   "personal":          "Personal details",
@@ -90,6 +93,7 @@ const DETAIL_TITLES: Record<DetailKey, string> = {
   "share_feedback":       "Share feedback",
   "integrations":         "Integrations",
   "webhooks":             "Webhooks",
+  "add_feedback":         "Feedback",
 };
 
 /* ── Business Details — three-tab view ──────────────────────────── */
@@ -103,6 +107,7 @@ const BUSINESS_TABS: { id: BusinessTab; label: string }[] = [
 
 function BusinessDetailsTabbed() {
   const [activeTab, setActiveTab] = useState<BusinessTab>("details");
+  const tabScrollRef = useHorizontalScroll<HTMLDivElement>();
 
   return (
     <>
@@ -110,21 +115,29 @@ function BusinessDetailsTabbed() {
           bar spans edge-to-edge and sits flush against the header border.
           Tabs switch by unmounting the inactive component — dirty state is lost
           on switch, consistent with pressing Back also discarding unsaved changes. */}
-      <div className="sticky top-0 z-10 -mx-4 -mt-5 px-4 pb-2 bg-white dark:bg-zinc-950 border-b border-border/40">
-        <div className="flex gap-1 bg-muted/60 p-1 rounded-xl">
-          {BUSINESS_TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveTab(t.id)}
-              className={cn(
-                "flex-1 py-1.5 text-[11.5px] font-medium rounded-lg transition-colors truncate",
-                activeTab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
+      <div className="sticky top-0 z-10 -mx-4 -mt-5 bg-white dark:bg-zinc-950 border-b border-border/50">
+        <div ref={tabScrollRef} className="[&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
+        <div className="flex w-max">
+          {BUSINESS_TABS.map((t) => {
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id)}
+                className={cn(
+                  "relative shrink-0 px-4 h-10 text-[13.5px] whitespace-nowrap transition-colors",
+                  active ? "font-semibold text-primary" : "font-normal text-muted-foreground"
+                )}
+              >
+                {t.label}
+                {active && (
+                  <span className="absolute inset-x-4 bottom-0 h-[2.5px] bg-primary rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
         </div>
       </div>
 
@@ -154,6 +167,7 @@ function DetailContent({ screen }: { screen: DetailKey }) {
     case "share_feedback":      return <MobileShareFeedback />;
     case "integrations":        return <MobileIntegrations />;
     case "webhooks":            return <MobileWebhooks />;
+    case "add_feedback":        return <MobileAddFeedback />;
   }
 }
 

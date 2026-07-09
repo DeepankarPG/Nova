@@ -56,29 +56,27 @@ const PHONE_W = 393;
 const PHONE_H = 780;
 
 /* ── Carousel slides for login screen ── */
+/* ── Illustration srcs — rendered as background-image so background-size: cover
+   works reliably in Safari iOS (objectFit on SVG <img> is broken in WebKit). ── */
 const slides = [
   {
     id: "settlements",
-    // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_1.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
-    header: "Complete visibility into every payment",
+    illustrationSrc: "/Illustration 1.svg",
+    header: "Track every transaction as it happens",
   },
   {
     id: "analytics",
-    // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_2.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
-    header: "Understand your business with real-time insights",
+    illustrationSrc: "/Illustration 2.svg",
+    header: "Instant visibility into every settlement",
   },
   {
     id: "payment-links",
-    // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_3.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
+    illustrationSrc: "/Illustration 3.svg",
     header: "Share a link, get paid instantly",
   },
   {
     id: "echo",
-    // eslint-disable-next-line @next/next/no-img-element
-    illustration: <img src="/Card_4.png" alt="" width="78%" height="210" style={{ objectFit: "contain", display: "block" }} />,
+    illustrationSrc: "/Card_4.png",
     header: "Meet Echo, your payment assistant",
   },
 ];
@@ -206,7 +204,7 @@ function AppStage() {
   const [disputesOpen,        setDisputesOpen]        = useState(false);
   const [appSettingsOpen,        setAppSettingsOpen]        = useState(false);
   const [accountSettingsOpen,    setAccountSettingsOpen]    = useState(false);
-  const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | undefined>(undefined);
+  const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | "add_feedback" | undefined>(undefined);
 
   /* ── In-frame toast ── */
   type FrameToast = { id: number; message: string; type: "success" | "error" };
@@ -532,7 +530,7 @@ function AppStage() {
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
         contained
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} onAddFeedbackTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("add_feedback"); setAccountSettingsOpen(true); }} />
       <MobileEbrc open={ebrcOpen} onClose={() => setEbrcOpen(false)} contained />
       <MobileDisputes open={disputesOpen} onClose={() => setDisputesOpen(false)} contained />
       <MobileAppSettings open={appSettingsOpen} onClose={() => setAppSettingsOpen(false)} contained />
@@ -1167,32 +1165,20 @@ function PreviewScreen() {
             exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
           >
-            {/* Carousel — illustration + dots at bottom */}
+            {/* Carousel — full-bleed illustration layer + logo + dots overlaid */}
             <div
               style={{
                 height: 455,
                 flexShrink: 0,
+                position: "relative",
                 overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
               }}
               onTouchStart={() => { pausedRef.current = true; }}
               onTouchEnd={() => setTimeout(() => { pausedRef.current = false; }, 3000)}
             >
-              {/* Logo */}
+              {/* Illustration slides — absolute, full-bleed from top edge to bottom of carousel */}
               <motion.div
-                style={{ height: 156, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-                initial={{ y: loginFromSplashRef.current ? 48 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0 : 0 }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.svg" alt="PayGlocal" width={115} height={21} />
-              </motion.div>
-
-              {/* Illustration slides */}
-              <motion.div
-                style={{ flex: 1, position: "relative" }}
+                style={{ position: "absolute", inset: 0 }}
                 initial={{ y: loginFromSplashRef.current ? 48 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.05 : 0 }}
@@ -1203,21 +1189,31 @@ function PreviewScreen() {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      backgroundImage: `url(${JSON.stringify(slide.illustrationSrc)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center top",
+                      backgroundRepeat: "no-repeat",
                       opacity: i === activeIdx ? 1 : 0,
                       transition: "opacity 300ms ease-in-out",
                     }}
-                  >
-                    {slide.illustration}
-                  </div>
+                  />
                 ))}
               </motion.div>
 
-              {/* Pagination dots — centred, inside blue gradient */}
+              {/* Logo — absolute overlay, sits above illustration */}
               <motion.div
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "24px 24px 26px" }}
+                style={{ position: "absolute", top: 0, left: 0, right: 0, height: 156, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}
+                initial={{ y: loginFromSplashRef.current ? 48 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0 : 0 }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.svg" alt="PayGlocal" width={115} height={21} />
+              </motion.div>
+
+              {/* Pagination dots — absolute, pinned to bottom, overlays illustration */}
+              <motion.div
+                style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "24px 24px 26px", zIndex: 2 }}
                 initial={{ y: loginFromSplashRef.current ? 40 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: loginFromSplashRef.current ? 0.10 : 0 }}
