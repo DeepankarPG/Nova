@@ -977,18 +977,12 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
         </button>
       </div>
 
-      {/* Logo */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "16px 24px 0", flexShrink: 0 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/PG_blue.svg" alt="PayGlocal" width={115} height={21} />
-      </div>
-
       {/* Title + subtitle */}
-      <div style={{ padding: "20px 24px 0", flexShrink: 0 }}>
-        <p style={{ fontSize: 22, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.2, textAlign: "center" }}>
+      <div style={{ padding: "16px 24px 0", flexShrink: 0 }}>
+        <p style={{ fontSize: 22, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.2 }}>
           Sign in to your Account
         </p>
-        <p style={{ fontSize: 13, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5, textAlign: "center" }}>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5 }}>
           Enter your email and password to log in
         </p>
       </div>
@@ -1095,12 +1089,9 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
         </button>
       </div>
 
-      {/* Spacer */}
-      <div style={{ flex: 1, minHeight: 16 }} />
-
       {/* Sign up link */}
-      <div style={{ padding: "0 24px 28px", flexShrink: 0 }}>
-        <p style={{ textAlign: "center", margin: 0, fontSize: 13, color: "#6B7280" }}>
+      <div style={{ padding: "16px 24px 24px", flexShrink: 0 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#6B7280" }}>
           Don&apos;t have an account?{" "}
           <span style={{ color: "#007AFF", fontWeight: 500, cursor: "pointer" }}>Sign up</span>
         </p>
