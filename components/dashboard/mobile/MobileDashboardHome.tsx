@@ -554,6 +554,8 @@ function HeroCarousel({ metric, setMetric }: { metric: MetricKey; setMetric: (m:
 }
 
 /* ─── Merchant Pulse Card (primary hero) ─────────────────────────── */
+type ProductTab = "payment-gateway" | "multi-currency";
+
 function MerchantPulseCard({ metric, setMetric }: { metric: MetricKey; setMetric: (m: MetricKey) => void }) {
   const m = METRICS[metric];
   const { hidden } = useHideAmounts();
@@ -1022,12 +1024,50 @@ export function MobileDashboardHome({
   onDisputesOpen?: () => void;
 } = {}) {
   const [metric, setMetric] = useState<MetricKey>("gross");
+  const [productTab, setProductTab] = useState<ProductTab>("payment-gateway");
 
   return (
     <div className="flex flex-col gap-8 pt-1.5">
 
-      {/* ① Hero carousel — Gross Volume · Referral (2 slides) */}
-      <HeroCarousel metric={metric} setMetric={setMetric} />
+      {/* ① Segmented tab + hero carousel grouped — tab is a sibling above the carousel */}
+      <div>
+        <div className="px-4 mt-0.5 mb-3">
+          <div
+            className="rounded-xl p-0.75 flex"
+            style={{ background: "rgba(255,255,255,0.25)" }}
+          >
+            {(["payment-gateway", "multi-currency"] as const).map((id) => {
+              const label  = id === "payment-gateway" ? "Payment gateway" : "Multi-currency accounts";
+              const active = productTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setProductTab(id);
+                    // TODO: update KPI + chart data for selected product tab
+                    console.log("[Dashboard] product tab:", id);
+                  }}
+                  className={cn(
+                    "flex flex-1 items-center justify-center h-10 rounded-xl text-[12px] transition-all duration-150",
+                    active ? "text-primary font-semibold shadow-sm" : "font-normal"
+                  )}
+                  style={active ? { background: "rgba(255,255,255,0.85)" } : undefined}
+                >
+                  <span
+                    className={cn("text-center", !active && "text-muted-foreground")}
+                  >
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Hero carousel — Gross Volume · Referral (2 slides) */}
+        <HeroCarousel metric={metric} setMetric={setMetric} />
+      </div>
 
       {/* ④ Quick actions — icon + label only, no containers */}
       <QuickActionsSection onCreatePaymentLink={onCreatePaymentLink} onSettlementsOpen={onSettlementsOpen} onDisputesOpen={onDisputesOpen} />
