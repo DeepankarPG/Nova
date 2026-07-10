@@ -184,6 +184,7 @@ function AppStage() {
   const [txnFilterApplied, setTxnFilterApplied] = useState<FilterState>(emptyFilters());
   const [plusOpen,         setPlusOpen]         = useState(false);
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
+  const [intlPgMcaTab,     setIntlPgMcaTab]     = useState<"pg" | "mca">("pg");
   const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice" | "mca-links">("transactions");
   const [swipeDir,             setSwipeDir]             = useState(0);
   const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
@@ -283,8 +284,32 @@ function AppStage() {
           </button>
         </div>
       ) : (
-        <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
+        <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">International</h1>
+          <div className="bg-[#F5F5F5] dark:bg-muted rounded-full p-0.75 flex items-center">
+            {(["pg", "mca"] as const).map((id) => {
+              const active = intlPgMcaTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setIntlPgMcaTab(id);
+                    // TODO: filter account data by PG or MCA product type
+                    console.log("[International] product:", id.toUpperCase());
+                  }}
+                  className={cn(
+                    "flex items-center justify-center h-7.5 px-3 rounded-full text-[12px] transition-all duration-150",
+                    active
+                      ? "bg-white dark:bg-card text-primary font-semibold shadow-sm"
+                      : "bg-transparent text-muted-foreground font-normal"
+                  )}
+                >
+                  {id.toUpperCase()}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -480,12 +505,12 @@ function AppStage() {
           <div className="flex-1 flex items-center justify-center h-full">
             <button type="button" onClick={() => setPlusOpen(p => !p)}>
               <motion.div
-                className={cn("h-[38px] w-[38px] rounded-full flex items-center justify-center transition-colors",
-                  plusOpen ? "bg-primary" : "bg-muted/80 border border-border/60")}
+                className={cn("h-9.5 w-9.5 rounded-full flex items-center justify-center transition-colors",
+                  plusOpen ? "bg-muted/80 border border-border/60" : "bg-primary")}
                 animate={{ rotate: plusOpen ? 45 : 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 32 }}
               >
-                <Plus className={cn("h-5 w-5", plusOpen ? "text-white" : "text-muted-foreground")} strokeWidth={2} />
+                <Plus className={cn("h-5 w-5", plusOpen ? "text-muted-foreground" : "text-white")} strokeWidth={2} />
               </motion.div>
             </button>
           </div>
