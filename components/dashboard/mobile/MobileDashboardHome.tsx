@@ -1010,6 +1010,7 @@ function RecentTransactionsCard({ onTxnTap, onSeeAll }: { onTxnTap?: (txn: Recen
 /* ─── Root export ────────────────────────────────────────────────── */
 export function MobileDashboardHome({
   onCreatePaymentLink,
+  onMcaPaymentLinkBlocked,
   onTapToPay,
   onTxnTap,
   onSeeAllTransactions,
@@ -1017,6 +1018,7 @@ export function MobileDashboardHome({
   onDisputesOpen,
 }: {
   onCreatePaymentLink?: () => void;
+  onMcaPaymentLinkBlocked?: () => void;
   onTapToPay?: () => void;
   onTxnTap?: (txn: RecentTxnItem) => void;
   onSeeAllTransactions?: () => void;
@@ -1070,7 +1072,17 @@ export function MobileDashboardHome({
       </div>
 
       {/* ④ Quick actions — icon + label only, no containers */}
-      <QuickActionsSection onCreatePaymentLink={onCreatePaymentLink} onSettlementsOpen={onSettlementsOpen} onDisputesOpen={onDisputesOpen} />
+      <QuickActionsSection
+        onCreatePaymentLink={() => {
+          if (productTab === "multi-currency") {
+            onMcaPaymentLinkBlocked?.();
+          } else {
+            onCreatePaymentLink?.();
+          }
+        }}
+        onSettlementsOpen={onSettlementsOpen}
+        onDisputesOpen={onDisputesOpen}
+      />
 
       {/* ④ Needs attention */}
       <NeedsAttentionSection />

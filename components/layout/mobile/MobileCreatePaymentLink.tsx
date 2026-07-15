@@ -121,6 +121,53 @@ function displayAmount(raw: string, currencyCode: string): string {
   return decPart !== undefined ? `${formatted}.${decPart}` : formatted;
 }
 
+/* ─── Mock QR (visual only) ──────────────────────────────────────── */
+function MockQR({ size = 160 }: { size?: number }) {
+  const M = 21;
+  const CELL = size / M;
+
+  function finderDark(r: number, c: number): boolean {
+    if (r === 0 || r === 6 || c === 0 || c === 6) return true;
+    if (r === 1 || r === 5 || c === 1 || c === 5) return false;
+    return true;
+  }
+
+  function cellDark(r: number, c: number): boolean {
+    if (r < 7 && c < 7) return finderDark(r, c);
+    if (r < 7 && c >= M - 7) return finderDark(r, c - (M - 7));
+    if (r >= M - 7 && c < 7) return finderDark(r - (M - 7), c);
+    if (r === 7 && c <= 7) return false;
+    if (r === 7 && c >= M - 8) return false;
+    if (c === 7 && r <= 7) return false;
+    if (c === 7 && r >= M - 7) return false;
+    if (c === M - 8 && r <= 7) return false;
+    if (r === M - 8 && c <= 7) return false;
+    if (r === 6) return c % 2 === 0;
+    if (c === 6) return r % 2 === 0;
+    if (r === M - 8 && c === 8) return true;
+    const h = (r * 1664525 + c * 22695477) >>> 0;
+    return (h >> 15) % 2 === 0;
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }}>
+      <rect width={size} height={size} fill="white" />
+      {Array.from({ length: M }, (_, r) =>
+        Array.from({ length: M }, (_, c) =>
+          cellDark(r, c)
+            ? <rect key={`${r}-${c}`} x={c * CELL} y={r * CELL} width={CELL} height={CELL} fill="#1a1a1a" />
+            : null
+        )
+      )}
+    </svg>
+  );
+}
+
+function truncateUrl(url: string, maxLen = 38): string {
+  const s = url.replace(/^https?:\/\//, "");
+  return s.length <= maxLen ? s : `${s.slice(0, maxLen - 3)}...`;
+}
+
 /* ─── Props ───────────────────────────────────────────────────────── */
 interface Props { open:boolean; onClose:()=>void; contained?:boolean; }
 type Step = "amount" | "currency" | "dialCode" | "success";
@@ -145,6 +192,7 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
   const [customTime,    setCustomTime]    = useState("");
   const [searchQ,       setSearchQ]       = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [qrExpanded,    setQrExpanded]    = useState(false);
 
   const descRef = useRef<HTMLInputElement>(null);
 
@@ -205,6 +253,7 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
   };
 
   const handleClose = () => {
+    setQrExpanded(false);
     onClose();
     setTimeout(() => {
       setStep("amount"); setAmountRaw(""); setDescription(""); setFocusMode("amount");
@@ -554,6 +603,7 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
             {/* ── Success state ── */}
             {step === "success" && (
               <div className="flex flex-col flex-1 min-h-0">
+                {/* Header */}
                 <div className="flex justify-end px-4 pt-5 pb-2 shrink-0">
                   <button type="button" onClick={handleClose}
                     className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-muted/80 transition-colors"
@@ -562,83 +612,140 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                   </button>
                 </div>
 
-                <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 overflow-y-auto">
-                  {/* Checkmark */}
+                <div className="flex-1 overflow-y-auto px-5 pb-8">
+                  {/* 1. Success hero */}
                   <motion.div
-                    initial={{ scale:0, opacity:0 }} animate={{ scale:1, opacity:1 }}
-                    transition={{ type:"spring", stiffness:300, damping:22, delay:0.05 }}
-                    className="mb-6"
+                    initial={{ scale: 0.85, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.05 }}
+                    className="flex flex-col items-center text-center mb-6"
                   >
-                    <Lottie
-                      animationData={successAnim}
-                      loop={true}
-                      className="h-[115px] w-[115px]"
-                    />
-                  </motion.div>
-
-                  <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
-                    transition={{ duration:0.35, delay:0.25, ease:[0.22,1,0.36,1] }}
-                    className="text-center mb-8"
-                  >
-                    <h2 className="text-[22px] font-bold text-foreground mb-1.5">Payment link created!</h2>
+                    <Lottie animationData={successAnim} loop={false} className="h-[88px] w-[88px] mb-2" />
+                    <h2 className="text-[22px] font-bold text-foreground mb-1">Payment link created!</h2>
                     <p className="text-[14px] text-muted-foreground">
                       Share this link to collect{" "}
-                      <span className="font-semibold text-foreground">{sym} {displayAmount(amountRaw, currency)}</span>
+                      <span className="font-semibold text-foreground">
+                        {sym} {displayAmount(amountRaw, currency)}
+                      </span>
                       {description ? ` for ${description}` : ""}
                     </p>
                   </motion.div>
 
-                  {/* Link card */}
-                  <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
-                    transition={{ duration:0.35, delay:0.35, ease:[0.22,1,0.36,1] }}
-                    className="w-full mb-6"
+                  {/* 2. Payment link details card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.32, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full rounded-2xl border border-border bg-card mb-4 overflow-hidden"
                   >
-                    <div className="rounded-2xl border border-border bg-card p-4">
+                    <div className="px-4 pt-4 pb-3">
                       <p className="text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Payment link</p>
-                      <p className="text-[20px] font-bold text-foreground tabular-nums mb-0.5">{sym} {displayAmount(amountRaw, currency)}</p>
-                      {description && <p className="text-[13px] text-muted-foreground mb-2">{description}</p>}
-                      <p className="text-[12px] text-muted-foreground mb-2">
-                        Expires in:{" "}
-                        {expiry === "custom"
-                          ? `${customDate} at ${customTime}`
-                          : EXPIRY_OPTS.find(e => e.id === expiry)?.label}
+                      <p className="text-[26px] font-bold text-foreground tabular-nums leading-tight mb-0.5">
+                        {sym} {displayAmount(amountRaw, currency)}
                       </p>
-                      <p className="font-mono text-[11px] text-muted-foreground break-all mt-2 mb-4">{generatedLink}</p>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={handleCopy}
-                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition-opacity"
+                      {description && (
+                        <p className="text-[13px] text-muted-foreground mt-0.5">{description}</p>
+                      )}
+                    </div>
+
+                    <div className="border-t border-border/50 mx-4" />
+
+                    <div className="px-4 py-3 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[13px] text-muted-foreground">Expires in</span>
+                        <span className="text-[13px] font-medium text-foreground">
+                          {expiry === "custom"
+                            ? (customDate ? `${customDate}${customTime ? ` at ${customTime}` : ""}` : "Custom")
+                            : EXPIRY_OPTS.find(e => e.id === expiry)?.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-mono text-[11.5px] text-muted-foreground truncate flex-1 min-w-0">
+                          {truncateUrl(generatedLink)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleCopy}
+                          className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0"
+                          aria-label="Copy link"
                         >
-                          <Copy className="h-4 w-4" strokeWidth={2} /> Copy link
-                        </button>
-                        <button type="button" onClick={async () => {
-                          if (navigator.share) {
-                            try { await navigator.share({ title:`Payment — ${sym} ${amountRaw}`, url:generatedLink }); }
-                            catch {}
-                          } else { handleCopy(); }
-                        }}
-                          className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-muted transition-colors"
-                        >
-                          <Share2 className="h-4 w-4" strokeWidth={2} /> Share
+                          <Copy className="h-3.5 w-3.5" strokeWidth={2} />
                         </button>
                       </div>
                     </div>
+
+                    <div className="border-t border-border/50 mx-4" />
+
+                    <div className="px-4 py-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition-opacity"
+                      >
+                        <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+                        Copy link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (navigator.share) {
+                            try {
+                              await navigator.share({
+                                title: `Payment link - ${sym} ${displayAmount(amountRaw, currency)}`,
+                                url: generatedLink,
+                              });
+                            } catch {}
+                          } else {
+                            handleCopy();
+                          }
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent py-2.5 text-[13px] font-semibold text-foreground hover:bg-muted transition-colors"
+                      >
+                        <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
+                        Share
+                      </button>
+                    </div>
                   </motion.div>
 
-                  <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.45 }}
-                    className="flex flex-col items-center gap-3 w-full"
+                  {/* 3. QR code card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.32, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full rounded-2xl border border-border bg-card px-4 pt-4 pb-4 mb-6"
                   >
-                    <a href="/payment-products/payment-links"
-                      className="flex items-center gap-1.5 text-[13px] text-primary font-semibold"
+                    <p className="text-[14px] font-semibold text-foreground mb-1">Scan to Pay</p>
+                    <p className="text-[12.5px] text-muted-foreground mb-4 leading-relaxed">
+                      Customers can scan this QR code to complete the payment.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setQrExpanded(true)}
+                      className="w-full flex justify-center active:scale-[0.97] transition-transform duration-150"
+                      aria-label="Tap to enlarge QR code"
                     >
-                      View all payment links
-                    </a>
-                    <button type="button"
+                      <div className="rounded-xl overflow-hidden shadow-sm border border-border/40">
+                        <MockQR size={168} />
+                      </div>
+                    </button>
+                    <p className="text-center text-[11.5px] text-muted-foreground/70 mt-3">Tap to enlarge</p>
+                  </motion.div>
+
+                  {/* 4. Create another */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.25, delay: 0.42 }}
+                    className="flex justify-center"
+                  >
+                    <button
+                      type="button"
                       onClick={() => {
                         setStep("amount"); setAmountRaw(""); setDescription("");
-                        setExpiry("24h"); setCustomDate(""); setCustomTime(""); setGeneratedLink("");
-                        setCustName(""); setCustEmail(""); setCustPhone("");
+                        setExpiry("24h"); setCustomDate(""); setCustomTime("");
+                        setGeneratedLink(""); setCustName(""); setCustEmail(""); setCustPhone("");
                       }}
-                      className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-[13px] text-primary font-medium hover:opacity-80 transition-opacity"
                     >
                       Create another link
                     </button>
@@ -646,6 +753,63 @@ export function MobileCreatePaymentLink({ open, onClose, contained=false }: Prop
                 </div>
               </div>
             )}
+
+            {/* Full-screen QR overlay */}
+            <AnimatePresence>
+              {qrExpanded && (
+                <>
+                  <motion.div
+                    key="qr-bd"
+                    className="absolute inset-0 z-20 bg-black/80"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => setQrExpanded(false)}
+                  />
+                  <motion.div
+                    key="qr-overlay"
+                    className="absolute inset-0 z-30 flex flex-col"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Close button at top */}
+                    <div className="flex justify-end px-4 pt-5 pb-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setQrExpanded(false)}
+                        className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      >
+                        <X className="h-5 w-5" strokeWidth={2} />
+                      </button>
+                    </div>
+
+                    {/* QR card */}
+                    <div className="flex-1 flex flex-col items-center justify-center px-8 pointer-events-none">
+                      <motion.div
+                        initial={{ scale: 0.82, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.82, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                        className="bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl pointer-events-auto"
+                      >
+                        <MockQR size={248} />
+                        <p className="text-[14px] font-semibold text-gray-800 mt-4">
+                          {sym} {displayAmount(amountRaw, currency)}
+                        </p>
+                        {description && (
+                          <p className="text-[12px] text-gray-500 mt-0.5">{description}</p>
+                        )}
+                      </motion.div>
+                    </div>
+
+                    <div className="shrink-0 h-16" />
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}

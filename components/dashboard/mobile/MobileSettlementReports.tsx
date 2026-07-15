@@ -73,7 +73,7 @@ function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: nu
   const pts   = data.map((v, i) => `${i * step},${h - pad - ((v - min) / range) * (h - pad * 2)}`).join(" ");
   const lastX = (data.length - 1) * step;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ overflow: "visible", display: "block" }}>
       <polygon points={`0,${h} ${pts} ${lastX},${h}`} fill={color} fillOpacity={0.12} />
       <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>

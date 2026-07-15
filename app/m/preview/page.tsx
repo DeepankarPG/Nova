@@ -6,6 +6,7 @@ import Image from "next/image";
 import {
   House, ArrowUpDown, ArrowLeft, BarChart3, Globe,
   Bell, Eye, EyeClosed, Plus, Link2, Nfc, Settings2, FilePlus2, Zap,
+  ChevronDown, Check, X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MobileSplashScreen }        from "@/components/layout/mobile/MobileSplashScreen";
@@ -45,7 +46,7 @@ import {
 } from "@/components/dashboard/mobile/MobileInternational";
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider } from "@/lib/hide-amounts-context";
-import { WorkspaceProvider } from "@/lib/workspace-context";
+import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
 import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
 import type { FilterState, FilterCat } from "@/components/dashboard/mobile/MobileFilterDrawer";
@@ -175,6 +176,7 @@ function AppStage() {
   const [echoOpen,         setEchoOpen]         = useState(false);
   const [notifsOpen,       setNotifsOpen]       = useState(false);
   const [paymentLinkOpen,  setPaymentLinkOpen]  = useState(false);
+  const [mcaPaymentLinkWarning, setMcaPaymentLinkWarning] = useState(false);
   const [mcaLinkOpen,      setMcaLinkOpen]      = useState(false);
   const [tapToPayOpen,     setTapToPayOpen]     = useState(false);
   const [filterOpen,       setFilterOpen]       = useState<FilterId | null>(null);
@@ -184,7 +186,9 @@ function AppStage() {
   const [txnFilterApplied, setTxnFilterApplied] = useState<FilterState>(emptyFilters());
   const [plusOpen,         setPlusOpen]         = useState(false);
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
-  const [intlPgMcaTab,     setIntlPgMcaTab]     = useState<"pg" | "mca">("pg");
+  const [intlMidSheetOpen, setIntlMidSheetOpen] = useState(false);
+  const { mids }                                = useWorkspace();
+  const [intlSelectedMidId, setIntlSelectedMidId] = useState(mids[0]?.id ?? "");
   const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice" | "mca-links">("transactions");
   const [swipeDir,             setSwipeDir]             = useState(0);
   const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
@@ -264,15 +268,8 @@ function AppStage() {
           </div>
         </div>
       ) : activeTab === "txns" ? (
-        <div className="flex items-center justify-between px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
+        <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">Payments</h1>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setNotifsOpen(true)}
-              className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
-              <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
-              <span className="absolute top-[9px] right-[9px] h-[7px] w-[7px] rounded-full bg-red-500 border-[1.5px] border-background" aria-hidden />
-            </button>
-          </div>
         </div>
       ) : activeTab === "analytics" ? (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
@@ -286,30 +283,23 @@ function AppStage() {
       ) : (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">International</h1>
-          <div className="bg-[#F5F5F5] dark:bg-muted rounded-full p-0.75 flex items-center">
-            {(["pg", "mca"] as const).map((id) => {
-              const active = intlPgMcaTab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    setIntlPgMcaTab(id);
-                    // TODO: filter account data by PG or MCA product type
-                    console.log("[International] product:", id.toUpperCase());
-                  }}
-                  className={cn(
-                    "flex items-center justify-center h-7.5 px-3 rounded-full text-[12px] transition-all duration-150",
-                    active
-                      ? "bg-white dark:bg-card text-primary font-semibold shadow-sm"
-                      : "bg-transparent text-muted-foreground font-normal"
-                  )}
-                >
-                  {id.toUpperCase()}
-                </button>
-              );
-            })}
-          </div>
+          {/* MID selector pill */}
+          {(() => {
+            const selectedMid = mids.find(m => m.id === intlSelectedMidId) ?? mids[0];
+            return (
+              <button
+                type="button"
+                onClick={() => setIntlMidSheetOpen(true)}
+                className="flex items-center gap-1.5 h-7.5 px-3 rounded-full bg-[#F5F5F5] dark:bg-muted"
+                style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+              >
+                <span className="text-[12px] font-semibold text-primary leading-none">
+                  {"••••" + (selectedMid?.maskedId ?? "")}
+                </span>
+                <ChevronDown className="h-3 w-3 text-primary" strokeWidth={2.5} />
+              </button>
+            );
+          })()}
         </div>
       )}
 
@@ -373,6 +363,7 @@ function AppStage() {
            ) :
            <MobileDashboardHome
              onCreatePaymentLink={() => setPaymentLinkOpen(true)}
+             onMcaPaymentLinkBlocked={() => setMcaPaymentLinkWarning(true)}
              onTapToPay={() => setTapToPayOpen(true)}
              onTxnTap={setSelectedTxn}
              onSeeAllTransactions={() => setActiveTab("txns")}
@@ -619,6 +610,87 @@ function AppStage() {
               onClose={() => { setTxnFilterOpen(false); setTxnFilterCat(null); }}
             />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MID Selector Sheet ── */}
+      <AnimatePresence>
+        {intlMidSheetOpen && (
+          <>
+            <motion.div
+              key="mid-sheet-bd"
+              className="absolute inset-0 z-50 bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22 }}
+              onClick={() => setIntlMidSheetOpen(false)}
+            />
+            <motion.div
+              key="mid-sheet"
+              className="absolute inset-x-0 bottom-0 z-51 bg-background rounded-t-3xl overflow-hidden"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="h-1 w-10 rounded-full bg-foreground/20" />
+              </div>
+              {/* Sheet header */}
+              <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-border/50">
+                <p className="text-[17px] font-bold text-foreground">Select merchant</p>
+                <button
+                  type="button"
+                  onClick={() => setIntlMidSheetOpen(false)}
+                  className="h-8 w-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+              {/* MID list */}
+              <div className="overflow-y-auto" style={{ maxHeight: "55vh" }}>
+                {mids.map((mid, i) => {
+                  const isSelected = mid.id === intlSelectedMidId;
+                  return (
+                    <button
+                      key={mid.id}
+                      type="button"
+                      onClick={() => {
+                        setIntlSelectedMidId(mid.id);
+                        setIntlMidSheetOpen(false);
+                        // TODO: reload international account data for selected MID
+                        console.log("[International] MID selected:", mid.id, mid.name);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-5 text-left transition-colors active:bg-muted/40",
+                        i > 0 && "border-t border-border/50"
+                      )}
+                      style={{ minHeight: 56 }}
+                    >
+                      <div className="py-3">
+                        <p className={cn("text-[15px] font-semibold leading-snug", isSelected ? "text-primary" : "text-foreground")}>
+                          {mid.name}
+                        </p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {"MID ••••" + mid.maskedId}
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                          <Check className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Safe area spacer */}
+              <div style={{ height: "env(safe-area-inset-bottom, 16px)" }} />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -876,6 +948,56 @@ function AppStage() {
               onBack={invoicePreviewFromEdit ? () => { setSelectedInvoice(null); setInvoicePreviewFromEdit(false); } : undefined}
             />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MCA payment link blocked sheet ── */}
+      <AnimatePresence>
+        {mcaPaymentLinkWarning && (
+          <>
+            <motion.div
+              key="mca-pl-warn-backdrop"
+              className="absolute inset-0 z-110 bg-black/30"
+              style={{ backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMcaPaymentLinkWarning(false)}
+            />
+            <motion.div
+              key="mca-pl-warn-sheet"
+              className="absolute inset-x-0 bottom-0 z-111 bg-background rounded-t-3xl px-4 pt-5 pb-8"
+              style={{ boxShadow: "0 -4px 24px rgba(0,0,0,0.12)" }}
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            >
+              <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-5" />
+              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-amber-50 mx-auto mb-4">
+                <Link2 className="h-6 w-6 text-amber-500" strokeWidth={2} />
+              </div>
+              <p className="text-[16px] font-bold text-foreground text-center mb-2">
+                Not available for MCA
+              </p>
+              <p className="text-[13px] text-muted-foreground text-center leading-relaxed mb-6 px-2">
+                Payment links can&apos;t be created for Multi-currency accounts. Use MCA links to collect payments from customers instead.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMcaPaymentLinkWarning(false)}
+                  className="flex-1 py-3.5 rounded-2xl border border-border text-[14.5px] font-semibold text-foreground active:bg-muted/30 transition-colors"
+                >
+                  Dismiss
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMcaPaymentLinkWarning(false); setMcaLinkOpen(true); }}
+                  className="flex-1 py-3.5 rounded-2xl bg-primary text-[14.5px] font-semibold text-primary-foreground active:opacity-90 transition-opacity"
+                >
+                  Create MCA link
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
