@@ -8,9 +8,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
 } from "recharts";
 import {
-  ChevronDown, ArrowDownLeft,
+  ChevronDown,
   Link2, Receipt, Globe, FileText, Scale,
-  XCircle, Clock,
+  Clock,
   ChevronRight, AlertTriangle, AlertCircle, TrendingUp, ArrowUpRight,
   Wallet, CreditCard, Landmark,
 } from "lucide-react";
@@ -44,6 +44,14 @@ const RECENT_TXN = [
   { id: "tx3", name: "SwiftPay Ltd",   amount: "₹890",    method: "Net Banking", status: "failed"  as const, time: "34m ago" },
   { id: "tx4", name: "Ananya Kapoor",  amount: "₹2,100",  method: "UPI",         status: "pending" as const, time: "1h ago"  },
   { id: "tx5", name: "Globaltech Inc", amount: "₹67,800", method: "Card",        status: "success" as const, time: "2h ago"  },
+];
+
+const MCA_TXN = [
+  { id: "mca1", name: "Acme Corp",      amount: "$2,400",  method: "Wire",  status: "success" as const, time: "5m ago"  },
+  { id: "mca2", name: "Tech Solutions", amount: "€1,850",  method: "SWIFT", status: "success" as const, time: "22m ago" },
+  { id: "mca3", name: "Global Retail",  amount: "£900",    method: "Card",  status: "failed"  as const, time: "48m ago" },
+  { id: "mca4", name: "SingTel Pte",    amount: "S$5,200", method: "Wire",  status: "pending" as const, time: "2h ago"  },
+  { id: "mca5", name: "Yamada Trading", amount: "¥84,000", method: "SWIFT", status: "success" as const, time: "3h ago"  },
 ];
 
 type MetricKey = "gross" | "net" | "count";
@@ -81,16 +89,13 @@ const STATUS_BADGE = {
   pending: { label: "Pending",   text: "text-amber-700 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-950/40"     },
 } as const;
 
-const TXN_ICON = {
-  success: ArrowDownLeft,
-  failed:  XCircle,
-  pending: Clock,
-} as const;
 
 const METHOD_ICON: Record<string, React.ElementType> = {
   "UPI":         Wallet,
   "Card":        CreditCard,
   "Net Banking": Landmark,
+  "Wire":        Globe,
+  "SWIFT":       Globe,
 };
 
 const AMOUNT_COLOR: Record<string, string> = {
@@ -915,93 +920,142 @@ function NeedsAttentionSection() {
 const TXN_TABS = ["all", "success", "failed"] as const;
 type TxnTab = typeof TXN_TABS[number];
 
-function RecentTransactionsCard({ onTxnTap, onSeeAll }: { onTxnTap?: (txn: RecentTxnItem) => void; onSeeAll?: () => void } = {}) {
-  const [tab, setTab] = useState<TxnTab>("all");
+function RecentTransactionsCard({
+  onTxnTap,
+  onSeeAll,
+  productTab,
+  onProductTabChange,
+}: {
+  onTxnTap?: (txn: RecentTxnItem) => void;
+  onSeeAll?: () => void;
+  productTab: ProductTab;
+  onProductTabChange: (tab: ProductTab) => void;
+}) {
+  const [txnTab, setTxnTab] = useState<TxnTab>("all");
   const { hidden } = useHideAmounts();
 
-  const filtered = tab === "all"
-    ? RECENT_TXN
-    : RECENT_TXN.filter((t) => (tab === "success" ? t.status === "success" : t.status === "failed"));
+  const txnData = productTab === "payment-gateway" ? RECENT_TXN : MCA_TXN;
+  const filtered = txnTab === "all"
+    ? txnData
+    : txnData.filter(t => t.status === txnTab);
 
   return (
     <div className="mx-4">
-      <div className="rounded-xl bg-card overflow-hidden border border-border shadow-sm">
-        {/* Header — reduced from 15px to 13px */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2.5">
+      <div className="rounded-xl border border-border shadow-sm bg-card overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-0">
           <p className="text-[15px] font-semibold text-foreground">Recent transactions</p>
-          <button type="button" onClick={onSeeAll} className="text-[11.5px] font-semibold text-primary active:opacity-60 transition-opacity">
+          <button
+            type="button"
+            onClick={onSeeAll}
+            className="text-[11.5px] font-semibold text-primary active:opacity-60 transition-opacity"
+          >
             See all
           </button>
         </div>
 
-        {/* Tab pills */}
-        <div className="mx-4 mb-3 bg-muted/50 rounded-lg p-1 flex gap-1">
-          {TXN_TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "flex-1 py-1 rounded-md text-[11px] font-medium capitalize transition-all duration-150",
-                tab === t
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground"
-              )}
-            >
-              {t === "all" ? "All" : t === "success" ? "Success" : "Failed"}
-            </button>
-          ))}
+        {/* Account segmented control — full-width mode switch */}
+        <div className="px-4 pt-4">
+          <div className="bg-muted/40 rounded-xl p-0.75 flex">
+            {(["payment-gateway", "multi-currency"] as const).map((id) => {
+              const active = productTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onProductTabChange(id)}
+                  className={cn(
+                    "flex flex-1 items-center justify-center h-9 rounded-xl text-[12.5px] transition-all duration-150",
+                    active
+                      ? "bg-card text-primary font-semibold shadow-sm"
+                      : "font-normal text-muted-foreground"
+                  )}
+                >
+                  {id === "payment-gateway" ? "Payment Gateway" : "Multi-Currency Accounts"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Transaction rows */}
-        <div className="divide-y divide-border border-t border-border min-h-[260px]">
-          {filtered.length === 0 ? (
-            <p className="px-4 py-8 text-center text-[12px] text-muted-foreground">No transactions</p>
-          ) : filtered.map((txn) => {
-            const Icon      = TXN_ICON[txn.status];
-            const badge     = STATUS_BADGE[txn.status];
-            const isSuccess = txn.status === "success";
-            const isFailed  = txn.status === "failed";
-
-            const MethodIcon = METHOD_ICON[txn.method] ?? Wallet;
-            return (
+        {/* Status segmented control — compact filter */}
+        <div className="px-4 pt-3">
+          <div className="bg-muted/50 rounded-lg p-1 flex gap-1">
+            {TXN_TABS.map(t => (
               <button
+                key={t}
                 type="button"
-                key={txn.id}
-                onClick={() => onTxnTap?.(txn)}
-                className="flex items-start justify-between gap-3 px-4 py-3.5 w-full text-left active:bg-muted/30 transition-colors duration-100"
+                onClick={() => setTxnTab(t)}
+                className={cn(
+                  "flex-1 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all duration-150",
+                  txnTab === t
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                )}
               >
-                {/* Left block */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">
-                    {txn.name}
-                  </p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <MethodIcon className="h-[12px] w-[12px] text-muted-foreground shrink-0" strokeWidth={1.75} />
-                    <p className="text-[12px] text-muted-foreground leading-snug">{txn.method}</p>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{txn.time}</p>
-                </div>
-
-                {/* Right block */}
-                <div className="shrink-0 text-right">
-                  <p className={cn("text-[13.5px] font-bold tabular-nums leading-snug", AMOUNT_COLOR[txn.status])}>
-                    <MaskedNumber
-                      value={`${isSuccess ? "+" : isFailed ? "−" : ""}${txn.amount}`}
-                      hidden={hidden}
-                    />
-                  </p>
-                  <span className={cn(
-                    "mt-0.5 inline-block text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full",
-                    badge.text, badge.bg
-                  )}>
-                    {badge.label}
-                  </span>
-                </div>
+                {t === "all" ? "All" : t === "success" ? "Success" : "Failed"}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
+
+        {/* Transaction list */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${productTab}-${txnTab}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="divide-y divide-border border-t border-border mt-4 min-h-60"
+          >
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-1.5">
+                <p className="text-[13px] font-semibold text-foreground">No transactions found</p>
+                <p className="text-[12px] text-muted-foreground text-center px-8 leading-relaxed">
+                  No {txnTab !== "all" ? txnTab : ""} transactions for this account yet.
+                </p>
+              </div>
+            ) : filtered.map(txn => {
+              const badge     = STATUS_BADGE[txn.status];
+              const isSuccess = txn.status === "success";
+              const isFailed  = txn.status === "failed";
+              const MethodIcon = METHOD_ICON[txn.method] ?? Wallet;
+              return (
+                <button
+                  type="button"
+                  key={txn.id}
+                  onClick={() => onTxnTap?.(txn)}
+                  className="flex items-start justify-between gap-3 px-4 py-3.5 w-full text-left active:bg-muted/30 transition-colors duration-100"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-foreground leading-snug truncate">{txn.name}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <MethodIcon className="h-3 w-3 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                      <p className="text-[12px] text-muted-foreground leading-snug">{txn.method}</p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{txn.time}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className={cn("text-[13.5px] font-bold tabular-nums leading-snug", AMOUNT_COLOR[txn.status])}>
+                      <MaskedNumber
+                        value={`${isSuccess ? "+" : isFailed ? "−" : ""}${txn.amount}`}
+                        hidden={hidden}
+                      />
+                    </p>
+                    <span className={cn(
+                      "mt-0.5 inline-block text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full",
+                      badge.text, badge.bg
+                    )}>
+                      {badge.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -1031,45 +1085,7 @@ export function MobileDashboardHome({
   return (
     <div className="flex flex-col gap-8 pt-1.5">
 
-      {/* ① Segmented tab + hero carousel grouped — tab is a sibling above the carousel */}
-      <div>
-        <div className="px-4 mt-0.5 mb-3">
-          <div
-            className="rounded-xl p-0.75 flex"
-            style={{ background: "rgba(255,255,255,0.25)" }}
-          >
-            {(["payment-gateway", "multi-currency"] as const).map((id) => {
-              const label  = id === "payment-gateway" ? "Payment gateway" : "Multi-currency accounts";
-              const active = productTab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    setProductTab(id);
-                    // TODO: update KPI + chart data for selected product tab
-                    console.log("[Dashboard] product tab:", id);
-                  }}
-                  className={cn(
-                    "flex flex-1 items-center justify-center h-10 rounded-xl text-[12px] transition-all duration-150",
-                    active ? "text-primary font-semibold shadow-sm" : "font-normal"
-                  )}
-                  style={active ? { background: "rgba(255,255,255,0.85)" } : undefined}
-                >
-                  <span
-                    className={cn("text-center", !active && "text-muted-foreground")}
-                  >
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Hero carousel — Gross Volume · Referral (2 slides) */}
-        <HeroCarousel metric={metric} setMetric={setMetric} />
-      </div>
+      <HeroCarousel metric={metric} setMetric={setMetric} />
 
       {/* ④ Quick actions — icon + label only, no containers */}
       <QuickActionsSection
@@ -1088,7 +1104,12 @@ export function MobileDashboardHome({
       <NeedsAttentionSection />
 
       {/* ⑤ Recent transactions */}
-      <RecentTransactionsCard onTxnTap={onTxnTap} onSeeAll={onSeeAllTransactions} />
+      <RecentTransactionsCard
+        onTxnTap={onTxnTap}
+        onSeeAll={onSeeAllTransactions}
+        productTab={productTab}
+        onProductTabChange={setProductTab}
+      />
 
       {/* Footer */}
       <Image
