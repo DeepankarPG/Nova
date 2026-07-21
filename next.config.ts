@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 const atlasDocsBase = process.env.ATLAS_DOCS_BASE_URL?.replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "flagcdn.com" },
+    ],
+  },
+  turbopack: {
+    root: process.cwd(),
+  },
   async redirects() {
     const base = [
       {

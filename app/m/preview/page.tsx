@@ -10,7 +10,7 @@ import { MobileEchoSheet } from "@/components/layout/mobile/MobileEchoSheet";
 import { MobileDashboardHome } from "@/components/dashboard/mobile/MobileDashboardHome";
 import { MobileAnalytics } from "@/components/dashboard/mobile/MobileAnalytics";
 import { MobileTransactions } from "@/components/dashboard/mobile/MobileTransactions";
-import { MobileInternational, CountrySheet, COUNTRIES } from "@/components/dashboard/mobile/MobileInternational";
+import { MobileInternational, COUNTRIES } from "@/components/dashboard/mobile/MobileInternational";
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
 import { MobileNotifications } from "@/components/layout/mobile/MobileNotifications";
@@ -62,7 +62,6 @@ function PreviewScreen() {
   const [appliedFilters, setAppliedFilters] = useState<Partial<Record<FilterId, string>>>({});
   const [plusOpen, setPlusOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("home");
-  const [intlSheetOpen, setIntlSheetOpen] = useState(false);
   const [intlCountry, setIntlCountry] = useState<IntlCountry>(COUNTRIES[0]);
   const { hidden, toggle } = useHideAmounts();
 
@@ -155,9 +154,9 @@ function PreviewScreen() {
          ) :
          activeTab === "intl"       ? (
            <MobileInternational
-             onOpenCountrySheet={() => setIntlSheetOpen(true)}
              externalCountry={intlCountry}
              onCountryChange={setIntlCountry}
+             countryPickerVariant="carousel"
            />
          ) :
          <MobileDashboardHome onCreatePaymentLink={() => setPaymentLinkOpen(true)} onTapToPay={() => setTapToPayOpen(true)} />}
@@ -291,13 +290,6 @@ function PreviewScreen() {
       <MobileCreatePaymentLink open={paymentLinkOpen} onClose={() => setPaymentLinkOpen(false)} contained />
       <MobileTapToPay open={tapToPayOpen} onClose={() => setTapToPayOpen(false)} contained />
       <MobileHamburgerDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} contained />
-      <CountrySheet
-        open={intlSheetOpen}
-        selected={intlCountry}
-        onSelect={setIntlCountry}
-        onClose={() => setIntlSheetOpen(false)}
-        contained
-      />
       <MobileFilterSheet
         open={filterOpen}
         onClose={() => setFilterOpen(null)}

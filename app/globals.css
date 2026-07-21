@@ -39,6 +39,11 @@ body {
 *:hover { scrollbar-color: #d1d5db transparent; }
 .dark *:hover { scrollbar-color: #4b5563 transparent; }
 
+/* Fully hide scrollbar (e.g. horizontal card carousels) — scrolling still works */
+.scrollbar-hidden::-webkit-scrollbar { display: none; }
+.scrollbar-hidden { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-hidden:hover::-webkit-scrollbar-thumb { background: transparent; }
+
 /* ─── Shimmer ────────────────────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
