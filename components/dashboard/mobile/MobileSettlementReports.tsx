@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import {
-  ArrowLeft, Banknote,
-  Download, Copy, Check, X, ChevronDown, Info,
+  ArrowLeft, ArrowUpRight, Banknote,
+  Download, Copy, Check, X, Info,
   Landmark, RefreshCw,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,8 +13,13 @@ import { allSettlements } from "@/lib/mock-data";
 
 type Settlement = typeof allSettlements[number];
 
-/* ── Settlement overview metrics ──────────────────────────────────────────── */
-type SettlePeriod = "1D" | "1W" | "1M" | "3M" | "YTD";
+/* ── Settlement overview metric (Total settled card) ─────────────────────── */
+const TOTAL_SETTLED = {
+  amount:         "₹5.07L",
+  delta:          "+12.3% vs last",
+  deltaPositive:  true,
+  spark:          [280, 320, 380, 360, 430, 480, 530, 507],
+};
 
 /* ── Settlement list tab filter ───────────────────────────────────────────── */
 type SettleTab = "all" | "settled" | "processing";
@@ -24,44 +29,6 @@ const SETTLE_TABS: { id: SettleTab; label: string }[] = [
   { id: "settled",    label: "Settled"    },
   { id: "processing", label: "Processing" },
 ];
-
-const SETTLE_PERIODS: { id: SettlePeriod; label: string }[] = [
-  { id: "1D",  label: "Today"        },
-  { id: "1W",  label: "1 Week"       },
-  { id: "1M",  label: "1 Month"      },
-  { id: "3M",  label: "3 Months"     },
-  { id: "YTD", label: "Year to date" },
-];
-
-const SETTLE_PERIOD_LABELS: Record<SettlePeriod, string> = {
-  "1D":  "Settlement overview",
-  "1W":  "Settlement overview",
-  "1M":  "Settlement overview",
-  "3M":  "Settlement overview",
-  "YTD": "Settlement overview",
-};
-
-type SettleMetric = {
-  totalSettled: string; settleDelta: string; settleDeltaPos: boolean;
-  processing: string;   procDelta: string;   procDeltaPos: boolean;
-};
-
-const SETTLE_METRICS: Record<SettlePeriod, SettleMetric> = {
-  "1D":  { totalSettled: "₹5.07L",  settleDelta: "+12.3% vs last", settleDeltaPos: true,  processing: "₹1,24,890.5", procDelta: "+5.1%", procDeltaPos: true  },
-  "1W":  { totalSettled: "₹28.4L",  settleDelta: "+8.7% vs last",  settleDeltaPos: true,  processing: "₹4,12,300",   procDelta: "+3.2%", procDeltaPos: true  },
-  "1M":  { totalSettled: "₹1.24Cr", settleDelta: "+15.2% vs last", settleDeltaPos: true,  processing: "₹18,40,500",  procDelta: "+6.8%", procDeltaPos: true  },
-  "3M":  { totalSettled: "₹3.68Cr", settleDelta: "+11.4% vs last", settleDeltaPos: true,  processing: "₹52,30,800",  procDelta: "-2.1%", procDeltaPos: false },
-  "YTD": { totalSettled: "₹8.19Cr", settleDelta: "+22.1% vs last", settleDeltaPos: true,  processing: "₹93,14,200",  procDelta: "+9.4%", procDeltaPos: true  },
-};
-
-
-const SETTLE_SPARK: Record<SettlePeriod, { settled: number[]; processing: number[] }> = {
-  "1D":  { settled: [280, 320, 380, 360, 430, 480, 530, 507], processing: [80,  90,  110, 100, 130, 120, 145, 125] },
-  "1W":  { settled: [300, 350, 400, 380, 420, 460, 510, 540], processing: [90,  110, 130, 120, 150, 140, 160, 155] },
-  "1M":  { settled: [350, 400, 450, 430, 480, 520, 560, 580], processing: [100, 120, 140, 130, 160, 150, 175, 165] },
-  "3M":  { settled: [380, 420, 470, 450, 490, 530, 570, 550], processing: [110, 130, 150, 140, 160, 140, 155, 145] },
-  "YTD": { settled: [300, 380, 450, 480, 530, 590, 650, 700], processing: [80,  100, 130, 150, 170, 185, 200, 210] },
-};
 
 function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: number; h: number }) {
   if (data.length < 2) return null;
@@ -389,16 +356,14 @@ export interface MobileSettlementReportsProps {
 
 export function MobileSettlementReports({ open, onClose, contained = false, onTxnLinkTap }: MobileSettlementReportsProps) {
   const [selectedId,          setSelectedId]          = useState<string | null>(null);
-  const [settlePeriod,        setSettlePeriod]        = useState<SettlePeriod>("1D");
-  const [settleDropdownOpen,  setSettleDropdownOpen]  = useState(false);
   const [settleTab,           setSettleTab]           = useState<SettleTab>("all");
   const [cycleDetailsOpen,    setCycleDetailsOpen]    = useState(false);
 
   const pos        = contained ? "absolute" : "fixed";
   const filtered = settleTab === "all" ? allSettlements : allSettlements.filter(s => s.status === settleTab);
   const selected = selectedId ? (allSettlements.find(s => s.id === selectedId) ?? null) : null;
-  const sm      = SETTLE_METRICS[settlePeriod];
-  const todayProcessing = SETTLE_METRICS["1D"].processing;
+  const previousSettlement = allSettlements.find(s => s.status === "settled") ?? null;
+  const upcomingSettlement = allSettlements.find(s => s.status === "processing") ?? null;
 
   return (
     <AnimatePresence>
@@ -439,78 +404,70 @@ export function MobileSettlementReports({ open, onClose, contained = false, onTx
             <div className="px-4 pt-4 space-y-2.5">
 
               {/* Header row */}
-              <div className="flex items-center justify-between">
-                <p className="text-[14px] font-bold text-foreground leading-none">
-                  {SETTLE_PERIOD_LABELS[settlePeriod]}
-                </p>
-                <div className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setSettleDropdownOpen(p => !p)}
-                    className="flex items-center gap-1.5 px-3 h-[34px] rounded-xl border border-border bg-white text-[12.5px] font-medium text-foreground active:bg-muted/40 transition-colors"
-                  >
-                    {SETTLE_PERIODS.find(p => p.id === settlePeriod)?.label}
-                    <ChevronDown
-                      className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-150", settleDropdownOpen && "rotate-180")}
-                      strokeWidth={2}
-                    />
-                  </button>
-                  {settleDropdownOpen && (
-                    <>
-                      <div className="fixed inset-0 z-[19]" onClick={() => setSettleDropdownOpen(false)} />
-                      <div
-                        className="absolute right-0 top-full mt-1.5 bg-white rounded-2xl border border-border overflow-hidden min-w-[130px] z-[20]"
-                        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}
-                      >
-                        {SETTLE_PERIODS.map(p => {
-                          const active = p.id === settlePeriod;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => { setSettlePeriod(p.id); setSettleDropdownOpen(false); }}
-                              className={cn(
-                                "w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors",
-                                active ? "bg-muted/40" : "active:bg-muted/30"
-                              )}
-                            >
-                              <span className={cn("text-[13px]", active ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                                {p.label}
-                              </span>
-                              {active && <Check className="h-3.5 w-3.5 text-primary shrink-0 ml-3" strokeWidth={2.5} />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+              <p className="text-[14px] font-bold text-foreground leading-none">
+                Settlement overview
+              </p>
 
               {/* Total Settled — full-width primary metric */}
               <div className="rounded-xl border border-border bg-card px-3.5 py-3 flex flex-col">
                 <p className="text-[11px] font-medium text-muted-foreground leading-none mb-1.5">Total settled</p>
-                <p className="text-[20px] font-medium text-foreground tabular-nums leading-tight">{sm.totalSettled}</p>
-                <p className={cn("text-[11px] font-medium mt-1", sm.settleDeltaPos ? "text-emerald-600" : "text-red-600")}>
-                  {sm.settleDelta}
+                <p className="text-[20px] font-medium text-foreground tabular-nums leading-tight">{TOTAL_SETTLED.amount}</p>
+                <p className={cn("text-[11px] font-medium mt-1", TOTAL_SETTLED.deltaPositive ? "text-emerald-600" : "text-red-600")}>
+                  {TOTAL_SETTLED.delta}
                 </p>
                 <div className="mt-2">
-                  <Sparkline data={SETTLE_SPARK[settlePeriod].settled} color="#10b981" w={280} h={36} />
+                  <Sparkline data={TOTAL_SETTLED.spark} color="#10b981" w={280} h={36} />
                 </div>
               </div>
+
+              {/* Previous settled + Upcoming settlement — side by side */}
+              {(previousSettlement || upcomingSettlement) && (
+                <div className="grid grid-cols-2 gap-2.5 items-stretch">
+                  {previousSettlement && (
+                    <div className="rounded-xl border border-border bg-card px-3 py-3 flex flex-col h-full">
+                      <p className="text-[10.5px] font-medium text-muted-foreground leading-none mb-2">Previous settled</p>
+                      <p
+                        className="font-bold text-foreground tabular-nums leading-none tracking-tight"
+                        style={{ fontSize: "clamp(15px, 4.8vw, 18px)" }}
+                      >
+                        {fmtAmount(previousSettlement.amount)}
+                      </p>
+                      <p className="text-[10.5px] font-medium text-muted-foreground mt-2">
+                        {fmtDate(previousSettlement.date)}
+                      </p>
+                    </div>
+                  )}
+
+                  {upcomingSettlement && (
+                    <div className="rounded-xl border border-primary/25 bg-primary/[0.04] px-3 py-3 flex flex-col h-full">
+                      <div className="flex items-center gap-1 mb-2">
+                        <div className="h-4 w-4 rounded-full bg-primary/12 flex items-center justify-center shrink-0">
+                          <ArrowUpRight className="h-2.5 w-2.5 text-primary" strokeWidth={2.5} />
+                        </div>
+                        <p className="text-[10.5px] font-medium text-primary leading-none truncate">
+                          Upcoming settlement
+                        </p>
+                      </div>
+                      <p
+                        className="font-bold text-foreground tabular-nums leading-none tracking-tight"
+                        style={{ fontSize: "clamp(15px, 4.8vw, 18px)" }}
+                      >
+                        {fmtAmount(upcomingSettlement.amount)}
+                      </p>
+                      <p className="text-[10.5px] font-medium text-muted-foreground mt-2 leading-snug">
+                        Tonight · 12:00 AM IST
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Today's Settlement Cycle */}
-            <div className="mx-4 mt-4 bg-card border border-border rounded-xl px-4 pt-4 pb-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[14px] font-medium text-foreground">Today&apos;s Settlement Cycle</p>
-                  <span className="text-[11px] text-muted-foreground font-medium">Settles at 11:59 PM IST</span>
-                </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1">Processing</p>
-                  <p className="text-[16px] font-semibold text-foreground tabular-nums leading-tight">{todayProcessing}</p>
-                </div>
+            {/* Your Settlement Cycle */}
+            <div className="mx-4 mt-6 bg-card border border-border rounded-xl px-4 pt-4 pb-5">
+              <div className="mb-4">
+                <p className="text-[14px] font-medium text-foreground">Your settlement cycle</p>
+                <span className="text-[11px] text-muted-foreground font-medium">Settles at 11:59 PM IST</span>
               </div>
               <SettlementStepper />
             </div>
