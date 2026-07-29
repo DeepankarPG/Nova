@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { disputes } from "@/lib/mock-data";
 import type { DisputeMockRow } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/ui/status-badge";
-import type { DisputePrimaryTabKey } from "@/components/dispute-management/DisputeLayoutBlocks";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
@@ -55,13 +54,34 @@ const FILTER_CHIPS = [
   "Evidence due by",
 ] as const;
 
-const CARD_TABS: { key: DisputePrimaryTabKey; label: string }[] = [
-  { key: "all",          label: "All"            },
-  { key: "open",         label: "Needs response" },
-  { key: "under_review", label: "In review"      },
-  { key: "won",          label: "Won"            },
-  { key: "lost",         label: "Lost"           },
-];
+/* ── Overview metrics sparkline trend (illustrative) ─────────────────────── */
+const DISPUTE_SPARK = {
+  needsAction: [5, 4.6, 4, 3.4, 3, 2.6, 2.2, 2],
+  won:         [0, 0.1, 0.3, 0.4, 0.6, 0.7, 0.9, 1],
+  lost:        [2, 1.8, 1.6, 1.4, 1.2, 1.1, 1, 1],
+  inReview:    [0, 0.3, 0.6, 0.8, 0.9, 1, 1, 1],
+};
+
+/* ── Sparkline — matches Transactions/Settlement overview cards ──────────── */
+function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: number; h: number }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const pad = 2;
+  const step = w / (data.length - 1);
+  const pts = data.map((v, i) =>
+    `${i * step},${h - pad - ((v - min) / range) * (h - pad * 2)}`
+  ).join(" ");
+  const lastX = (data.length - 1) * step;
+  const area = `0,${h} ${pts} ${lastX},${h}`;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+      <polygon points={area} fill={color} fillOpacity={0.12} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 /* ── CopyBtn ──────────────────────────────────────────────────────────────── */
 
@@ -243,16 +263,18 @@ export function MobileDisputes({
 }) {
   const pos = contained ? "absolute" : "fixed";
 
-  const [activeTab,       setActiveTab]       = useState<DisputePrimaryTabKey>("all");
   const [selectedDispute, setSelectedDispute] = useState<DisputeMockRow | null>(null);
   const [searchQuery,     setSearchQuery]     = useState("");
 
-  const chipsRef    = useHorizontalScroll<HTMLDivElement>();
-  const tabScrollRef = useHorizontalScroll<HTMLDivElement>();
+  const chipsRef = useHorizontalScroll<HTMLDivElement>();
+
+  const needsActionCount = disputes.filter(d => d.status === "open" || d.status === "under_review").length;
+  const wonCount          = disputes.filter(d => d.status === "won").length;
+  const lostCount         = disputes.filter(d => d.status === "lost").length;
+  const inReviewCount     = disputes.filter(d => d.status === "under_review").length;
 
   const q = searchQuery.trim().toLowerCase();
   const filtered = disputes
-    .filter(d => activeTab === "all" || d.status === activeTab)
     .filter(d =>
       !q ||
       d.customerName.toLowerCase().includes(q) ||
@@ -295,6 +317,57 @@ export function MobileDisputes({
               <p className="text-[13px] font-medium text-foreground leading-snug flex-1 min-w-0">
                 This page is optimised for desktop. For the full experience, open PayGlocal on a larger screen.
               </p>
+            </div>
+
+            {/* Dispute overview metrics */}
+            <div className="px-4 mb-3 space-y-2.5">
+              <p className="text-[14px] font-bold text-foreground leading-none">Dispute overview</p>
+
+              {/* Card A — Needs action */}
+              <div className="rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5 flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-medium text-muted-foreground mb-1">Needs action</p>
+                  <p className="text-[26px] font-bold text-foreground tabular-nums leading-tight">
+                    {needsActionCount}
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <Sparkline data={DISPUTE_SPARK.needsAction} color="#f59e0b" w={120} h={48} />
+                </div>
+              </div>
+
+              {/* Cards B / C / D */}
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+                  <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Disputes won</p>
+                  <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+                    {wonCount}
+                  </p>
+                  <div className="mt-2">
+                    <Sparkline data={DISPUTE_SPARK.won} color="#10b981" w={80} h={28} />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+                  <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Disputes lost</p>
+                  <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+                    {lostCount}
+                  </p>
+                  <div className="mt-2">
+                    <Sparkline data={DISPUTE_SPARK.lost} color="#ef4444" w={80} h={28} />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+                  <p className="text-[10px] font-medium text-muted-foreground leading-none mb-1.5">Disputes in review</p>
+                  <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+                    {inReviewCount}
+                  </p>
+                  <div className="mt-2">
+                    <Sparkline data={DISPUTE_SPARK.inReview} color="#3b82f6" w={80} h={28} />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* All Disputes card */}
@@ -355,29 +428,6 @@ export function MobileDisputes({
                     >
                       <Plus className="h-[11px] w-[11px] text-muted-foreground/60 shrink-0" strokeWidth={2} />
                       {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Segmented tab bar */}
-              <div
-                ref={tabScrollRef}
-                className="mx-4 mb-3 [&::-webkit-scrollbar]:hidden"
-                style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}
-              >
-                <div className="flex gap-1 bg-muted/60 p-1 rounded-xl w-max min-w-full">
-                  {CARD_TABS.map((t) => (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setActiveTab(t.key)}
-                      className={cn(
-                        "flex-1 shrink-0 py-1.5 px-4 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
-                        activeTab === t.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                      )}
-                    >
-                      {t.label}
                     </button>
                   ))}
                 </div>
