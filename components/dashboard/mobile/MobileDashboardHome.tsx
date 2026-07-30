@@ -114,6 +114,7 @@ const BANNER_SLIDES: Array<{
   body: string;
   cta: string;
   href: string;
+  enabled?: boolean;
 }> = [
   { severity: "info",    icon: Globe,         headline: "International Payments Now Live",  body: "Accept USD, EUR & GBP with automatic FX settlement.",   cta: "Learn More",   href: "/payment-products/international-accounts" },
   { severity: "info",    icon: Link2,         headline: "Generate Links with Echo",          body: "Create and share payment links directly through chat.", cta: "Try Now",      href: "/echo" },
@@ -122,6 +123,11 @@ const BANNER_SLIDES: Array<{
   { severity: "alert",   icon: AlertCircle,   headline: "Dispute Action Required",           body: "Document upload pending for 4 disputes.",              cta: "Review Now",   href: "/dispute-management" },
   { severity: "alert",   icon: Clock,         headline: "Funds on Hold",                     body: "₹52,340 requires action before release.",              cta: "Take Action",  href: "/settlement-reports" },
 ];
+
+const ACTIVE_BANNER_SLIDES = BANNER_SLIDES.filter(s => s.enabled !== false);
+
+/* Master switch for the whole running-notifications banner carousel. */
+const BANNER_CAROUSEL_ENABLED = false;
 
 const BANNER_THEME: Record<BannerSeverity, {
   surface:       string;
@@ -168,7 +174,7 @@ const BANNER_THEME: Record<BannerSeverity, {
 export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
   const [idx, setIdx] = useState(0);
   const [dragStart, setDragStart] = useState<number | null>(null);
-  const total = BANNER_SLIDES.length;
+  const total = ACTIVE_BANNER_SLIDES.length;
 
   useEffect(() => {
     const t = setInterval(() => setIdx(i => (i + 1) % total), 5000);
@@ -182,6 +188,8 @@ export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
     if (Math.abs(dx) > 40) setIdx(i => (i + (dx < 0 ? 1 : -1) + total) % total);
     setDragStart(null);
   }
+
+  if (!BANNER_CAROUSEL_ENABLED) return null;
 
   return (
     /* Outer container — bg-background so content behind is covered.
@@ -205,7 +213,7 @@ export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
             transition:"transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)",
           }}
         >
-          {BANNER_SLIDES.map((slide, i) => {
+          {ACTIVE_BANNER_SLIDES.map((slide, i) => {
             const Icon  = slide.icon;
             const theme = BANNER_THEME[slide.severity] ?? BANNER_THEME.info;
             return (
@@ -255,7 +263,7 @@ export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
 
                 {/* Dot indicators — active dot uses severity accent color */}
                 <div className="flex justify-center items-center gap-1.5 py-2">
-                  {BANNER_SLIDES.map((_, di) => (
+                  {ACTIVE_BANNER_SLIDES.map((_, di) => (
                     <button
                       key={di}
                       type="button"
@@ -280,7 +288,7 @@ export function BannerCarousel({ onOpen }: { onOpen?: () => void } = {}) {
 }
 
 /* ─── Critical slides (warning + alert only, excludes blue/info) ─── */
-const CRITICAL_SLIDES = BANNER_SLIDES.filter(s => s.severity !== "info");
+const CRITICAL_SLIDES = ACTIVE_BANNER_SLIDES.filter(s => s.severity !== "info");
 
 /* ─── Single notification card — identical markup to BannerCarousel ─ */
 function BannerNotificationCard({ slide }: { slide: typeof BANNER_SLIDES[number] }) {

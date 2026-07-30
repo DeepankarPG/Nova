@@ -1572,6 +1572,22 @@ export default function MobilePreviewPage() {
             </HideAmountsProvider>
           </WorkspaceProvider>
         </div>
+
+        {/* Notch */}
+        <div
+          className="pointer-events-none absolute"
+          style={{
+            top: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 132,
+            height: 32,
+            background: "#000",
+            borderRadius: "0 0 18px 18px",
+            zIndex: 20,
+          }}
+          aria-hidden
+        />
       </div>
     </div>
   );

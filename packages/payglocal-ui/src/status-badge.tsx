@@ -53,6 +53,9 @@ const config: Record<string, StatusBadgeMeta> = {
   under_review: { label: "Under review", variant: "warning", trailIcon: "clock" },
   evidence_submitted: { label: "Evidence submitted", variant: "info", trailIcon: "arrow-right" },
   deadline_missed: { label: "Deadline missed", variant: "muted", trailIcon: "info" },
+  upload_documents: { label: "Upload documents", variant: "warning", trailIcon: "arrow-right" },
+  action_required: { label: "Action required", variant: "warning", trailIcon: "arrow-right" },
+  insufficient_documents: { label: "Insufficient documents", variant: "danger" },
   processing: { label: "Processing", variant: "warning", trailIcon: "clock" },
 
   refunded: { label: "Refunded", variant: "refund", trailIcon: "refresh" },
