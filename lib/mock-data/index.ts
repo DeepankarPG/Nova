@@ -18,11 +18,36 @@ export const todaysAnalytics = {
     attempted: 1362,
     failed: 78,
     avgTicket: 6600,
+    byMode: { upi: 96.1, card: 93.4, netbanking: 89.2, wallets: 91.0 },
+  },
+  declineBreakdown: {
+    issuer: {
+      count: 66,
+      pct: 85,
+      reasons: [
+        { reason: "Insufficient funds", count: 38 },
+        { reason: "Issuer declined", count: 19 },
+        { reason: "Limit exceeded", count: 9 },
+      ],
+    },
+    general: {
+      count: 12,
+      pct: 15,
+      reasons: [
+        { reason: "OTP / 3DS timeout", count: 24 },
+        { reason: "Incorrect CVV", count: 12 },
+      ],
+    },
   },
   attention: {
     fundsOnHold: { amount: 52_340, releaseLabel: "12 Transactions" },
     disputes: { openCount: 4, disputedAmount: 14_200 },
-    settlementsDue: { amount: 1_24_890, expectedLabel: "Settles at 12:00AM IST" },
+    settlementsDue: {
+      amount: 1_24_890,
+      expectedLabel: "Settles at 12:00AM IST",
+      bankAccountLast4: "4521",
+      cycleLabel: "T+1",
+    },
   },
   /**
    * payments* = successful + failed + disputed (per hour).
@@ -93,6 +118,12 @@ export const settlementSpeedBuckets = [
   { bucket: "T+2", pct: 14 },
   { bucket: "T+3+", pct: 4 },
 ];
+
+/** Apple Pay / Google Pay digital wallet contribution stats */
+export const walletStats = {
+  applePay: { volume: 48_200, transactions: 82, pctOfTotal: 5.1 },
+  googlePay: { volume: 31_400, transactions: 54, pctOfTotal: 3.3 },
+};
 
 /** Top decline / failure reasons (issuer + customer behaviour) */
 export const paymentFailureReasons = [
@@ -386,6 +417,15 @@ export const allSettlements = [
     utrNumber: "UTR2603080005",
     date: "2026-03-08T00:00:00",
   },
+];
+
+// ─── FIRC Documents ────────────────────────────────────────────────────────────
+
+export const fircDocuments = [
+  { id: "firc_001", settlementId: "stl_e5f6g7h8", amountUsd: 1184.22, fxRate: 83.12, issuedDate: "2026-03-12", downloadUrl: "#" },
+  { id: "firc_002", settlementId: "stl_i9j0k1l2", amountUsd: 1716.28, fxRate: 83.08, issuedDate: "2026-03-11", downloadUrl: "#" },
+  { id: "firc_003", settlementId: "stl_m3n4o5p6", amountUsd: 916.87, fxRate: 83.15, issuedDate: "2026-03-10", downloadUrl: "#" },
+  { id: "firc_004", settlementId: "stl_q7r8s9t0", amountUsd: 2278.80, fxRate: 83.09, issuedDate: "2026-03-09", downloadUrl: "#" },
 ];
 
 // ─── Disputes ──────────────────────────────────────────────────────────────────

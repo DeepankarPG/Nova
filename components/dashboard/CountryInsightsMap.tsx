@@ -3,6 +3,12 @@
 import { Shimmer } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+const FLAG_MAP: Record<string, string> = {
+  US: "🇺🇸", IE: "🇮🇪", GB: "🇬🇧", CA: "🇨🇦", QA: "🇶🇦",
+  SG: "🇸🇬", DE: "🇩🇪", IN: "🇮🇳", AU: "🇦🇺", AE: "🇦🇪",
+  NZ: "🇳🇿", JP: "🇯🇵", FR: "🇫🇷", NL: "🇳🇱", CH: "🇨🇭",
+};
+
 interface CountryData {
   country: string;
   code: string;
@@ -24,9 +30,6 @@ function fmt(n: number): string {
   return `₹${n}`;
 }
 
-const flagEmoji: Record<string, string> = {
-  US: "🇺🇸", IE: "🇮🇪", GB: "🇬🇧", CA: "🇨🇦", QA: "🇶🇦", SG: "🇸🇬", DE: "🇩🇪",
-};
 
 function PeriodChrome({ static: isStatic }: { static?: boolean }) {
   const className =
@@ -82,6 +85,7 @@ export function CountryInsightsMap({
   }
 
   const maxAmount = Math.max(...data.map((d) => d.amount));
+  const totalAmount = data.reduce((s, d) => s + d.amount, 0);
 
   return (
     <div className={cn("bg-card text-card-foreground rounded-xl p-5 border border-border shadow-sm", className)}>
@@ -96,12 +100,14 @@ export function CountryInsightsMap({
 
       <div className="space-y-3">
         {data.map((item, i) => {
-          const pct = (item.amount / maxAmount) * 100;
+          const barPct = (item.amount / maxAmount) * 100;
+          const sharePct = totalAmount > 0 ? ((item.amount / totalAmount) * 100).toFixed(1) : "0.0";
+          const flag = FLAG_MAP[item.code] ?? "🌍";
           return (
             <div key={item.code} className="flex items-center gap-3 group">
               {/* Flag + name */}
               <div className="flex items-center gap-1.5 w-28 flex-shrink-0">
-                <span className="text-sm leading-none">{flagEmoji[item.code] ?? "🌍"}</span>
+                <span className="text-sm leading-none">{flag}</span>
                 <span className="text-xs text-muted-foreground font-medium truncate">{item.country}</span>
               </div>
 
@@ -111,7 +117,7 @@ export function CountryInsightsMap({
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
-                      width: `${pct}%`,
+                      width: `${barPct}%`,
                       background: i === 0
                         ? "linear-gradient(90deg, #0061E3, #60a5fa)"
                         : i === 1
@@ -123,9 +129,10 @@ export function CountryInsightsMap({
                 </div>
               </div>
 
-              {/* Amount */}
-              <div className="w-16 text-right flex-shrink-0">
+              {/* Amount + share */}
+              <div className="w-24 text-right flex-shrink-0">
                 <span className="text-xs font-semibold text-foreground">{fmt(item.amount)}</span>
+                <span className="ml-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">{sharePct}%</span>
               </div>
             </div>
           );

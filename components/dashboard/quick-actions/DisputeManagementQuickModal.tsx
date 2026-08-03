@@ -47,6 +47,7 @@ export function DisputeManagementQuickModal({
     won: disputes.filter((d) => d.status === "won").length,
     total: disputes.length,
   };
+  const merchantActionCount = disputes.filter((d) => d.resolutionOwner === "merchant").length;
 
   const previewRows = disputes.slice(0, PREVIEW_ROW_CAP);
 
@@ -82,7 +83,7 @@ export function DisputeManagementQuickModal({
 
           <DisputeStatsGrid stats={stats} isLoading={false} />
 
-          <DisputeActionBanner stats={stats} />
+          <DisputeActionBanner stats={stats} merchantActionCount={merchantActionCount} />
 
           <DisputePrimaryTabs activeFilter="all" readOnly />
 

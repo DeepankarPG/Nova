@@ -30,8 +30,8 @@ const quickActions: QuickActionItem[] = [
 
 const quickAccessCardClass = cn(
   "group flex shrink-0 flex-col items-start gap-2 rounded-xl border border-border bg-card text-left",
-  "px-3.5 pb-2.5 pt-3.5 shadow-sm transition-shadow duration-150",
-  "hover:bg-muted/40 hover:shadow",
+  "px-3.5 pb-2.5 pt-3.5 shadow-sm transition-all duration-150",
+  "hover:border-primary/30 hover:shadow-md",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   "w-[9rem] sm:w-[9.25rem]"
 );

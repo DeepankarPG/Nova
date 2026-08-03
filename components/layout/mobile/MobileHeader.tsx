@@ -4,8 +4,7 @@ import Image from "next/image";
 import { Bell, Eye, EyeClosed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts } from "@/lib/hide-amounts-context";
-
-const USER_NAME = "Deep";
+import { useWorkspace } from "@/lib/workspace-context";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -31,6 +30,8 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ className = "md:hidden", onMenuClick }: MobileHeaderProps) {
   const { hidden, toggle } = useHideAmounts();
+  const { user } = useWorkspace();
+  const firstName = user.name.split(" ")[0] ?? user.name;
   return (
     <header
       className={cn(
@@ -59,7 +60,7 @@ export function MobileHeader({ className = "md:hidden", onMenuClick }: MobileHea
       {/* Greeting */}
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-bold text-foreground leading-tight">
-          {getGreeting()}, {USER_NAME}{" "}
+          {getGreeting()}, {firstName}{" "}
           <span className="inline-block animate-[wave_2s_ease-in-out_infinite] origin-[70%_70%]">👋</span>
         </p>
         <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">

@@ -15,12 +15,15 @@ import { cn } from "@/lib/utils";
 type Props = {
   onSend: (text: string, files: string[]) => void;
   disabled?: boolean;
+  /** Hide the "Add context of this page" chip (e.g. in mobile sheet). */
   hidePageContext?: boolean;
-  hideToolbarDivider?: boolean;
+  /** Override the textarea placeholder. */
   placeholder?: string;
+  /** Hide the divider line above the attachment/send toolbar row. */
+  hideToolbarDivider?: boolean;
 };
 
-export function EchoComposer({ onSend, disabled, hidePageContext, hideToolbarDivider, placeholder }: Props) {
+export function EchoComposer({ onSend, disabled, hidePageContext = false, placeholder, hideToolbarDivider = false }: Props) {
   const pathname = usePathname() ?? "/";
   const pageContext = getEchoPageContextLabel(pathname);
 
@@ -155,7 +158,7 @@ export function EchoComposer({ onSend, disabled, hidePageContext, hideToolbarDiv
           className="max-h-32 min-h-[44px] w-full resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
         />
 
-        <div className={`mt-2 flex items-center gap-2 pt-2${hideToolbarDivider ? "" : " border-t border-border/60"}`}>
+        <div className={cn("mt-2 flex items-center gap-2 pt-2", !hideToolbarDivider && "border-t border-border/60")}>
           <input
             ref={inputRef}
             type="file"
@@ -177,7 +180,7 @@ export function EchoComposer({ onSend, disabled, hidePageContext, hideToolbarDiv
           >
             <Paperclip className="h-[17px] w-[17px]" strokeWidth={2} />
           </button>
-          {!pageContextActive && (
+          {!pageContextActive && !hidePageContext && (
             <span className="text-[12px] font-medium text-muted-foreground">
               Auto
             </span>

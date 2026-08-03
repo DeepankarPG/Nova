@@ -45,7 +45,7 @@ import {
   COUNTRIES,
 } from "@/components/dashboard/mobile/MobileInternational";
 import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
-import { HideAmountsProvider } from "@/lib/hide-amounts-context";
+import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
 import { MobileFilterDrawer, emptyFilters } from "@/components/dashboard/mobile/MobileFilterDrawer";
@@ -168,7 +168,6 @@ function getSubtitle() {
   return "Here's your end-of-day recap";
 }
 
-
 /* ── App stage: full dashboard inside the phone frame ── */
 function AppStage() {
   const [drawerOpen,       setDrawerOpen]       = useState(false);
@@ -210,6 +209,7 @@ function AppStage() {
   const [appSettingsOpen,        setAppSettingsOpen]        = useState(false);
   const [accountSettingsOpen,    setAccountSettingsOpen]    = useState(false);
   const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | "add_feedback" | undefined>(undefined);
+  const { hidden, toggle } = useHideAmounts();
 
   /* ── In-frame toast ── */
   type FrameToast = { id: number; message: string; type: "success" | "error" };
@@ -260,6 +260,11 @@ function AppStage() {
             <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{getSubtitle()}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button type="button" onClick={toggle}
+              aria-label={hidden ? "Show amounts" : "Hide amounts"}
+              className="h-9 w-9 flex items-center justify-center rounded-full text-foreground">
+              {hidden ? <EyeClosed className="h-[18px] w-[18px]" strokeWidth={1.75} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />}
+            </button>
             <button type="button" onClick={() => setNotifsOpen(true)}
               className="relative h-9 w-9 flex items-center justify-center rounded-full text-foreground">
               <Bell className="h-[19px] w-[19px]" strokeWidth={1.75} />
@@ -359,6 +364,7 @@ function AppStage() {
                onOpenCountrySheet={() => setIntlSheetOpen(true)}
                externalCountry={intlCountry}
                onCountryChange={setIntlCountry}
+               countryPickerVariant="carousel"
              />
            ) :
            <MobileDashboardHome

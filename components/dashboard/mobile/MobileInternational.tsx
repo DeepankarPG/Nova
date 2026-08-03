@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Copy, Check, ArrowUpRight, AlertTriangle, X,
+  Copy, Check, ArrowUpRight, AlertTriangle, X, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
@@ -17,21 +18,52 @@ type AccountType = "primary" | "swift";
 interface Country {
   code:        string;
   name:        string;
+  shortName:   string;
   flag:        string;
+  /** ISO 3166-1 alpha-2 (lowercase) used for flagcdn.com images; omitted where no real flag exists */
+  iso2?:       string;
   currency:    string;
   regionLabel: string;
 }
 
 const COUNTRIES: Country[] = [
-  { code: "US",  name: "United States",  flag: "🇺🇸", currency: "USD", regionLabel: "US"            },
-  { code: "UK",  name: "United Kingdom", flag: "🇬🇧", currency: "GBP", regionLabel: "UK"            },
-  { code: "UAE", name: "UAE",            flag: "🇦🇪", currency: "AED", regionLabel: "UAE"           },
-  { code: "EU",  name: "Europe",         flag: "🇪🇺", currency: "EUR", regionLabel: "EUROPE"        },
-  { code: "CA",  name: "Canada",         flag: "🇨🇦", currency: "CAD", regionLabel: "CANADA"        },
-  { code: "AU",  name: "Australia",      flag: "🇦🇺", currency: "AUD", regionLabel: "AUSTRALIA"     },
-  { code: "SG",  name: "Singapore",      flag: "🇸🇬", currency: "SGD", regionLabel: "SINGAPORE"     },
-  { code: "ROW", name: "Rest of world",  flag: "🌍",  currency: "USD", regionLabel: "REST OF WORLD" },
+  { code: "US",  name: "United States",  shortName: "USA",    flag: "🇺🇸", iso2: "us", currency: "USD", regionLabel: "US"            },
+  { code: "UK",  name: "United Kingdom", shortName: "UK",     flag: "🇬🇧", iso2: "gb", currency: "GBP", regionLabel: "UK"            },
+  { code: "UAE", name: "UAE",            shortName: "UAE",    flag: "🇦🇪", iso2: "ae", currency: "AED", regionLabel: "UAE"           },
+  { code: "EU",  name: "Europe",         shortName: "Europe", flag: "🇪🇺", iso2: "eu", currency: "EUR", regionLabel: "EUROPE"        },
+  { code: "CA",  name: "Canada",         shortName: "Canada", flag: "🇨🇦", iso2: "ca", currency: "CAD", regionLabel: "CANADA"        },
+  { code: "AU",  name: "Australia",      shortName: "AU",     flag: "🇦🇺", iso2: "au", currency: "AUD", regionLabel: "AUSTRALIA"     },
+  { code: "SG",  name: "Singapore",      shortName: "SG",     flag: "🇸🇬", iso2: "sg", currency: "SGD", regionLabel: "SINGAPORE"     },
+  { code: "ROW", name: "Rest of world",  shortName: "ROW",    flag: "🌍",  currency: "USD", regionLabel: "REST OF WORLD" },
 ];
+
+/* ─── CountryFlagCircle — real flag image cropped to a filled circle ── */
+function CountryFlagCircle({ country, size = 32 }: { country: Country; size?: number }) {
+  if (!country.iso2) {
+    return (
+      <span
+        className="flex items-center justify-center rounded-full bg-muted shrink-0"
+        style={{ width: size, height: size, fontSize: size * 0.55 }}
+      >
+        {country.flag}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="relative block overflow-hidden rounded-full shrink-0 ring-1 ring-black/5"
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src={`https://flagcdn.com/w80/${country.iso2}.png`}
+        alt={`${country.name} flag`}
+        fill
+        sizes={`${size}px`}
+        className="object-cover"
+      />
+    </span>
+  );
+}
 
 /* ─── Per-country metrics ─────────────────────────────────────────── */
 interface CountryMetrics {
@@ -532,13 +564,15 @@ function WithdrawalsComingSoon() {
 
 /* ─── Root ────────────────────────────────────────────────────────── */
 export function MobileInternational({
-  onOpenCountrySheet: _onOpenCountrySheet,
+  onOpenCountrySheet,
   externalCountry,
   onCountryChange,
+  countryPickerVariant = "sheet",
 }: {
   onOpenCountrySheet?: () => void;
   externalCountry?:    Country;
   onCountryChange?:    (c: Country) => void;
+  countryPickerVariant?: "sheet" | "carousel";
 } = {}) {
   const [topTab,            setTopTab]            = useState<TopTab>("multi-currency");
   const [_selectedCountry,  _setSelectedCountry]  = useState<Country>(COUNTRIES[0]);
@@ -590,38 +624,60 @@ export function MobileInternational({
             className="space-y-3"
           >
 
-            {/* ② Horizontally scrollable currency chip selector */}
-            <div
-              ref={chipScrollRef}
-              className="px-4 [&::-webkit-scrollbar]:hidden"
-              style={{
-                overflowX: "scroll",
-                scrollbarWidth: "none",
-                WebkitOverflowScrolling: "touch",
-                cursor: "grab",
-              } as React.CSSProperties}
-            >
-              <div className="flex gap-2 w-max">
-                {COUNTRIES.map((c) => {
-                  const isSelected = c.code === selectedCountry.code;
-                  return (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => setSelectedCountry(c)}
-                      className={cn(
-                        "flex items-center gap-1.5 h-9 px-3.5 rounded-full shrink-0 transition-colors",
-                        isSelected
-                          ? "bg-primary text-white"
-                          : "bg-[#F5F5F5] dark:bg-muted text-muted-foreground border border-border/50"
-                      )}
-                    >
-                      <span className="text-[16px] leading-none">{c.flag}</span>
-                      <span className="text-[13px] font-semibold">{c.currency}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* ② Country selector with section label */}
+            <div>
+              <p className="mx-4 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                Your client location
+              </p>
+              {countryPickerVariant === "carousel" ? (
+                <div className="flex gap-2.5 overflow-x-auto px-4 pb-1 -mb-1 snap-x snap-mandatory scrollbar-hidden">
+                  {COUNTRIES.map((c) => {
+                    const isSelected = c.code === selectedCountry.code;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => setSelectedCountry(c)}
+                        className={cn(
+                          "shrink-0 snap-start flex flex-col items-center gap-1.5 rounded-2xl border px-4 py-3 text-center transition-colors",
+                          isSelected
+                            ? "border-primary bg-primary/[0.06] shadow-sm"
+                            : "border-border bg-card shadow-sm"
+                        )}
+                        style={{ width: 84 }}
+                      >
+                        <CountryFlagCircle country={c} size={36} />
+                        <p className={cn("text-[11.5px] font-bold leading-tight truncate w-full", isSelected ? "text-primary" : "text-foreground")}>
+                          {c.shortName}
+                        </p>
+                        <span className={cn(
+                          "text-[10px] font-semibold px-1.5 py-0.5 rounded-md",
+                          isSelected ? "text-primary bg-primary/[0.1]" : "text-muted-foreground bg-muted"
+                        )}>
+                          {c.currency}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mx-4">
+                  <button
+                    type="button"
+                    onClick={() => onOpenCountrySheet?.()}
+                    className="w-full flex items-center gap-3 rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5 text-left"
+                  >
+                    <span className="text-[28px] leading-none shrink-0">{selectedCountry.flag}</span>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <p className="text-[15px] font-bold text-foreground">{selectedCountry.name}</p>
+                      <span className="shrink-0 text-[11px] font-semibold text-primary bg-primary/[0.08] px-2 py-0.5 rounded-md">
+                        {selectedCountry.currency}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={2} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* ③ Dynamic section label: [FLAG] [REGION] ACCOUNT */}

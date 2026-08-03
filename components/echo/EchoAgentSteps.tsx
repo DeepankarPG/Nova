@@ -39,7 +39,7 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card text-[13px] shadow-sm",
+        "rounded-xl border border-border bg-card text-[12px] shadow-sm",
         className
       )}
       role="status"
@@ -50,9 +50,9 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
       <button
         type="button"
         onClick={() => setExpanded((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
       >
-        <span className="flex-1 text-[14px] font-medium text-foreground">
+        <span className="flex-1 text-[13px] font-medium text-foreground">
           {headerLabel}
           {busy && !reduceMotion && (
             <span className="echo-status-ellipsis ml-px inline-flex" aria-hidden>
@@ -63,13 +63,13 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
           )}
         </span>
 
-        <span className="shrink-0 text-[12px] text-muted-foreground">
+        <span className="shrink-0 text-[11px] text-muted-foreground">
           {doneCount}/{steps.length} steps
         </span>
         {expanded ? (
-          <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         )}
       </button>
 
@@ -84,35 +84,35 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <ul className="border-t border-border/60 px-4 pb-2 pt-3">
+            <ul className="border-t border-border/60 px-3 pb-2 pt-2.5">
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
 
                 return (
-                  <li key={step.id} className="flex gap-3">
-                    {/* ── Icon column + connector line ────────────────── */}
+                  <li key={step.id} className="flex gap-2">
+                    {/* Icon column + connector line */}
                     <div className="flex flex-col items-center">
                       {/* Status icon */}
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
                         {step.status === "done" ? (
-                          <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-emerald-500 text-white">
-                            <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                          <span className="flex h-[16px] w-[16px] items-center justify-center rounded-full bg-emerald-500 text-white">
+                            <Check className="h-2 w-2" strokeWidth={3} />
                           </span>
                         ) : step.status === "active" ? (
                           <Loader2
                             className={cn(
-                              "h-4 w-4 text-primary",
+                              "h-3.5 w-3.5 text-primary",
                               !reduceMotion && "animate-spin"
                             )}
                             strokeWidth={2.5}
                           />
                         ) : step.status === "error" ? (
-                          <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-destructive text-white">
-                            <X className="h-2.5 w-2.5" strokeWidth={3} />
+                          <span className="flex h-[16px] w-[16px] items-center justify-center rounded-full bg-destructive text-white">
+                            <X className="h-2 w-2" strokeWidth={3} />
                           </span>
                         ) : (
                           /* pending */
-                          <span className="h-2 w-2 rounded-full bg-border" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-border" />
                         )}
                       </span>
 
@@ -129,11 +129,11 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
                       )}
                     </div>
 
-                    {/* ── Label + detail ──────────────────────────────── */}
-                    <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
+                    {/* Label + detail */}
+                    <div className={cn("min-w-0 flex-1", !isLast && "pb-3")}>
                       <p
                         className={cn(
-                          "text-[13px] font-medium leading-snug",
+                          "text-[12px] font-medium leading-snug",
                           step.status === "done"
                             ? "text-foreground"
                             : step.status === "active"
@@ -146,7 +146,7 @@ export function EchoAgentSteps({ steps, busy, className }: Props) {
                         {step.label}
                       </p>
                       {step.detail && step.status !== "pending" && (
-                        <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                           {step.detail}
                         </p>
                       )}

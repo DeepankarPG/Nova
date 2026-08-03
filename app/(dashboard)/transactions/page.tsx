@@ -28,6 +28,7 @@ import { Shimmer } from "@/components/ui/skeleton";
 import { cn, formatTableDateTime } from "@/lib/utils";
 import { allTransactions } from "@/lib/mock-data";
 import { toast } from "sonner";
+import { useWorkspace } from "@/lib/workspace-context";
 
 type Transaction = typeof allTransactions[number];
 
@@ -667,11 +668,14 @@ export default function TransactionsPage() {
   const [selectedTxn,  setSelectedTxn]  = useState<Transaction | null>(null);
 
   const isDesktop = useIsDesktop();
+  const { selectedMid } = useWorkspace();
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
+
+  const scopeSubtitle = `${selectedMid.name} · MID ····${selectedMid.maskedId}`;
 
   const filtered = useMemo(() => allTransactions.filter((tx) => {
     const matchSearch  = !search || tx.customerName.toLowerCase().includes(search.toLowerCase()) || tx.email.toLowerCase().includes(search.toLowerCase()) || tx.id.toLowerCase().includes(search.toLowerCase());
@@ -694,7 +698,7 @@ export default function TransactionsPage() {
       <div className="w-full max-w-[1400px] space-y-4">
         <PageHeader
           title="Transactions"
-          subtitle={`${allTransactions.length} total transactions`}
+          subtitle={scopeSubtitle}
           actions={
             <Button variant="outline" size="sm" leftIcon={<Download className="w-3.5 h-3.5" />}
               isLoading={isExporting} onClick={handleExport}>

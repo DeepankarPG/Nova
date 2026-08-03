@@ -630,18 +630,19 @@ export function TodaysAnalyticsSection({ isLoading }: { isLoading?: boolean }) {
           )}
         >
           <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground">Upcoming settlement</p>
-              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="text-lg font-semibold leading-snug tracking-tight text-foreground tabular-nums sm:text-xl">
                   {formatInrCompact(attention.settlementsDue.amount)}
                 </span>
-                <span className="text-[13px] font-normal text-muted-foreground">
-                  <span className="text-muted-foreground/45" aria-hidden>
-                    ·{" "}
-                  </span>
-                  {attention.settlementsDue.expectedLabel}
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  {attention.settlementsDue.cycleLabel}
                 </span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                <span>{attention.settlementsDue.expectedLabel}</span>
+                <span className="tabular-nums">Bank ••••{attention.settlementsDue.bankAccountLast4}</span>
               </div>
             </div>
             <Button
@@ -652,7 +653,7 @@ export function TodaysAnalyticsSection({ isLoading }: { isLoading?: boolean }) {
               onClick={() => router.push("/settlement-reports")}
               rightIcon={<ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />}
             >
-              View settlement history
+              View settlements
             </Button>
           </div>
         </div>
@@ -742,6 +743,7 @@ export function TodaysAnalyticsSection({ isLoading }: { isLoading?: boolean }) {
                 </p>
               </div>
             </div>
+
           </div>
         </div>
 

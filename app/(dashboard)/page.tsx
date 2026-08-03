@@ -28,8 +28,8 @@ import {
 } from "@/lib/dashboard-widget-catalog";
 import { recentTransactions, recentSettlements } from "@/lib/mock-data";
 import { toast } from "sonner";
-
-const ADMIN_NAME = "Deepankar";
+import { useWorkspace } from "@/lib/workspace-context";
+import { McaDashboard } from "@/components/dashboard/McaDashboard";
 
 /** Illustrative INR per 1 USD for dashboard FX quick action (no MCA context). */
 const QUICK_FX_INR_PER_USD = 88.35;
@@ -79,6 +79,8 @@ export default function DashboardPage() {
   const [disputeOverviewOpen, setDisputeOverviewOpen] = useState(false);
   const { greeting } = useGreeting();
   const contextLine = useContextLine();
+  const { user, activeProductTab } = useWorkspace();
+  const firstName = user.name.split(" ")[0] ?? user.name;
 
   const handleQuickAction = (id: QuickActionId) => {
     switch (id) {
@@ -147,6 +149,17 @@ export default function DashboardPage() {
     setEditMode(false);
   };
 
+  if (activeProductTab === "mca") {
+    return (
+      <McaDashboard
+        greeting={greeting}
+        firstName={firstName}
+        contextLine={contextLine}
+        onForex={() => setFxOpen(true)}
+      />
+    );
+  }
+
   return (
     <div className="max-w-[1400px] mx-auto space-y-4">
 
@@ -155,7 +168,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h1 className="text-[1.35rem] font-bold text-foreground tracking-tight leading-snug">
-              {greeting}, {ADMIN_NAME}{" "}
+              {greeting}, {firstName}{" "}
               <span
                 className="inline-block origin-bottom-right"
                 style={{ animation: "wave 2.4s ease-in-out infinite" }}
@@ -188,22 +201,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Tab switcher — sits flush below header */}
-        <div className="flex items-center gap-1 bg-muted/60 dark:bg-muted/40 p-1 rounded-xl w-fit border border-border/70 dark:border-border">
-        {["Payment Gateway", "Multi-Currency Accounts"].map((tab, i) => (
-          <button
-            key={tab}
-            type="button"
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-              i === 0
-                ? "bg-card text-foreground shadow-sm dark:bg-muted dark:border dark:border-border"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-        </div>
       </div>
 
       <PayGlocalAdvantageBanner />

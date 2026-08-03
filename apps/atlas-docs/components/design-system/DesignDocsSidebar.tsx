@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DESIGN_DOCS_NAV } from "@/components/design-system/design-docs-nav";
+import { ATLAS_VERSION } from "@/components/design-system/atlas-config";
 import { cn } from "@/lib/utils";
 
 export function DesignDocsSidebar() {
@@ -12,7 +13,9 @@ export function DesignDocsSidebar() {
       <div className="sticky top-0 flex h-[calc(100dvh-0px)] flex-col gap-6 overflow-y-auto px-4 py-6">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Atlas</p>
-          <p className="mt-1 text-xs text-muted-foreground">PayGlocal UI</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            PayGlocal UI <span className="ml-1 font-mono text-[10px] text-muted-foreground/60">v{ATLAS_VERSION}</span>
+          </p>
         </div>
         <nav className="flex flex-col gap-6" aria-label="Design documentation">
           {DESIGN_DOCS_NAV.map((section) => (
