@@ -1,13 +1,16 @@
 "use client";
 
-import { MobileAnalytics } from "@/components/dashboard/mobile/MobileAnalytics";
+import { useState } from "react";
+import { MobileAnalytics, loadAnalyticsCharts } from "@/components/dashboard/mobile/MobileAnalytics";
 
 export default function AnalyticsPage() {
+  const [chartIds] = useState<string[]>(() => loadAnalyticsCharts());
+
   return (
     <>
       {/* Mobile — full-bleed, escape layout padding */}
       <div className="md:hidden -mx-4 -mt-4">
-        <MobileAnalytics />
+        <MobileAnalytics chartIds={chartIds} onEditOpen={() => {}} />
       </div>
 
       {/* Desktop placeholder — analytics charts live in the main dashboard on desktop */}

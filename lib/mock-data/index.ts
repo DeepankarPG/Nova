@@ -456,6 +456,8 @@ export type DisputeMockRow = {
   arn: string;
   rrn: string;
   caseId: string;
+  /** Who the ball is currently in the court of — drives the desktop Resolution column. */
+  resolutionOwner?: "merchant" | "customer" | "bank";
 };
 
 export const disputes: DisputeMockRow[] = [
@@ -481,6 +483,7 @@ export const disputes: DisputeMockRow[] = [
     arn: "345678987600",
     rrn: "123456789600",
     caseId: "345678987600",
+    resolutionOwner: "merchant",
   },
   {
     id: "dsp_a2b3c4",
@@ -504,6 +507,7 @@ export const disputes: DisputeMockRow[] = [
     arn: "345678987607",
     rrn: "123456789607",
     caseId: "345678987607",
+    resolutionOwner: "bank",
   },
   {
     id: "dsp_u1v9a1",
@@ -665,6 +669,7 @@ export const disputes: DisputeMockRow[] = [
     arn: "345678987608",
     rrn: "123456789608",
     caseId: "345678987608",
+    resolutionOwner: "customer",
   },
   {
     id: "dsp_l0s1t2",
@@ -688,6 +693,7 @@ export const disputes: DisputeMockRow[] = [
     arn: "345678987609",
     rrn: "123456789609",
     caseId: "345678987609",
+    resolutionOwner: "merchant",
   },
 ];
 
