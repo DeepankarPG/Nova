@@ -43,8 +43,9 @@ import {
   MobileInternational,
   CountrySheet,
   COUNTRIES,
+  WithdrawalsHowItWorks,
 } from "@/components/dashboard/mobile/MobileInternational";
-import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
+import type { Country as IntlCountry, TopTab as IntlTopTab } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
 import type { FilterId } from "@/components/dashboard/mobile/MobileTransactions";
@@ -189,6 +190,7 @@ function AppStage() {
   const { mids }                                = useWorkspace();
   const [intlSelectedMidId, setIntlSelectedMidId] = useState(mids[0]?.id ?? "");
   const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice" | "mca-links">("transactions");
+  const [paymentsProductTab,   setPaymentsProductTab]   = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [swipeDir,             setSwipeDir]             = useState(0);
   const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
   const [selectedInvoice,      setSelectedInvoice]      = useState<string | null>(null);
@@ -200,6 +202,8 @@ function AppStage() {
   const [analyticsEditOpen,    setAnalyticsEditOpen]    = useState(false);
   const [intlSheetOpen,       setIntlSheetOpen]       = useState(false);
   const [intlCountry,         setIntlCountry]         = useState<IntlCountry>(COUNTRIES[0]);
+  const [intlTopTab,          setIntlTopTab]          = useState<IntlTopTab>("multi-currency");
+  const [howItWorksOpen,      setHowItWorksOpen]      = useState(false);
   const [criticalSheetOpen,   setCriticalSheetOpen]   = useState(false);
   const [selectedTxn,         setSelectedTxn]         = useState<RecentTxnItem | null>(null);
   const [settlementOpen,      setSettlementOpen]      = useState(false);
@@ -273,8 +277,28 @@ function AppStage() {
           </div>
         </div>
       ) : activeTab === "txns" ? (
-        <div className="px-5 bg-transparent shrink-0" style={{ paddingBottom: 12 }}>
+        <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">Payments</h1>
+          <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
+            {(["payment-gateway", "multi-currency"] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setPaymentsProductTab(id);
+                  if (id === "multi-currency" && paymentsSubTab === "payment-links") {
+                    setPaymentsSubTab("transactions");
+                  }
+                }}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors",
+                  paymentsProductTab === id ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                {id === "payment-gateway" ? "PG" : "MCA"}
+              </button>
+            ))}
+          </div>
         </div>
       ) : activeTab === "analytics" ? (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
@@ -288,8 +312,15 @@ function AppStage() {
       ) : (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">International</h1>
-          {/* MID selector pill */}
-          {(() => {
+          {intlTopTab === "withdrawals" ? (
+            <button
+              type="button"
+              onClick={() => setHowItWorksOpen(true)}
+              className="text-[13px] font-semibold text-primary active:opacity-70 transition-opacity shrink-0"
+            >
+              How it works
+            </button>
+          ) : (() => {
             const selectedMid = mids.find(m => m.id === intlSelectedMidId) ?? mids[0];
             return (
               <button
@@ -318,7 +349,7 @@ function AppStage() {
                 { id: "payment-links", label: "Payment Links" },
                 { id: "invoice",       label: "Invoice"       },
                 { id: "mca-links",     label: "MCA Links"     },
-              ].map((tab) => {
+              ].filter((tab) => !(paymentsProductTab === "multi-currency" && tab.id === "payment-links")).map((tab) => {
                 const active = tab.id === paymentsSubTab;
                 return (
                   <button
@@ -365,6 +396,7 @@ function AppStage() {
                externalCountry={intlCountry}
                onCountryChange={setIntlCountry}
                countryPickerVariant="carousel"
+               onTopTabChange={setIntlTopTab}
              />
            ) :
            <MobileDashboardHome
@@ -406,6 +438,8 @@ function AppStage() {
                   />
                 : (
                   <MobileTransactions
+                    key={paymentsProductTab}
+                    productTab={paymentsProductTab}
                     externalFilterState={txnFilterApplied}
                     onFilterButtonTap={() => { setTxnFilterCat(null); setTxnFilterOpen(true); }}
                     onChipTap={(cat) => { setTxnFilterCat(cat); setTxnFilterOpen(true); }}
@@ -545,6 +579,10 @@ function AppStage() {
         onSelect={setIntlCountry}
         onClose={() => setIntlSheetOpen(false)}
         contained
+      />
+      <WithdrawalsHowItWorks
+        open={howItWorksOpen}
+        onClose={() => setHowItWorksOpen(false)}
       />
       <MobileFilterSheet
         open={filterOpen}
@@ -1569,6 +1607,7 @@ export default function MobilePreviewPage() {
 
         {/* Inner screen */}
         <div
+          data-app-frame="true"
           className="relative flex flex-col w-full h-full overflow-hidden"
           style={{ borderRadius: 42 }}
         >

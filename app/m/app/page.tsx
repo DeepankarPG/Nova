@@ -31,8 +31,8 @@ import {
   loadAnalyticsCharts, saveAnalyticsCharts,
 } from "@/components/dashboard/mobile/MobileAnalytics";
 import { MobileTransactions }       from "@/components/dashboard/mobile/MobileTransactions";
-import { MobileInternational, CountrySheet, COUNTRIES } from "@/components/dashboard/mobile/MobileInternational";
-import type { Country as IntlCountry } from "@/components/dashboard/mobile/MobileInternational";
+import { MobileInternational, CountrySheet, COUNTRIES, WithdrawalsHowItWorks } from "@/components/dashboard/mobile/MobileInternational";
+import type { Country as IntlCountry, TopTab as IntlTopTab } from "@/components/dashboard/mobile/MobileInternational";
 import { HideAmountsProvider, useHideAmounts } from "@/lib/hide-amounts-context";
 import type { FilterId }            from "@/components/dashboard/mobile/MobileTransactions";
 import { cn } from "@/lib/utils";
@@ -75,6 +75,9 @@ function AppScreen() {
   const [activeTab,        setActiveTab]        = useState<TabId>("home");
   const [intlSheetOpen,    setIntlSheetOpen]    = useState(false);
   const [intlCountry,      setIntlCountry]      = useState<IntlCountry>(COUNTRIES[0]);
+  const [intlTopTab,       setIntlTopTab]       = useState<IntlTopTab>("multi-currency");
+  const [howItWorksOpen,   setHowItWorksOpen]   = useState(false);
+  const [paymentsProductTab, setPaymentsProductTab] = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [analyticsChartIds, setAnalyticsChartIds] = useState<string[]>(() => loadAnalyticsCharts());
   const [analyticsEditOpen, setAnalyticsEditOpen] = useState(false);
   const [mcaLinkOpen,       setMcaLinkOpen]       = useState(false);
@@ -135,6 +138,32 @@ function AppScreen() {
               Edit
             </button>
           )}
+          {activeTab === "txns" && (
+            <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
+              {(["payment-gateway", "multi-currency"] as const).map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPaymentsProductTab(id)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors",
+                    paymentsProductTab === id ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+                  )}
+                >
+                  {id === "payment-gateway" ? "PG" : "MCA"}
+                </button>
+              ))}
+            </div>
+          )}
+          {activeTab === "intl" && intlTopTab === "withdrawals" && (
+            <button
+              type="button"
+              onClick={() => setHowItWorksOpen(true)}
+              className="text-[13px] font-semibold text-primary active:opacity-70 transition-opacity shrink-0"
+            >
+              How it works
+            </button>
+          )}
         </div>
       )}
 
@@ -143,6 +172,8 @@ function AppScreen() {
         {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} /> :
          activeTab === "txns" ? (
            <MobileTransactions
+             key={paymentsProductTab}
+             productTab={paymentsProductTab}
              appliedFilters={appliedFilters}
              onOpenFilter={setFilterOpen}
              onClearFilter={(id) => setAppliedFilters(prev => { const n = {...prev}; delete n[id]; return n; })}
@@ -155,11 +186,13 @@ function AppScreen() {
              onOpenCountrySheet={() => setIntlSheetOpen(true)}
              externalCountry={intlCountry}
              onCountryChange={setIntlCountry}
+             onTopTabChange={setIntlTopTab}
            />
          ) :
          <MobileDashboardHome
            onCreatePaymentLink={() => setPaymentLinkOpen(true)}
            onTapToPay={() => setTapToPayOpen(true)}
+           onSeeAllTransactions={() => setActiveTab("txns")}
          />}
       </div>
 
@@ -289,6 +322,10 @@ function AppScreen() {
         selected={intlCountry}
         onSelect={setIntlCountry}
         onClose={() => setIntlSheetOpen(false)}
+      />
+      <WithdrawalsHowItWorks
+        open={howItWorksOpen}
+        onClose={() => setHowItWorksOpen(false)}
       />
       <MobileFilterSheet
         open={filterOpen}

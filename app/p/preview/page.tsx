@@ -1147,6 +1147,7 @@ export default function IPadPreviewPage() {
         {/* Inner screen -- absolute positioning guarantees correct placement within bezels.
             Bezels: 22px top (camera), 14px sides, 24px bottom (home indicator). */}
         <div
+          data-app-frame="true"
           className="absolute overflow-hidden"
           style={{ top: 22, left: 14, right: 14, bottom: 24, borderRadius: 10 }}
         >

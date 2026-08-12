@@ -93,6 +93,11 @@ type TxnDetail = {
   creditedBank?: string;
   statusNotes?: StatusNotes;
   linkedTransaction?: LinkedTransaction;
+  /* MCA-only fields */
+  country?:               string;
+  countryFlag?:           string;
+  remitterName?:          string;
+  settlementStatusLabel?: string;
 };
 
 /* ── Mock detail data ─────────────────────────────────────────────── */
@@ -244,6 +249,120 @@ const TXN_DETAIL_MAP: Record<string, TxnDetail> = {
       reason: "Transaction declined due to insufficient funds in the customer's account.",
       errorCode: "INSUFFICIENT_FUNDS",
     },
+  },
+};
+
+/* ── MCA mock detail data ──────────────────────────────────────────── */
+const MCA_TXN_DETAIL_MAP: Record<string, TxnDetail> = {
+  mtx1: {
+    transactionId: "mca_o-7a2b4c6d8e0f2g4h6i8j",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
+    settlementDate: "—", expectedSettlementDate: "29 Jul 2026",
+    utrNumber: null, comments: "—",
+    currency: "CAD", createdAt: "27 Jul 2026 · 09:35 AM",
+    country: "Canada", countryFlag: "🇨🇦", remitterName: "frm2",
+  },
+  mtx2: {
+    transactionId: "mca_o-2b4c6d8e0f2g4h6i8j0k",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementDate: "—", expectedSettlementDate: "—",
+    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
+    currency: "USD", createdAt: "24 Jul 2026 · 03:32 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "frm",
+  },
+  mtx3: {
+    transactionId: "mca_o-3c6d8e0f2g4h6i8j0k2l",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementDate: "—", expectedSettlementDate: "—",
+    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
+    currency: "CAD", createdAt: "24 Jul 2026 · 12:28 PM",
+    country: "Canada", countryFlag: "🇨🇦", remitterName: "puneethv",
+  },
+  mtx4: {
+    transactionId: "mca_o-4d8e0f2g4h6i8j0k2l4m",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementDate: "—", expectedSettlementDate: "—",
+    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
+    currency: "USD", createdAt: "24 Jul 2026 · 12:27 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
+  },
+  mtx5: {
+    transactionId: "mca_o-5e0f2g4h6i8j0k2l4m6n",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "settled", settlementStatusLabel: "Settled",
+    settlementDate: "25 Jul 2026", utrNumber: "UTR2607US004512",
+    comments: "—",
+    currency: "USD", createdAt: "23 Jul 2026 · 10:23 AM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "apple",
+  },
+  mtx6: {
+    transactionId: "mca_o-6f2g4h6i8j0k2l4m6n8o",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
+    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
+    utrNumber: null, comments: "—",
+    currency: "USD", createdAt: "22 Jul 2026 · 05:21 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "test",
+  },
+  mtx7: {
+    transactionId: "mca_o-7g4h6i8j0k2l4m6n8o0p",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "settled", settlementStatusLabel: "Settled",
+    settlementDate: "24 Jul 2026", utrNumber: "UTR2207US009845",
+    comments: "—",
+    currency: "USD", createdAt: "22 Jul 2026 · 03:52 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "EEFC",
+  },
+  mtx8: {
+    transactionId: "mca_o-8h6i8j0k2l4m6n8o0p2q",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "settled", settlementStatusLabel: "Settled",
+    settlementDate: "24 Jul 2026", utrNumber: "UTR2207US007731",
+    comments: "—",
+    currency: "USD", createdAt: "22 Jul 2026 · 02:42 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
+  },
+  mtx9: {
+    transactionId: "mca_o-9i8j0k2l4m6n8o0p2q4r",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
+    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
+    utrNumber: null, comments: "—",
+    currency: "USD", createdAt: "22 Jul 2026 · 02:39 PM",
+    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
+  },
+  mtx10: {
+    transactionId: "mca_o-0j0k2l4m6n8o0p2q4r6s",
+    email: "—", phone: "—", address: "—",
+    merchantTxnId: "—", cardType: "—", cardLast4: null,
+    paymentCategory: "—", issuerName: "—",
+    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
+    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
+    utrNumber: null, comments: "—",
+    currency: "CAD", createdAt: "22 Jul 2026 · 02:23 PM",
+    country: "Canada", countryFlag: "🇨🇦", remitterName: "test",
   },
 };
 
@@ -421,7 +540,8 @@ export function MobileTransactionDetail({
 }) {
   const [loading, setLoading] = useState(true);
 
-  const detail    = TXN_DETAIL_MAP[txn.id] ?? null;
+  const detail    = TXN_DETAIL_MAP[txn.id] ?? MCA_TXN_DETAIL_MAP[txn.id] ?? null;
+  const isMca     = !!detail?.remitterName;
   const statusCfg = STATUS_CONFIG[txn.status];
 
   useEffect(() => {
@@ -505,7 +625,7 @@ export function MobileTransactionDetail({
                     statusCfg.text, statusCfg.bg,
                   )}>
                     <span className={cn("h-[5px] w-[5px] rounded-full shrink-0", statusCfg.dot)} />
-                    {statusCfg.label}
+                    {detail?.settlementStatusLabel ?? statusCfg.label}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap mt-3">
@@ -547,13 +667,15 @@ export function MobileTransactionDetail({
                 </div>
               </div>
 
-              {/* Charged to — inside card, separated by divider */}
+              {/* Charged to / Received from — inside card, separated by divider */}
               <div className="border-t border-border/50 px-5 py-3.5">
                 <p className="text-[12px] text-muted-foreground">
-                  Charged to{" "}
+                  {isMca ? "Received from" : "Charged to"}{" "}
                   <span className="font-semibold text-primary">{txn.name}</span>
                   {" "}
-                  <IndiaFlag />
+                  {detail?.countryFlag
+                    ? <span className="text-[13px] leading-none">{detail.countryFlag}</span>
+                    : <IndiaFlag />}
                 </p>
               </div>
             </div>
@@ -573,12 +695,12 @@ export function MobileTransactionDetail({
                       value: detail?.settlementStatus === "settled" ? (
                         <div className="flex items-center gap-1.5">
                           <Check className="h-[14px] w-[14px] text-emerald-600 shrink-0" strokeWidth={2.5} />
-                          <p className="text-[13px] font-medium text-foreground leading-snug">Settled</p>
+                          <p className="text-[13px] font-medium text-foreground leading-snug">{detail?.settlementStatusLabel ?? "Settled"}</p>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-[14px] w-[14px] text-amber-600 shrink-0" strokeWidth={2} />
-                          <p className="text-[13px] font-medium text-amber-600 leading-snug">Pending</p>
+                          <p className="text-[13px] font-medium text-amber-600 leading-snug">{detail?.settlementStatusLabel ?? "Pending"}</p>
                         </div>
                       ),
                     }}
@@ -625,10 +747,16 @@ export function MobileTransactionDetail({
             </div>
           )}
 
-          {/* §2 Customer Details — unchanged */}
+          {/* §2 Customer Details */}
           <div>
             <SectionLabel>Customer Details</SectionLabel>
-            {loading ? <SkSection rows={4} /> : (
+            {loading ? <SkSection rows={4} /> : isMca ? (
+              <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                <DetailRow label="Remitter Name" value={detail?.remitterName ?? "—"} />
+                <DetailRow label="Country"       value={detail?.country ?? "—"} />
+                <DetailRow label="Comments"      value={detail?.comments ?? "—"} last />
+              </div>
+            ) : (
               <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                 <DetailRow label="Email ID"       value={detail?.email ?? "—"}  copy={detail?.email} />
                 <DetailRow label="Phone Number"  value={detail?.phone ?? "—"}  copy={detail?.phone} />
@@ -638,8 +766,8 @@ export function MobileTransactionDetail({
             )}
           </div>
 
-          {/* §3 Payment Details */}
-          {txn.status !== "failed" && (
+          {/* §3 Payment Details — not applicable to MCA remittances */}
+          {txn.status !== "failed" && !isMca && (
             <div>
               <SectionLabel>Payment Details</SectionLabel>
               {loading ? <SkSection rows={2} /> : (
