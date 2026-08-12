@@ -17,6 +17,7 @@ import { MobileEditInvoice }        from "@/components/dashboard/mobile/MobileEd
 import { MobileSettlementReports }  from "@/components/dashboard/mobile/MobileSettlementReports";
 import { MobileEbrc }              from "@/components/dashboard/mobile/MobileEbrc";
 import { MobileHamburgerDrawer }    from "@/components/layout/mobile/MobileHamburgerDrawer";
+import { MobileTeamManagement }     from "@/components/dashboard/mobile/MobileTeamManagement";
 import { MobileMoreSheet }          from "@/components/layout/mobile/MobileMoreSheet";
 import { MobileEchoSheet }          from "@/components/layout/mobile/MobileEchoSheet";
 import { MobileNotifications }      from "@/components/layout/mobile/MobileNotifications";
@@ -64,6 +65,7 @@ function AppScreen() {
   const [splashDone,       setSplashDone]       = useState(false);
   const [loginDone,        setLoginDone]        = useState(false);
   const [drawerOpen,       setDrawerOpen]       = useState(false);
+  const [teamManagementOpen, setTeamManagementOpen] = useState(false);
   const [moreOpen,         setMoreOpen]         = useState(false);
   const [echoOpen,         setEchoOpen]         = useState(false);
   const [notifsOpen,       setNotifsOpen]       = useState(false);
@@ -332,7 +334,7 @@ function AppScreen() {
         onClose={() => setFilterOpen(null)}
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}        onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}        onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} />
       <MobileSettlementReports
         open={settlementOpen}
         onClose={() => setSettlementOpen(false)}
@@ -343,6 +345,7 @@ function AppScreen() {
         }}
       />
       <MobileEbrc              open={ebrcOpen}        onClose={() => setEbrcOpen(false)}         />
+      <MobileTeamManagement    open={teamManagementOpen} onClose={() => setTeamManagementOpen(false)} />
       <MobileCreateMcaLink     open={mcaLinkOpen}     onClose={() => setMcaLinkOpen(false)}      />
 
       {/* ── Login (after splash) ── */}

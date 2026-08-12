@@ -12,6 +12,7 @@ import {
   FileText,
   AlertTriangle,
   Users,
+  UserCog,
   BadgeCheck,
   Settings2,
   MessageCircle,
@@ -45,6 +46,7 @@ const DRAWER_NAV = [
       { label: "International Accounts", href: "/payment-products/international-accounts", icon: Globe },
       { label: "Settlement Reports",     href: "/settlement-reports",                       icon: FileText },
       { label: "Client Management",      href: "/client-management",                        icon: Users },
+      { label: "Team Management",        href: "/team-management",                          icon: UserCog },
       { label: "Dispute Management",     href: "/dispute-management", icon: AlertTriangle,   badge: "NEW" },
       { label: "eBRC",                   href: "/ebrc",               icon: BadgeCheck },
     ],
@@ -66,6 +68,7 @@ interface MobileHamburgerDrawerProps {
   onSettlementTap?: () => void;
   onEbrcTap?: () => void;
   onDisputesTap?: () => void;
+  onTeamManagementTap?: () => void;
   onAppSettingsTap?: () => void;
   onContactSupportTap?: () => void;
   onAddFeedbackTap?:    () => void;
@@ -78,6 +81,7 @@ export function MobileHamburgerDrawer({
   onSettlementTap,
   onEbrcTap,
   onDisputesTap,
+  onTeamManagementTap,
   onAppSettingsTap,
   onContactSupportTap,
   onAddFeedbackTap,
@@ -241,6 +245,14 @@ export function MobileHamburgerDrawer({
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onDisputesTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/team-management" && onTeamManagementTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onTeamManagementTap(); }}
                               className={rowClass} style={itemStyle}
                             >{inner}</button>
                           );
