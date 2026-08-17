@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   House, ArrowUpDown, ArrowLeft, BarChart3, Globe,
   Bell, Eye, EyeClosed, Plus, Link2, Nfc, Settings2, FilePlus2, Zap,
-  ChevronDown, Check, X,
+  ChevronDown, Check, X, ShieldCheck, Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MobileSplashScreen }        from "@/components/layout/mobile/MobileSplashScreen";
@@ -83,18 +83,6 @@ const slides = [
     header: "Meet Echo, your payment assistant",
   },
 ];
-
-function GoogleIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      <path fill="none" d="M0 0h48v48H0z"/>
-    </svg>
-  );
-}
 
 
 /* ── Status bar — used across all stages ── */
@@ -288,7 +276,7 @@ function AppStage() {
                 type="button"
                 onClick={() => {
                   setPaymentsProductTab(id);
-                  if (id === "multi-currency" && paymentsSubTab === "payment-links") {
+                  if (id === "multi-currency" && (paymentsSubTab === "payment-links" || paymentsSubTab === "invoice")) {
                     setPaymentsSubTab("transactions");
                   }
                 }}
@@ -351,7 +339,7 @@ function AppStage() {
                 { id: "payment-links", label: "Payment Links" },
                 { id: "invoice",       label: "Invoice"       },
                 { id: "mca-links",     label: "MCA Links"     },
-              ].filter((tab) => !(paymentsProductTab === "multi-currency" && tab.id === "payment-links")).map((tab) => {
+              ].filter((tab) => !(paymentsProductTab === "multi-currency" && (tab.id === "payment-links" || tab.id === "invoice"))).map((tab) => {
                 const active = tab.id === paymentsSubTab;
                 return (
                   <button
@@ -1123,6 +1111,14 @@ function AppStage() {
   );
 }
 
+/* ── Brand mark — logo used on the login screen ── */
+function LoginBrandMark() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/logo_sign%20in.png" alt="PayGlocal" width={60} height={60} style={{ flexShrink: 0 }} />
+  );
+}
+
 /* ── LoginFormScreen: email + password form ── */
 function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: () => void }) {
   const [email,    setEmail]    = useState("");
@@ -1142,12 +1138,12 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    padding: "12px 14px",
+    padding: "13px 14px",
     fontSize: 15,
     color: "#0A0A0A",
-    background: "#F9FAFB",
+    background: "#ffffff",
     border: "1px solid #E5E7EB",
-    borderRadius: 10,
+    borderRadius: 12,
     outline: "none",
     boxSizing: "border-box",
     fontFamily: "inherit",
@@ -1163,26 +1159,34 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1"
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#007AFF", fontSize: 15, fontWeight: 500, fontFamily: "inherit", padding: "6px 0" }}
+          aria-label="Back"
+          style={{
+            height: 36, width: 36, borderRadius: "50%", background: "#F3F4F6",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "none", cursor: "pointer", color: "#0A0A0A",
+          }}
         >
-          <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.5} />
-          Back
+          <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2} />
         </button>
       </div>
 
+      {/* Brand mark */}
+      <div style={{ display: "flex", justifyContent: "center", paddingTop: 14, flexShrink: 0 }}>
+        <LoginBrandMark />
+      </div>
+
       {/* Title + subtitle */}
-      <div style={{ padding: "16px 24px 0", flexShrink: 0 }}>
-        <p style={{ fontSize: 22, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.2 }}>
-          Sign in to your Account
+      <div style={{ padding: "16px 30px 0", textAlign: "center", flexShrink: 0 }}>
+        <p style={{ fontSize: 19, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.25 }}>
+          Welcome back, Nidhi
         </p>
-        <p style={{ fontSize: 13, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5 }}>
-          Enter your email and password to log in
+        <p style={{ fontSize: 12, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.5 }}>
+          Sign in to manage your global payments, wherever you are.
         </p>
       </div>
 
       {/* Form fields */}
-      <div style={{ padding: "24px 24px 0", flexShrink: 0 }}>
+      <div style={{ padding: "28px 24px 0", flexShrink: 0 }}>
         {/* Email */}
         <div style={{ marginBottom: 16 }}>
           <label htmlFor="preview-email" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
@@ -1230,21 +1234,21 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
         </div>
 
         {/* Remember me + Forgot Password */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#374151", userSelect: "none" }}>
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              style={{ width: 16, height: 16, accentColor: "#007AFF", cursor: "pointer", flexShrink: 0 }}
+              style={{ width: 16, height: 16, accentColor: "#2557D6", cursor: "pointer", flexShrink: 0 }}
             />
             Remember me
           </label>
           <button
             type="button"
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#007AFF", fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#2557D6", fontWeight: 500, fontFamily: "inherit", padding: 0 }}
           >
-            Forgot Password?
+            Forgot Password ?
           </button>
         </div>
 
@@ -1255,10 +1259,10 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
           disabled={!canSubmit}
           style={{
             width: "100%",
-            background: "#007AFF",
-            opacity: canSubmit ? 1 : 0.38,
-            borderRadius: 12,
-            padding: 16,
+            background: "#3D63E0",
+            opacity: canSubmit ? 1 : 0.5,
+            borderRadius: 14,
+            padding: 17,
             fontSize: 16,
             fontWeight: 600,
             color: "white",
@@ -1281,13 +1285,51 @@ function LoginFormScreen({ onSubmit, onBack }: { onSubmit: () => void; onBack: (
             </svg>
           ) : "Login"}
         </button>
+
+        {/* Or divider */}
+        <p style={{ textAlign: "center", fontSize: 13, color: "#9CA3AF", margin: "16px 0" }}>Or</p>
+
+        {/* Use OTP instead */}
+        <button
+          type="button"
+          style={{
+            width: "100%",
+            background: "white",
+            border: "1px solid #E5E7EB",
+            borderRadius: 14,
+            padding: 16,
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#0A0A0A",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          }}
+        >
+          Use OTP instead
+        </button>
       </div>
 
-      {/* Sign up link */}
-      <div style={{ padding: "16px 24px 24px", flexShrink: 0 }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#6B7280" }}>
-          Don&apos;t have an account?{" "}
-          <span style={{ color: "#007AFF", fontWeight: 500, cursor: "pointer" }}>Sign up</span>
+      {/* Gradient footer with sign-up link — blurred so the white→blue blend has no hard edge */}
+      <div style={{
+        flex: 1,
+        marginTop: 24,
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        paddingBottom: "max(28px, env(safe-area-inset-bottom))",
+      }}>
+        <div style={{
+          position: "absolute",
+          inset: -24,
+          background: "linear-gradient(180deg, #FFFFFF 0%, #F1F6FF 18%, #DCE8FD 34%, #B7D0FA 50%, #86ACF2 66%, #5D87E9 82%, #3F66D8 100%)",
+          filter: "blur(20px)",
+          zIndex: 0,
+        }} />
+        <p style={{ position: "relative", zIndex: 1, margin: 0, fontSize: 13.5, color: "white" }}>
+          Don&apos;t have an account? <span style={{ fontWeight: 700 }}>Sign Up</span>
         </p>
       </div>
     </div>
@@ -1422,7 +1464,7 @@ function PreviewScreen() {
 
             {/* Below-carousel: text + buttons */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px 24px" }}>
-              <div style={{ flex: 0.4 }} />
+              <div style={{ flex: 0.18 }} />
 
               {/* Slide headline only — no description */}
               <motion.div
@@ -1444,16 +1486,16 @@ function PreviewScreen() {
                       pointerEvents: i === activeIdx ? "auto" : "none",
                     }}
                   >
-                    <p style={{ fontSize: 24, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.25, textAlign: "center" }}>
+                    <p style={{ fontSize: 19, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.25, textAlign: "center" }}>
                       {slide.header}
                     </p>
                   </div>
                 ))}
               </motion.div>
 
-              <div style={{ flex: 0.35 }} />
+              <div style={{ flex: 0.16 }} />
 
-              {/* Button block */}
+              {/* Button block — Login (primary) + Sign up (secondary), stacked */}
               <motion.div
                 initial={{ y: loginFromSplashRef.current ? 40 : 0, opacity: loginFromSplashRef.current ? 0 : 1 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -1467,8 +1509,8 @@ function PreviewScreen() {
                     width: "100%",
                     background: "#007AFF",
                     borderRadius: 14,
-                    padding: "15px 16px",
-                    fontSize: 16,
+                    padding: "11px 16px",
+                    fontSize: 15,
                     fontWeight: 600,
                     color: "white",
                     border: "none",
@@ -1476,71 +1518,50 @@ function PreviewScreen() {
                     fontFamily: "inherit",
                   }}
                 >
-                  Login
+                  Login to your account
                 </button>
 
-                <div style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
-                  <hr style={{ flex: 1, border: "none", borderTop: "1px solid #E5E7EB" }} />
-                  <span style={{ fontSize: 13, color: "#9CA3AF", margin: "0 14px" }}>Or</span>
-                  <hr style={{ flex: 1, border: "none", borderTop: "1px solid #E5E7EB" }} />
-                </div>
-
-                {/* Google + Meta — side by side */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <button
-                    type="button"
-                    onClick={() => setStage("app")}
-                    style={{
-                      background: "white",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 14,
-                      padding: "14px 16px",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      color: "#0A0A0A",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <GoogleIcon />
-                    Google
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStage("app")}
-                    style={{
-                      background: "white",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 14,
-                      padding: "14px 16px",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      color: "#0A0A0A",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/meta_logo.svg" alt="Meta" width={22} height={13} />
-                    Meta
-                  </button>
-                </div>
-
-                <p style={{ textAlign: "center", margin: "12px 0 0", fontSize: 13, color: "#6B7280" }}>
-                  Don&apos;t have an account?{" "}
-                  <span style={{ color: "#007AFF", fontWeight: 500, cursor: "pointer" }}>Sign up</span>
-                </p>
+                {/* Sign up → skips straight into the app for this demo */}
+                <button
+                  type="button"
+                  onClick={() => setStage("app")}
+                  style={{
+                    width: "100%",
+                    marginTop: 10,
+                    background: "white",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 14,
+                    padding: "11px 16px",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "#0A0A0A",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Create a new account
+                </button>
               </motion.div>
 
               <div style={{ flex: 1 }} />
+
+              {/* Trust footer */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, whiteSpace: "nowrap", paddingBottom: "max(4px, env(safe-area-inset-bottom))" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <ShieldCheck className="h-[11px] w-[11px] shrink-0" style={{ color: "#4B5563" }} strokeWidth={2} />
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#4B5563" }}>RBI-authorised</span>
+                </span>
+                <span style={{ width: 3, height: 3, borderRadius: 999, background: "#9CA3AF", flexShrink: 0 }} />
+                <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <Users className="h-[11px] w-[11px] shrink-0" style={{ color: "#4B5563" }} strokeWidth={2} />
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#4B5563" }}>10k+ merchants</span>
+                </span>
+                <span style={{ width: 3, height: 3, borderRadius: 999, background: "#9CA3AF", flexShrink: 0 }} />
+                <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <Globe className="h-[11px] w-[11px] shrink-0" style={{ color: "#4B5563" }} strokeWidth={2} />
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#4B5563" }}>33+ currencies</span>
+                </span>
+              </div>
             </div>
           </motion.div>
         )}

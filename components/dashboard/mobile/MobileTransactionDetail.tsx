@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Copy, Check, Clock, ChevronRight, Wallet, Landmark } from "lucide-react";
+import { X, Copy, Check, Clock, ChevronRight, Wallet, Landmark, CreditCard, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 const BANK_CFG: Record<string, { short: string; bg: string }> = {
   "HDFC Bank":  { short: "HDFC",  bg: "#004C8F" },
@@ -73,6 +74,20 @@ type LinkedTransaction = {
   txItem: RecentTxnItem;
 };
 
+/* MCA settlement lifecycle stepper — a transaction either still needs an
+ * invoice (Document Pending, "current" step shows the upload dropzone) or
+ * has already cleared that step and is progressing toward settlement. */
+type TimelineStepState = "done" | "current" | "upcoming";
+
+type TimelineStep = {
+  id:          string;
+  label:       string;
+  state:       TimelineStepState;
+  dateLabel?:  string;
+  subLabel?:   string;
+  showUpload?: boolean;
+};
+
 type TxnDetail = {
   transactionId: string;
   email: string;
@@ -94,10 +109,9 @@ type TxnDetail = {
   statusNotes?: StatusNotes;
   linkedTransaction?: LinkedTransaction;
   /* MCA-only fields */
-  country?:               string;
-  countryFlag?:           string;
   remitterName?:          string;
   settlementStatusLabel?: string;
+  mcaTimeline?:           TimelineStep[];
 };
 
 /* ── Mock detail data ─────────────────────────────────────────────── */
@@ -252,117 +266,113 @@ const TXN_DETAIL_MAP: Record<string, TxnDetail> = {
   },
 };
 
-/* ── MCA mock detail data ──────────────────────────────────────────── */
+/* ── Settlement timeline builders ─────────────────────────────────────
+ * Workflow 1 — needs invoice: Fund Received (done) → Invoice Uploaded
+ * (current, shows the upload dropzone) → every later milestone upcoming.
+ * Workflow 2 — invoice not required: Fund Received through Sent for
+ * Settlement are already done, only FX/Settlement/FIRC remain. */
+function docPendingTimeline(fundReceivedAt: string, amount: string, invoiceDueAt: string): TimelineStep[] {
+  return [
+    { id: "fund-received",       label: "Fund Received",             state: "done",     dateLabel: fundReceivedAt, subLabel: amount },
+    { id: "invoice-uploaded",    label: "Invoice Uploaded",          state: "current",  dateLabel: invoiceDueAt, showUpload: true },
+    { id: "invoice-approved",    label: "Invoice Approved",          state: "upcoming", dateLabel: "Expected 14 Aug" },
+    { id: "compliance-accepted", label: "Compliance Accepted",       state: "upcoming", dateLabel: "Expected 14 Aug" },
+    { id: "fund-received-pg",    label: "Fund Received at PG House", state: "upcoming", dateLabel: "Expected 14 Aug" },
+    { id: "sent-for-settlement", label: "Sent for Settlement",       state: "upcoming", dateLabel: "Expected 14 Aug" },
+    { id: "fx-booked",           label: "FX Booked",                 state: "upcoming", dateLabel: "Expected 17 Aug" },
+    { id: "settled",             label: "Settled",                   state: "upcoming", dateLabel: "Expected 17 Aug" },
+    { id: "firc-received",       label: "FIRC Received",             state: "upcoming" },
+  ];
+}
+
+function sentForSettlementTimeline(doneAt: string, amount: string): TimelineStep[] {
+  return [
+    { id: "fund-received",       label: "Fund Received",             state: "done", dateLabel: doneAt, subLabel: amount },
+    { id: "compliance-accepted", label: "Compliance Accepted",       state: "done", dateLabel: doneAt },
+    { id: "fund-received-pg",    label: "Fund Received at PG House", state: "done", dateLabel: doneAt },
+    { id: "sent-for-settlement", label: "Sent for Settlement",       state: "done", dateLabel: doneAt },
+    { id: "fx-booked",           label: "FX Booked",                 state: "upcoming", dateLabel: "Expected 17 Aug" },
+    { id: "settled",             label: "Settled",                   state: "upcoming", dateLabel: "Expected 17 Aug" },
+    { id: "firc-received",       label: "FIRC Received",             state: "upcoming" },
+  ];
+}
+
+/* ── MCA mock detail data ─────────────────────────────────────────────
+ * Rows mtx1–mtx4 need an invoice (Document Pending); mtx5–mtx6 have
+ * already cleared that step (Sent For Settlement) — mirrors the two rows
+ * of MCA_TABLE_TXNS in MobileTransactions.tsx. */
 const MCA_TXN_DETAIL_MAP: Record<string, TxnDetail> = {
   mtx1: {
-    transactionId: "mca_o-7a2b4c6d8e0f2g4h6i8j",
+    transactionId: "mca_o-1a3b5c7d9e1f3g5h7i9j",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
-    settlementDate: "—", expectedSettlementDate: "29 Jul 2026",
+    settlementStatus: "document-pending", settlementStatusLabel: "Document Pending",
+    settlementDate: "—", expectedSettlementDate: "—",
     utrNumber: null, comments: "—",
-    currency: "CAD", createdAt: "27 Jul 2026 · 09:35 AM",
-    country: "Canada", countryFlag: "🇨🇦", remitterName: "frm2",
+    currency: "GBP", createdAt: "13 Aug 2026 · 04:32 PM",
+    remitterName: "Test Debtor Name",
+    mcaTimeline: docPendingTimeline("13 Aug · 04:39 PM", "£30,000", "14 Aug · 05:07 AM"),
   },
   mtx2: {
     transactionId: "mca_o-2b4c6d8e0f2g4h6i8j0k",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementStatus: "document-pending", settlementStatusLabel: "Document Pending",
     settlementDate: "—", expectedSettlementDate: "—",
-    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
-    currency: "USD", createdAt: "24 Jul 2026 · 03:32 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "frm",
+    utrNumber: null, comments: "—",
+    currency: "GBP", createdAt: "13 Aug 2026 · 04:29 PM",
+    remitterName: "Test Debtor Name",
+    mcaTimeline: docPendingTimeline("13 Aug · 04:36 PM", "£12", "14 Aug · 05:03 AM"),
   },
   mtx3: {
-    transactionId: "mca_o-3c6d8e0f2g4h6i8j0k2l",
+    transactionId: "mca_o-3c5d7e9f1g3h5i7j9k1l",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementStatus: "document-pending", settlementStatusLabel: "Document Pending",
     settlementDate: "—", expectedSettlementDate: "—",
-    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
-    currency: "CAD", createdAt: "24 Jul 2026 · 12:28 PM",
-    country: "Canada", countryFlag: "🇨🇦", remitterName: "puneethv",
+    utrNumber: null, comments: "—",
+    currency: "GBP", createdAt: "13 Aug 2026 · 04:26 PM",
+    remitterName: "Test Debtor Name",
+    mcaTimeline: docPendingTimeline("13 Aug · 04:33 PM", "£26", "14 Aug · 05:01 AM"),
   },
   mtx4: {
-    transactionId: "mca_o-4d8e0f2g4h6i8j0k2l4m",
+    transactionId: "mca_o-4d6e8f0g2h4i6j8k0l2m",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "invoice-pending", settlementStatusLabel: "Invoice Pending",
+    settlementStatus: "document-pending", settlementStatusLabel: "Document Pending",
     settlementDate: "—", expectedSettlementDate: "—",
-    utrNumber: null, comments: "Invoice must be uploaded before this transaction can be settled.",
-    currency: "USD", createdAt: "24 Jul 2026 · 12:27 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
+    utrNumber: null, comments: "—",
+    currency: "EUR", createdAt: "13 Aug 2026 · 04:26 PM",
+    remitterName: "Test Debtor Name",
+    mcaTimeline: docPendingTimeline("13 Aug · 04:33 PM", "€10", "14 Aug · 05:01 AM"),
   },
   mtx5: {
-    transactionId: "mca_o-5e0f2g4h6i8j0k2l4m6n",
+    transactionId: "mca_o-5e7f9g1h3i5j7k9l1m3n",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "settled", settlementStatusLabel: "Settled",
-    settlementDate: "25 Jul 2026", utrNumber: "UTR2607US004512",
-    comments: "—",
-    currency: "USD", createdAt: "23 Jul 2026 · 10:23 AM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "apple",
+    settlementStatus: "sent-for-settlement", settlementStatusLabel: "Sent For Settlement",
+    settlementDate: "—", expectedSettlementDate: "17 Aug 2026",
+    utrNumber: null, comments: "—",
+    currency: "GBP", createdAt: "12 Aug 2026 · 03:27 PM",
+    remitterName: "AMAZON",
+    mcaTimeline: sentForSettlementTimeline("12 Aug · 03:27 PM", "£45,000"),
   },
   mtx6: {
-    transactionId: "mca_o-6f2g4h6i8j0k2l4m6n8o",
+    transactionId: "mca_o-6f8g0h2i4j6k8l0m2n4o",
     email: "—", phone: "—", address: "—",
     merchantTxnId: "—", cardType: "—", cardLast4: null,
     paymentCategory: "—", issuerName: "—",
-    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
-    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
+    settlementStatus: "sent-for-settlement", settlementStatusLabel: "Sent For Settlement",
+    settlementDate: "—", expectedSettlementDate: "17 Aug 2026",
     utrNumber: null, comments: "—",
-    currency: "USD", createdAt: "22 Jul 2026 · 05:21 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "test",
-  },
-  mtx7: {
-    transactionId: "mca_o-7g4h6i8j0k2l4m6n8o0p",
-    email: "—", phone: "—", address: "—",
-    merchantTxnId: "—", cardType: "—", cardLast4: null,
-    paymentCategory: "—", issuerName: "—",
-    settlementStatus: "settled", settlementStatusLabel: "Settled",
-    settlementDate: "24 Jul 2026", utrNumber: "UTR2207US009845",
-    comments: "—",
-    currency: "USD", createdAt: "22 Jul 2026 · 03:52 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "EEFC",
-  },
-  mtx8: {
-    transactionId: "mca_o-8h6i8j0k2l4m6n8o0p2q",
-    email: "—", phone: "—", address: "—",
-    merchantTxnId: "—", cardType: "—", cardLast4: null,
-    paymentCategory: "—", issuerName: "—",
-    settlementStatus: "settled", settlementStatusLabel: "Settled",
-    settlementDate: "24 Jul 2026", utrNumber: "UTR2207US007731",
-    comments: "—",
-    currency: "USD", createdAt: "22 Jul 2026 · 02:42 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
-  },
-  mtx9: {
-    transactionId: "mca_o-9i8j0k2l4m6n8o0p2q4r",
-    email: "—", phone: "—", address: "—",
-    merchantTxnId: "—", cardType: "—", cardLast4: null,
-    paymentCategory: "—", issuerName: "—",
-    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
-    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
-    utrNumber: null, comments: "—",
-    currency: "USD", createdAt: "22 Jul 2026 · 02:39 PM",
-    country: "United States", countryFlag: "🇺🇸", remitterName: "puneethv",
-  },
-  mtx10: {
-    transactionId: "mca_o-0j0k2l4m6n8o0p2q4r6s",
-    email: "—", phone: "—", address: "—",
-    merchantTxnId: "—", cardType: "—", cardLast4: null,
-    paymentCategory: "—", issuerName: "—",
-    settlementStatus: "sent-for-review", settlementStatusLabel: "Sent for Review",
-    settlementDate: "—", expectedSettlementDate: "25 Jul 2026",
-    utrNumber: null, comments: "—",
-    currency: "CAD", createdAt: "22 Jul 2026 · 02:23 PM",
-    country: "Canada", countryFlag: "🇨🇦", remitterName: "test",
+    currency: "GBP", createdAt: "12 Aug 2026 · 03:24 PM",
+    remitterName: "AMAZON",
+    mcaTimeline: sentForSettlementTimeline("12 Aug · 03:24 PM", "£30,000"),
   },
 };
 
@@ -485,6 +495,78 @@ function PairedRow({
 }
 
 
+/* ── Settlement timeline — vertical stepper with dashed connector ───── */
+function TimelineStepIcon({ state }: { state: TimelineStepState }) {
+  if (state === "done") {
+    return (
+      <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center shrink-0">
+        <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
+      </div>
+    );
+  }
+  if (state === "current") {
+    return (
+      <div className="h-6 w-6 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center shrink-0">
+        <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
+      </div>
+    );
+  }
+  return <div className="h-6 w-6 rounded-full border-2 border-border bg-card shrink-0" />;
+}
+
+function InvoiceUploadDropzone({ onTap }: { onTap: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onTap}
+      className="mt-3 w-full flex flex-col items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-primary/50 bg-primary/[0.03] active:bg-primary/[0.07] transition-colors"
+      style={{ height: 140 }}
+    >
+      <FileText className="h-6 w-6 text-primary/70" strokeWidth={1.5} />
+      <p className="text-[13.5px] font-semibold text-primary">Tap to upload files</p>
+      <p className="text-[11px] text-muted-foreground">Accepted: .pdf under 10MB</p>
+    </button>
+  );
+}
+
+function SettlementTimeline({ steps, onUploadTap }: { steps: TimelineStep[]; onUploadTap: () => void }) {
+  if (steps.length === 0) return null;
+  return (
+    <div className="relative">
+      <div className="absolute left-[11px] top-3 bottom-3 border-l border-dashed border-border" aria-hidden />
+      <div className="space-y-5 relative">
+        {steps.map((step) => (
+          <div key={step.id} className="flex items-start gap-3">
+            <TimelineStepIcon state={step.state} />
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className={cn(
+                  "text-[13px] leading-snug",
+                  step.state === "upcoming" ? "font-medium text-muted-foreground" : "font-semibold text-foreground"
+                )}>
+                  {step.label}
+                </p>
+                {step.dateLabel && (
+                  <span className={cn(
+                    "text-[11px] shrink-0 whitespace-nowrap",
+                    step.state === "current" ? "font-semibold text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+                  )}>
+                    {step.dateLabel}
+                  </span>
+                )}
+              </div>
+              {step.subLabel && (
+                <p className="text-[12px] text-muted-foreground mt-0.5">{step.subLabel}</p>
+              )}
+              {step.showUpload && <InvoiceUploadDropzone onTap={onUploadTap} />}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Linked transaction row ───────────────────────────────────────── */
 function LinkedTxnRow({
   linked,
@@ -543,6 +625,14 @@ export function MobileTransactionDetail({
   const detail    = TXN_DETAIL_MAP[txn.id] ?? MCA_TXN_DETAIL_MAP[txn.id] ?? null;
   const isMca     = !!detail?.remitterName;
   const statusCfg = STATUS_CONFIG[txn.status];
+
+  /* MCA statuses (Document Pending / Sent For Settlement) use their own
+   * amber/green coloring rather than the PG success/failed/pending map. */
+  const displayStatusCfg = isMca
+    ? (detail?.settlementStatus === "document-pending"
+      ? { text: "text-amber-700 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-950/40",   dot: "bg-amber-500"   }
+      : { text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40", dot: "bg-emerald-500" })
+    : statusCfg;
 
   useEffect(() => {
     setLoading(true);
@@ -622,9 +712,9 @@ export function MobileTransactionDetail({
                   </span>
                   <span className={cn(
                     "ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold shrink-0",
-                    statusCfg.text, statusCfg.bg,
+                    displayStatusCfg.text, displayStatusCfg.bg,
                   )}>
-                    <span className={cn("h-[5px] w-[5px] rounded-full shrink-0", statusCfg.dot)} />
+                    <span className={cn("h-[5px] w-[5px] rounded-full shrink-0", displayStatusCfg.dot)} />
                     {detail?.settlementStatusLabel ?? statusCfg.label}
                   </span>
                 </div>
@@ -641,7 +731,9 @@ export function MobileTransactionDetail({
                     </>
                   )}
                   <VDivider />
-                  {detail?.cardType && detail.cardType !== "—" && detail.cardLast4 ? (
+                  {isMca ? (
+                    <CreditCard className="h-[13px] w-[13px] text-muted-foreground shrink-0" strokeWidth={1.75} />
+                  ) : detail?.cardType && detail.cardType !== "—" && detail.cardLast4 ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -667,22 +759,34 @@ export function MobileTransactionDetail({
                 </div>
               </div>
 
-              {/* Charged to / Received from — inside card, separated by divider */}
+              {/* Charged to — inside card, separated by divider */}
               <div className="border-t border-border/50 px-5 py-3.5">
                 <p className="text-[12px] text-muted-foreground">
-                  {isMca ? "Received from" : "Charged to"}{" "}
+                  Charged to{" "}
                   <span className="font-semibold text-primary">{txn.name}</span>
-                  {" "}
-                  {detail?.countryFlag
-                    ? <span className="text-[13px] leading-none">{detail.countryFlag}</span>
-                    : <IndiaFlag />}
+                  {!isMca && (<>{" "}<IndiaFlag /></>)}
                 </p>
               </div>
             </div>
           )}
 
-          {/* §1 Settlement Details */}
-          {txn.status !== "failed" && (
+          {/* §1a Settlement Timeline — MCA only */}
+          {isMca && (
+            <div>
+              <SectionLabel>Settlement Timeline</SectionLabel>
+              {loading ? <SkSection rows={3} /> : (
+                <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm p-4">
+                  <SettlementTimeline
+                    steps={detail?.mcaTimeline ?? []}
+                    onUploadTap={() => toast("Invoice upload is coming soon")}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* §1 Settlement Details — PG only */}
+          {txn.status !== "failed" && !isMca && (
             <div>
               <SectionLabel>Settlement Details</SectionLabel>
               {loading ? <SkSection rows={2} /> : (
@@ -747,24 +851,20 @@ export function MobileTransactionDetail({
             </div>
           )}
 
-          {/* §2 Customer Details */}
-          <div>
-            <SectionLabel>Customer Details</SectionLabel>
-            {loading ? <SkSection rows={4} /> : isMca ? (
-              <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
-                <DetailRow label="Remitter Name" value={detail?.remitterName ?? "—"} />
-                <DetailRow label="Country"       value={detail?.country ?? "—"} />
-                <DetailRow label="Comments"      value={detail?.comments ?? "—"} last />
-              </div>
-            ) : (
-              <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
-                <DetailRow label="Email ID"       value={detail?.email ?? "—"}  copy={detail?.email} />
-                <DetailRow label="Phone Number"  value={detail?.phone ?? "—"}  copy={detail?.phone} />
-                <DetailRow label="Address"        value={detail?.address ?? "—"} />
-                <DetailRow label="Comments"       value={detail?.comments ?? "—"} last />
-              </div>
-            )}
-          </div>
+          {/* §2 Customer Details — PG only */}
+          {!isMca && (
+            <div>
+              <SectionLabel>Customer Details</SectionLabel>
+              {loading ? <SkSection rows={4} /> : (
+                <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                  <DetailRow label="Email ID"       value={detail?.email ?? "—"}  copy={detail?.email} />
+                  <DetailRow label="Phone Number"  value={detail?.phone ?? "—"}  copy={detail?.phone} />
+                  <DetailRow label="Address"        value={detail?.address ?? "—"} />
+                  <DetailRow label="Comments"       value={detail?.comments ?? "—"} last />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* §3 Payment Details — not applicable to MCA remittances */}
           {txn.status !== "failed" && !isMca && (

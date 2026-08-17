@@ -361,6 +361,9 @@ export function MobileTeamManagement({
     .filter((m) => tab === "all" || m.status === tab)
     .filter((m) => !q || m.name.toLowerCase().includes(q) || m.username.toLowerCase().includes(q));
 
+  const adminCount    = members.filter((m) => m.role === "admin").length;
+  const viewOnlyCount = members.filter((m) => m.role === "view-only").length;
+
   return (
     <AnimatePresence>
       {open && (
@@ -401,64 +404,97 @@ export function MobileTeamManagement({
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-            <div className="px-4 pt-4">
-              {/* Status tabs */}
-              <div className="flex gap-1 bg-muted/60 p-1 rounded-xl mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-                {TEAM_TABS.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setTab(t.id)}
-                    className={cn(
-                      "flex-1 shrink-0 py-1.5 px-2 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
-                      tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                    )}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
 
-              {/* Search */}
-              <div className="flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5 mb-1">
-                <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by username"
-                  className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-                />
-                {search && (
-                  <button type="button" onClick={() => setSearch("")}>
-                    <X className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-                  </button>
-                )}
+            {/* Role breakdown — styled like Transactions metric cards */}
+            <div className="mx-4 mt-4 grid grid-cols-2 gap-2.5">
+              <div className="rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5">
+                <p className="text-[12px] font-medium text-muted-foreground mb-1">Admin</p>
+                <p className="text-[26px] font-bold text-foreground tabular-nums leading-tight">{adminCount}</p>
+                <p className="text-[11.5px] text-muted-foreground mt-1.5">Full access</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card shadow-sm px-4 py-3.5">
+                <p className="text-[12px] font-medium text-muted-foreground mb-1">View-only</p>
+                <p className="text-[26px] font-bold text-foreground tabular-nums leading-tight">{viewOnlyCount}</p>
+                <p className="text-[11.5px] text-muted-foreground mt-1.5">Restricted access</p>
               </div>
             </div>
 
-            {/* Member rows */}
-            <div className="divide-y divide-border border-t border-border mt-3">
-              {filtered.length === 0 ? (
-                <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No team members found</p>
-              ) : filtered.map((m) => (
-                <div key={m.id} className="px-4 py-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold text-foreground leading-snug truncate">{m.name}</p>
-                      <p className="text-[12px] text-muted-foreground mt-0.5 font-mono truncate">{m.username}</p>
-                      <div className="mt-1.5">
-                        <RoleBadge role={m.role} />
+            <div className="mx-4 mt-3 mb-6 rounded-2xl border border-border bg-card shadow-sm">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                <p className="text-[15px] font-bold text-foreground">All Members</p>
+                <button
+                  type="button"
+                  onClick={() => setAddOpen(true)}
+                  className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
+                  aria-label="Add team member"
+                >
+                  <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="flex items-center gap-2.5 px-4 pb-3">
+                <div className="flex-1 flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5">
+                  <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by username"
+                    className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                  />
+                  {search && (
+                    <button type="button" onClick={() => setSearch("")}>
+                      <X className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status tabs */}
+              <div className="mx-4 mb-3 [&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+                <div className="flex gap-1 bg-muted/60 p-1 rounded-xl w-max min-w-full">
+                  {TEAM_TABS.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTab(t.id)}
+                      className={cn(
+                        "flex-1 shrink-0 py-1.5 px-4 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
+                        tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Member rows */}
+              <div className="divide-y divide-border">
+                {filtered.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No team members found</p>
+                ) : filtered.map((m) => (
+                  <div key={m.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{m.name}</p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5 font-mono truncate">{m.username}</p>
+                        <div className="mt-1.5">
+                          <RoleBadge role={m.role} />
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right flex flex-col items-end gap-1.5">
+                        <TeamStatusBadge status={m.status} />
+                        <p className="text-[11px] text-muted-foreground leading-snug">{m.phone}</p>
                       </div>
                     </div>
-                    <div className="shrink-0 flex flex-col items-end gap-1.5">
-                      <TeamStatusBadge status={m.status} />
-                      <p className="text-[11px] text-muted-foreground leading-snug">{m.phone}</p>
-                    </div>
+                    <p className="text-[11.5px] text-muted-foreground mt-1.5 truncate">{m.email}</p>
                   </div>
-                  <p className="text-[11.5px] text-muted-foreground mt-1.5 truncate">{m.email}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 

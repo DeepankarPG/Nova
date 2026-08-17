@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import {
-  Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download, Plus, Upload,
+  Search, X, SlidersHorizontal, Wallet, Landmark, CreditCard, ChevronDown, Check, Download, Plus,
 } from "lucide-react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
 import type { RecentTxnItem } from "@/components/dashboard/mobile/MobileTransactionDetail";
@@ -14,7 +13,7 @@ import type { FilterState, FilterCat } from "@/components/dashboard/mobile/Mobil
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 type TxnStatus = "success" | "failed" | "pending" | "refunded";
-type TxnTab    = "all" | "success" | "refunded" | "failed" | "invoice-pending" | "settled";
+type TxnTab    = "all" | "success" | "refunded" | "failed";
 type Period    = "1D" | "1W" | "1M" | "3M" | "YTD";
 type ProductTab = "payment-gateway" | "multi-currency";
 
@@ -94,48 +93,36 @@ const TABLE_TXNS: TxnRow[] = [
 ];
 
 /* ── MCA: settlement status + mock data ───────────────────────────────
- * MCA transactions are foreign remittances awaiting settlement — they use
- * a different vocabulary/data model than PG's card/UPI transactions
- * (remitter + country instead of customer + payment method). */
-type McaSettlementStatus = "sent-for-review" | "invoice-pending" | "settled";
+ * MCA transactions are cross-border remittances moving through a multi-step
+ * settlement pipeline. Each row either still needs an invoice (Document
+ * Pending) or has already cleared that step and is progressing toward
+ * settlement — the two workflows shown in the transaction detail timeline. */
+type McaSettlementStatus = "document-pending" | "sent-for-settlement" | "settled";
 
 type McaTxnRow = {
   id: string;
   txDetailId?: string;
   remitterName: string;
-  country: string;
-  countryFlag: string;
   date: string;
   time: string;
   amount: number;
   currency: string;
   settlementStatus: McaSettlementStatus;
-  utrNumber?: string;
 };
 
-const MCA_SETTLEMENT_CFG: Record<McaSettlementStatus, { label: string; text: string; bg: string }> = {
-  "sent-for-review": { label: "Sent for Review", text: "text-amber-700 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-950/40"   },
-  "invoice-pending": { label: "Invoice Pending",  text: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/40" },
-  settled:           { label: "Settled",          text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+const MCA_AMOUNT_CFG: Record<McaSettlementStatus, { color: string; prefix: string }> = {
+  "document-pending":    { color: "text-amber-600",   prefix: ""  },
+  "sent-for-settlement": { color: "text-emerald-700", prefix: "+" },
+  settled:               { color: "text-emerald-700", prefix: "+" },
 };
 
 const MCA_TABLE_TXNS: McaTxnRow[] = [
-  { id: "MCA-101", txDetailId: "mtx1",  remitterName: "frm2",     country: "Canada",        countryFlag: "🇨🇦", date: "27 Jul", time: "09:35 AM", amount:     0.50, currency: "CAD", settlementStatus: "sent-for-review" },
-  { id: "MCA-102", txDetailId: "mtx2",  remitterName: "frm",      country: "United States", countryFlag: "🇺🇸", date: "24 Jul", time: "03:32 PM", amount:     1.00, currency: "USD", settlementStatus: "invoice-pending" },
-  { id: "MCA-103", txDetailId: "mtx3",  remitterName: "puneethv", country: "Canada",        countryFlag: "🇨🇦", date: "24 Jul", time: "12:28 PM", amount:    20.00, currency: "CAD", settlementStatus: "invoice-pending" },
-  { id: "MCA-104", txDetailId: "mtx4",  remitterName: "puneethv", country: "United States", countryFlag: "🇺🇸", date: "24 Jul", time: "12:27 PM", amount:    20.00, currency: "USD", settlementStatus: "invoice-pending" },
-  { id: "MCA-105", txDetailId: "mtx5",  remitterName: "apple",    country: "United States", countryFlag: "🇺🇸", date: "23 Jul", time: "10:23 AM", amount: 10000.00, currency: "USD", settlementStatus: "settled", utrNumber: "UTR2607US004512" },
-  { id: "MCA-106", txDetailId: "mtx6",  remitterName: "test",     country: "United States", countryFlag: "🇺🇸", date: "22 Jul", time: "05:21 PM", amount:    10.00, currency: "USD", settlementStatus: "sent-for-review" },
-  { id: "MCA-107", txDetailId: "mtx7",  remitterName: "EEFC",     country: "United States", countryFlag: "🇺🇸", date: "22 Jul", time: "03:52 PM", amount:    50.00, currency: "USD", settlementStatus: "settled", utrNumber: "UTR2207US009845" },
-  { id: "MCA-108", txDetailId: "mtx8",  remitterName: "puneethv", country: "United States", countryFlag: "🇺🇸", date: "22 Jul", time: "02:42 PM", amount:    12.00, currency: "USD", settlementStatus: "settled", utrNumber: "UTR2207US007731" },
-  { id: "MCA-109", txDetailId: "mtx9",  remitterName: "puneethv", country: "United States", countryFlag: "🇺🇸", date: "22 Jul", time: "02:39 PM", amount:    11.00, currency: "USD", settlementStatus: "sent-for-review" },
-  { id: "MCA-110", txDetailId: "mtx10", remitterName: "test",     country: "Canada",        countryFlag: "🇨🇦", date: "22 Jul", time: "02:23 PM", amount:    11.00, currency: "CAD", settlementStatus: "sent-for-review" },
-];
-
-const MCA_TABS: { id: TxnTab; label: string }[] = [
-  { id: "invoice-pending", label: "Invoice Pending" },
-  { id: "all",             label: "All"             },
-  { id: "settled",         label: "Settled"         },
+  { id: "MCA-201", txDetailId: "mtx1", remitterName: "Test Debtor Name", date: "13 Aug", time: "04:32 PM", amount: 30000, currency: "GBP", settlementStatus: "document-pending" },
+  { id: "MCA-202", txDetailId: "mtx2", remitterName: "Test Debtor Name", date: "13 Aug", time: "04:29 PM", amount: 12,    currency: "GBP", settlementStatus: "document-pending" },
+  { id: "MCA-203", txDetailId: "mtx3", remitterName: "Test Debtor Name", date: "13 Aug", time: "04:26 PM", amount: 26,    currency: "GBP", settlementStatus: "document-pending" },
+  { id: "MCA-204", txDetailId: "mtx4", remitterName: "Test Debtor Name", date: "13 Aug", time: "04:26 PM", amount: 10,    currency: "EUR", settlementStatus: "document-pending" },
+  { id: "MCA-205", txDetailId: "mtx5", remitterName: "AMAZON",           date: "12 Aug", time: "03:27 PM", amount: 45000, currency: "GBP", settlementStatus: "sent-for-settlement" },
+  { id: "MCA-206", txDetailId: "mtx6", remitterName: "AMAZON",           date: "12 Aug", time: "03:24 PM", amount: 30000, currency: "GBP", settlementStatus: "sent-for-settlement" },
 ];
 
 function toMcaRecentItem(row: McaTxnRow): RecentTxnItem {
@@ -144,7 +131,7 @@ function toMcaRecentItem(row: McaTxnRow): RecentTxnItem {
     name: row.remitterName,
     amount: fmtAmount(row.amount, row.currency),
     method: "Wire",
-    status: row.settlementStatus === "settled" ? "success" : "pending",
+    status: row.settlementStatus === "document-pending" ? "pending" : "success",
     time: row.time,
     date: row.date,
   };
@@ -200,7 +187,10 @@ const DATE_PRESET_LABELS: Record<string, string> = {
 };
 
 function getChipLabel(f: ChipFilters, id: ChipId): string {
-  const SL: Record<string, string> = { success: "Completed", pending: "Pending", failed: "Failed", refunded: "Refunded" };
+  const SL: Record<string, string> = {
+    success: "Completed", pending: "Pending", failed: "Failed", refunded: "Refunded",
+    "document-pending": "Document Pending", "sent-for-settlement": "Sent For Settlement", settled: "Settled",
+  };
   const ML: Record<string, string> = { upi: "UPI", card: "Card", netbanking: "Net Banking" };
   switch (id) {
     case "status": {
@@ -243,6 +233,19 @@ const CHIP_STATUS_OPTS = [
   { id: "pending",  label: "Pending",   color: "text-amber-700",   bg: "bg-amber-50"   },
   { id: "failed",   label: "Failed",    color: "text-red-700",     bg: "bg-red-50"     },
   { id: "refunded", label: "Refunded",  color: "text-red-700",     bg: "bg-red-50"     },
+];
+
+const CHIP_STATUS_OPTS_MCA = [
+  { id: "document-pending",    label: "Document Pending",    color: "text-amber-700",   bg: "bg-amber-50"   },
+  { id: "sent-for-settlement", label: "Sent For Settlement", color: "text-emerald-700", bg: "bg-emerald-50" },
+  { id: "settled",             label: "Settled",             color: "text-emerald-700", bg: "bg-emerald-50" },
+];
+
+/* MCA table only surfaces Status / Date & Time / Currency chips */
+const CHIPS_MCA = [
+  { id: "status",   label: "Status"      } as const,
+  { id: "datetime", label: "Date & Time" } as const,
+  { id: "currency", label: "Currency"    } as const,
 ];
 
 const CHIP_DATE_PRESETS = [
@@ -394,7 +397,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
       case "status":
         return (
           <div className="divide-y divide-border/50">
-            {CHIP_STATUS_OPTS.map(s => {
+            {(isMca ? CHIP_STATUS_OPTS_MCA : CHIP_STATUS_OPTS).map(s => {
               const checked = chipDraft.status.has(s.id);
               return (
                 <button key={s.id} type="button"
@@ -523,8 +526,10 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
   const q = searchQuery.trim().toLowerCase();
 
   const filteredMca = MCA_TABLE_TXNS
-    .filter(t => tab === "all" || t.settlementStatus === tab)
-    .filter(t => !q || t.remitterName.toLowerCase().includes(q) || t.country.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+    .filter(t => tab === "all" || (tab === "success" && t.settlementStatus !== "document-pending"))
+    .filter(t => !q || t.remitterName.toLowerCase().includes(q) || t.id.toLowerCase().includes(q))
+    .filter(t => chipFilters.status.size === 0 || chipFilters.status.has(t.settlementStatus))
+    .filter(t => chipFilters.currency === "" || t.currency === chipFilters.currency);
 
   const filteredPg = TABLE_TXNS
     .filter(t => tab === "all" || t.status === tab)
@@ -699,7 +704,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={isMca ? "Search remitter, country, ID..." : "Search customer, email, ID..."}
+              placeholder="Search customer, email, ID..."
               className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             {searchQuery && (
@@ -708,22 +713,19 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
               </button>
             )}
           </div>
-          {!isMca && (
-            <button
-              type="button"
-              onClick={() => onFilterButtonTap?.()}
-              className="relative h-[38px] w-[38px] flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground shrink-0"
-            >
-              <SlidersHorizontal className="h-[15px] w-[15px]" strokeWidth={2} />
-              {hasAnyFilter(f) && (
-                <span className="absolute top-1.5 right-1.5 h-[5px] w-[5px] rounded-full bg-primary" />
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onFilterButtonTap?.()}
+            className="relative h-[38px] w-[38px] flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground shrink-0"
+          >
+            <SlidersHorizontal className="h-[15px] w-[15px]" strokeWidth={2} />
+            {!isMca && hasAnyFilter(f) && (
+              <span className="absolute top-1.5 right-1.5 h-[5px] w-[5px] rounded-full bg-primary" />
+            )}
+          </button>
         </div>
 
-        {/* Filter chips — active chips float to the left (PG only) */}
-        {!isMca && (
+        {/* Filter chips — active chips float to the left */}
         <div ref={chipsScrollRef} className="[&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
         <div className="flex gap-2 px-4 w-max">
           {settlementFilter && (
@@ -738,7 +740,7 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
               </span>
             </button>
           )}
-          {[...CHIPS].sort((a, b) => {
+          {[...(isMca ? CHIPS_MCA : CHIPS)].sort((a, b) => {
             const aActive = isChipActive(chipFilters, a.id) ? 0 : 1;
             const bActive = isChipActive(chipFilters, b.id) ? 0 : 1;
             return aActive - bActive;
@@ -775,12 +777,11 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
           })}
         </div>
         </div>
-        )}
 
         {/* Tab strip */}
         <div ref={tabScrollRef} className="mx-4 mt-4 mb-3 [&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", cursor: "grab" } as React.CSSProperties}>
           <div className="flex gap-1 bg-muted/60 p-1 rounded-xl w-max min-w-full">
-            {(isMca ? MCA_TABS : TABS).map((t) => (
+            {TABS.map((t) => (
               <button key={t.id} type="button" onClick={() => setTab(t.id)}
                 className={cn(
                   "flex-1 shrink-0 py-1.5 px-4 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
@@ -798,50 +799,35 @@ export function MobileTransactions({ externalFilterState, onFilterButtonTap, onC
             filteredMca.length === 0 ? (
               <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No transactions</p>
             ) : filteredMca.map((row) => {
-              const cfg = MCA_SETTLEMENT_CFG[row.settlementStatus];
+              const amt = MCA_AMOUNT_CFG[row.settlementStatus];
               return (
-                <div key={row.id} className="px-4 py-3.5">
-                  <button
-                    type="button"
-                    onClick={() => onTxnTap?.(toMcaRecentItem(row))}
-                    className="w-full flex items-start justify-between gap-3 text-left active:opacity-70 transition-opacity duration-100"
-                  >
-                    {/* Left block */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{row.remitterName}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[13px] leading-none">{row.countryFlag}</span>
-                        <p className="text-[12px] text-muted-foreground leading-snug">{row.country}</p>
-                      </div>
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => onTxnTap?.(toMcaRecentItem(row))}
+                  className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
+                >
+                  {/* Left block */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{row.remitterName}</p>
+                    <div className="mt-1">
+                      <CreditCard className="h-[13px] w-[13px] text-muted-foreground shrink-0" strokeWidth={1.75} />
                     </div>
+                  </div>
 
-                    {/* Right block */}
-                    <div className="shrink-0 text-right">
-                      <p className="leading-snug">
-                        <span className="text-[13.5px] font-bold tabular-nums text-foreground">
-                          {hidden ? "•••" : fmtAmount(row.amount, row.currency)}
-                        </span>
-                        {!hidden && (
-                          <span className="text-[11px] text-muted-foreground ml-1">{row.currency}</span>
-                        )}
-                      </p>
-                      <span className={cn("mt-1 inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md", cfg.bg, cfg.text)}>
-                        {cfg.label}
+                  {/* Right block */}
+                  <div className="shrink-0 text-right">
+                    <p className="leading-snug">
+                      <span className={cn("text-[13.5px] font-bold tabular-nums", amt.color)}>
+                        {hidden ? "•••" : `${amt.prefix}${fmtAmount(row.amount, row.currency)}`}
                       </span>
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{row.date} · {row.time}</p>
-                    </div>
-                  </button>
-                  {row.settlementStatus === "invoice-pending" && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); toast("Invoice upload is coming soon"); }}
-                      className="mt-2.5 w-full flex items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors"
-                    >
-                      <Upload className="h-3 w-3" strokeWidth={2.5} />
-                      Upload invoice
-                    </button>
-                  )}
-                </div>
+                      {!hidden && (
+                        <span className="text-[11px] text-muted-foreground ml-1">{row.currency}</span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{row.date} · {row.time}</p>
+                  </div>
+                </button>
               );
             })
           ) : (
