@@ -10,6 +10,7 @@ import {
   Users,
   Shield,
   Link2,
+  AppWindow,
   MousePointerClick,
   Zap,
   RefreshCw,
@@ -23,6 +24,7 @@ import {
   BookOpen,
   TrendingUp,
   Settings2,
+  Package2,
   type LucideIcon,
 } from "lucide-react";
 import type { PortalRole, ProductTab } from "./workspace-types";
@@ -170,6 +172,7 @@ export const pgNav: NavGroup[] = [
     sectionId: "main",
     items: [
       { label: "Payment Links",  href: "/payment-products/payment-links",  icon: Link2 },
+      { label: "Payment Pages",  href: "/payment-products/payment-pages",  icon: AppWindow },
       { label: "Payment Button", href: "/payment-products/payment-button", icon: MousePointerClick },
       { label: "Flash",          href: "/payment-products/flash",          icon: Zap,      badge: "NEW" },
       { label: "Subscriptions",  href: "/payment-products/subscriptions",  icon: RefreshCw },
@@ -252,6 +255,7 @@ export const mcaNav: NavGroup[] = [
     label: "",
     sectionId: "main",
     items: [
+      { label: "SKU management", href: "/sku-management", icon: Package2 },
       { label: "Clients", href: "/client-management", icon: Users },
       {
         label: "eBRC",
