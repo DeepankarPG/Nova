@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft, Search, Plus, Check, ArrowRight, X, ChevronDown, Loader2, Send,
+  ArrowLeft, Search, Plus, Check, ArrowRight, X, ChevronDown, Loader2, Send, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -369,7 +369,8 @@ export function MobileTeamManagement({
       {open && (
         <motion.div
           key="team-management-screen"
-          className={`${pos} inset-0 z-[80] flex flex-col bg-background overflow-hidden`}
+          className={`${pos} inset-x-0 bottom-0 z-[80] flex flex-col bg-background overflow-hidden`}
+          style={{ top: 44 }}
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
@@ -378,7 +379,7 @@ export function MobileTeamManagement({
           {/* Header */}
           <div
             className="flex items-center gap-3 px-4 bg-background border-b border-border/40 shrink-0"
-            style={{ paddingTop: "max(20px, env(safe-area-inset-top))", paddingBottom: 14 }}
+            style={{ paddingTop: 14, paddingBottom: 14 }}
           >
             <button
               type="button"
@@ -392,14 +393,6 @@ export function MobileTeamManagement({
               <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">Team Management</p>
               <p className="text-[12px] text-muted-foreground mt-0.5">{members.length} Members</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white active:scale-95 transition-transform shrink-0"
-              aria-label="Add team member"
-            >
-              <Plus className="h-[18px] w-[18px]" strokeWidth={2.25} />
-            </button>
           </div>
 
           {/* Scrollable body */}
@@ -419,31 +412,41 @@ export function MobileTeamManagement({
               </div>
             </div>
 
-            <div className="mx-4 mt-3 mb-6 rounded-2xl border border-border bg-card shadow-sm">
+            <div className="mx-4 mt-3 mb-6 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
 
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-4 pb-3">
-                <p className="text-[15px] font-bold text-foreground">All Members</p>
-                <button
-                  type="button"
-                  onClick={() => setAddOpen(true)}
-                  className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
-                  aria-label="Add team member"
-                >
-                  <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
-                </button>
+              {/* Header — matches Payment Links: title + Export + primary "+" */}
+              <div className="flex items-center justify-between px-4 pt-4 pb-3 gap-2">
+                <p className="text-[15px] font-bold text-foreground shrink-0">All Members</p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => toast.success("Exporting team members...")}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-[11.5px] font-medium text-muted-foreground active:bg-muted/40 transition-colors"
+                  >
+                    <Download className="h-[12px] w-[12px]" strokeWidth={2} />
+                    Export
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddOpen(true)}
+                    className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
+                    aria-label="Add team member"
+                  >
+                    <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
+                  </button>
+                </div>
               </div>
 
-              {/* Search */}
-              <div className="flex items-center gap-2.5 px-4 pb-3">
-                <div className="flex-1 flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5">
+              {/* Search — matches Payment Links: single-level wrapper */}
+              <div className="px-4 pb-3">
+                <div className="flex items-center gap-2.5 bg-muted/50 rounded-xl px-3.5 py-2.5">
                   <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={2} />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by username"
-                    className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                    className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none min-w-0"
                   />
                   {search && (
                     <button type="button" onClick={() => setSearch("")}>
@@ -453,23 +456,21 @@ export function MobileTeamManagement({
                 </div>
               </div>
 
-              {/* Status tabs */}
-              <div className="mx-4 mb-3 [&::-webkit-scrollbar]:hidden" style={{ overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
-                <div className="flex gap-1 bg-muted/60 p-1 rounded-xl w-max min-w-full">
-                  {TEAM_TABS.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTab(t.id)}
-                      className={cn(
-                        "flex-1 shrink-0 py-1.5 px-4 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap",
-                        tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                      )}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+              {/* Status tabs — matches Payment Links: single flex row, centered labels */}
+              <div className="flex gap-1 mx-4 mb-3 bg-muted/60 p-1 rounded-xl overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                {TEAM_TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    className={cn(
+                      "flex-1 flex items-center justify-center py-1.5 text-[11.5px] font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 px-1",
+                      tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
 
               {/* Member rows */}

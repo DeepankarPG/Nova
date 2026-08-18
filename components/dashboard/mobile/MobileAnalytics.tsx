@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import {
   AreaChart, Area, BarChart, Bar,
+  PieChart, Pie, Cell,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import {
@@ -17,12 +18,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight, ArrowDownRight, GripVertical,
   PlusCircle, MinusCircle, Search, X, SlidersHorizontal, ArrowLeft, Check,
+  ChevronRight, PiggyBank,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHideAmounts, MaskedNumber } from "@/lib/hide-amounts-context";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 type Period   = "1D" | "1W" | "1M" | "3M" | "YTD";
+type ProductTab = "payment-gateway" | "multi-currency";
 type Category = "Revenue" | "Payments" | "Subscribers" | "Disputes" | "Methods" | "Regional" | "Traffic";
 type Chip     = "All" | Category;
 type Dat      = { t: string; cur: number; prev: number };
@@ -662,14 +665,319 @@ export function AnalyticsEditOverlay({
   );
 }
 
+/* ─── MCA Analytics — mock data + cards ──────────────────────────────── */
+const MCA_REVENUE_SERIES = [
+  { t: "Feb", cur: 118000 }, { t: "Mar", cur: 120000 }, { t: "Apr", cur: 122000 },
+  { t: "May", cur: 398000 }, { t: "Jun", cur: 210000 }, { t: "Jul", cur: 58000 }, { t: "Aug", cur: 62000 },
+];
+const MCA_REVENUE_TOTAL  = "₹9.30L";
+const MCA_REVENUE_CHANGE = "+14.1%";
+
+const MCA_CLIENT_ANALYTICS = [
+  { name: "Acme Corp",        amount: "₹1.63L", pct: 100 },
+  { name: "GlobalTech Ltd",   amount: "₹1.23L", pct: 75  },
+  { name: "Nordic Solutions", amount: "₹97.8K", pct: 60  },
+  { name: "Pacific Trade Co", amount: "₹88.0K", pct: 54  },
+  { name: "Meridian Exports", amount: "₹61.4K", pct: 38  },
+];
+
+const MCA_COUNTRY_TXNS = [
+  { flag: "🇺🇸", country: "United States", amount: "$118,400", pct: 100, color: "#2563eb" },
+  { flag: "🇬🇧", country: "United Kingdom", amount: "$59,200",  pct: 50,  color: "#2563eb" },
+  { flag: "🇸🇬", country: "Singapore",      amount: "$44,600",  pct: 38,  color: "#2563eb" },
+  { flag: "🇩🇪", country: "Germany",        amount: "$33,100",  pct: 28,  color: "#7c3aed" },
+  { flag: "🇦🇪", country: "UAE",            amount: "$24,800",  pct: 21,  color: "#7c3aed" },
+  { flag: "🇦🇺", country: "Australia",      amount: "$17,500",  pct: 15,  color: "#059669" },
+];
+const MCA_COUNTRY_STATS: { label: string; value: string; delta: string | null; up: boolean }[] = [
+  { label: "Total invoiced",      value: "$298K", delta: "+18%", up: true  },
+  { label: "Avg per country",     value: "$50K",  delta: "+6%",  up: true  },
+  { label: "United States share", value: "40%",   delta: "-3%",  up: false },
+  { label: "Active markets",      value: "6",     delta: null,   up: true  },
+];
+
+const MCA_INVOICE_TREND = [
+  { t: "Jan", paid: 48, outstanding: 12 },
+  { t: "Feb", paid: 62, outstanding: 8  },
+  { t: "Mar", paid: 54, outstanding: 13 },
+  { t: "Apr", paid: 74, outstanding: 9  },
+  { t: "May", paid: 80, outstanding: 7  },
+  { t: "Jun", paid: 68, outstanding: 10 },
+  { t: "Jul", paid: 15, outstanding: 6  },
+];
+
+const MCA_CURRENCY_SPLIT_VOLUME = [
+  { key: "usd",   label: "USD",   value: 52, color: "#2563eb" },
+  { key: "eur",   label: "EUR",   value: 22, color: "#7c3aed" },
+  { key: "gbp",   label: "GBP",   value: 13, color: "#60a5fa" },
+  { key: "sgd",   label: "SGD",   value: 8,  color: "#059669" },
+  { key: "other", label: "Other", value: 5,  color: "#94a3b8" },
+];
+const MCA_CURRENCY_SPLIT_COUNT = [
+  { key: "usd",   label: "USD",   value: 45, color: "#2563eb" },
+  { key: "eur",   label: "EUR",   value: 26, color: "#7c3aed" },
+  { key: "gbp",   label: "GBP",   value: 15, color: "#60a5fa" },
+  { key: "sgd",   label: "SGD",   value: 9,  color: "#059669" },
+  { key: "other", label: "Other", value: 5,  color: "#94a3b8" },
+];
+
+function McaRevenueCard() {
+  const { hidden } = useHideAmounts();
+  return (
+    <div className="mx-4 mb-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[13.5px] font-bold text-foreground">Revenue</p>
+      </div>
+      <div className="px-4 pb-3">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[24px] font-bold text-foreground tabular-nums leading-tight">
+            <MaskedNumber value={MCA_REVENUE_TOTAL} hidden={hidden} />
+          </span>
+          <span className="text-[12px] font-medium text-muted-foreground">INR</span>
+        </div>
+        <div className="flex items-center gap-1 mt-1">
+          <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+          <span className="text-[11px] font-semibold text-emerald-600">{MCA_REVENUE_CHANGE} vs last month</span>
+        </div>
+      </div>
+      <div className="border-t border-border/40">
+        <div className="h-[150px] px-1 pt-2 pb-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={MCA_REVENUE_SERIES} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="mcaRevenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="t" {...AX} />
+              <YAxis {...AX} width={32} tickFormatter={fmtN} />
+              <Tooltip contentStyle={TT} formatter={(v: unknown) => [fmtN(Number(v))]} />
+              <Area dataKey="cur" stroke="#2563eb" strokeWidth={2.5} fill="url(#mcaRevenueGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#2563eb" }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function McaClientAnalyticsCard() {
+  const { hidden } = useHideAmounts();
+  return (
+    <div className="mx-4 mb-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <p className="text-[13.5px] font-bold text-foreground">Client analytics</p>
+        <button type="button" className="flex items-center gap-0.5 text-[12px] font-semibold text-primary active:opacity-60">
+          View all
+          <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </button>
+      </div>
+      <div className="px-4 pb-4 space-y-3.5">
+        {MCA_CLIENT_ANALYTICS.map((c) => (
+          <div key={c.name}>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[12.5px] font-semibold text-foreground">{c.name}</p>
+              <p className="text-[12.5px] font-bold text-foreground tabular-nums">
+                <MaskedNumber value={c.amount} hidden={hidden} />
+              </p>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${c.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function McaCountryTransactionsCard() {
+  const { hidden } = useHideAmounts();
+  return (
+    <div className="mx-4 mb-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="px-4 pt-4 pb-3">
+        <p className="text-[13.5px] font-bold text-foreground">Transactions</p>
+        <p className="text-[11.5px] text-muted-foreground mt-0.5">Total transaction volume by country</p>
+      </div>
+      <div className="px-4 pb-3 space-y-3">
+        {MCA_COUNTRY_TXNS.map((c) => (
+          <div key={c.country}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
+                <span className="text-[14px] leading-none">{c.flag}</span>
+                {c.country}
+              </span>
+              <span className="text-[12.5px] font-bold text-foreground tabular-nums">
+                <MaskedNumber value={c.amount} hidden={hidden} />
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full" style={{ width: `${c.pct}%`, background: c.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border/40 px-4 py-3.5 grid grid-cols-2 gap-y-3">
+        {MCA_COUNTRY_STATS.map((s) => (
+          <div key={s.label}>
+            <p className="text-[11px] text-muted-foreground mb-0.5">{s.label}</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[14px] font-bold text-foreground tabular-nums">{s.value}</span>
+              {s.delta && (
+                <span className={cn("flex items-center gap-0.5 text-[10.5px] font-semibold", s.up ? "text-emerald-600" : "text-destructive")}>
+                  {s.up ? <ArrowUpRight className="h-2.5 w-2.5" /> : <ArrowDownRight className="h-2.5 w-2.5" />}
+                  {s.delta}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function McaSummaryTilesRow() {
+  const { hidden } = useHideAmounts();
+  return (
+    <div className="mx-4 mb-3 grid grid-cols-3 gap-2.5">
+      <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3">
+        <p className="text-[10.5px] font-medium text-muted-foreground mb-1.5 leading-tight">Total invoiced</p>
+        <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+          <MaskedNumber value="$2,97,600" hidden={hidden} />
+        </p>
+        <span className="flex items-center gap-0.5 text-[10.5px] font-semibold text-emerald-600 mt-1">
+          <ArrowUpRight className="h-2.5 w-2.5" /> +18%
+        </span>
+      </div>
+      <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3">
+        <p className="text-[10.5px] font-medium text-muted-foreground mb-1.5 leading-tight">Outstanding</p>
+        <p className="text-[14px] font-bold text-foreground tabular-nums leading-tight">
+          <MaskedNumber value="$41,500" hidden={hidden} />
+        </p>
+        <span className="flex items-center gap-0.5 text-[10.5px] font-semibold text-destructive mt-1">
+          <ArrowDownRight className="h-2.5 w-2.5" /> -8%
+        </span>
+      </div>
+      <div className="rounded-2xl border border-border bg-card shadow-sm px-3 py-3 flex flex-col">
+        <div className="h-6 w-6 rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center mb-1.5">
+          <PiggyBank className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2} />
+        </div>
+        <p className="text-[10.5px] font-medium text-muted-foreground mb-1 leading-tight">Saved amount</p>
+        <p className="text-[13px] font-bold text-foreground tabular-nums leading-tight">
+          <MaskedNumber value="₹8,240.25" hidden={hidden} />
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function McaInvoiceTrendCard() {
+  return (
+    <div className="mx-4 mb-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="px-4 pt-4 pb-1">
+        <p className="text-[13.5px] font-bold text-foreground">Invoice trend</p>
+        <p className="text-[11.5px] text-muted-foreground mt-0.5">Paid vs outstanding invoices by month</p>
+      </div>
+      <div className="h-[150px] px-1 pt-3 pb-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={MCA_INVOICE_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="32%" barGap={3}>
+            <XAxis dataKey="t" {...AX} />
+            <YAxis {...AX} width={26} />
+            <Tooltip contentStyle={TT} />
+            <Bar dataKey="paid" fill="#2563eb" radius={[3, 3, 0, 0]} name="Paid" />
+            <Bar dataKey="outstanding" fill="#bfdbfe" radius={[3, 3, 0, 0]} name="Outstanding" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex items-center gap-4 px-4 pt-1 pb-3.5">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2 w-2 rounded-full" style={{ background: "#2563eb" }} />
+          <span className="text-[10px] text-muted-foreground font-medium">Paid</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2 w-2 rounded-full" style={{ background: "#bfdbfe" }} />
+          <span className="text-[10px] text-muted-foreground font-medium">Outstanding</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function McaCurrencySplitCard() {
+  const [mode, setMode] = useState<"volume" | "count">("volume");
+  const data = mode === "volume" ? MCA_CURRENCY_SPLIT_VOLUME : MCA_CURRENCY_SPLIT_COUNT;
+  return (
+    <div className="mx-4 mb-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="flex items-start justify-between px-4 pt-4 pb-1 gap-2">
+        <div className="min-w-0">
+          <p className="text-[13.5px] font-bold text-foreground">Currency split</p>
+          <p className="text-[11.5px] text-muted-foreground mt-0.5">Share of total volume by currency</p>
+        </div>
+        <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
+          {(["volume", "count"] as const).map((m) => (
+            <button key={m} type="button" onClick={() => setMode(m)}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[10.5px] font-semibold capitalize transition-colors",
+                mode === m ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+              )}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-4 px-4 py-4">
+        <div className="h-[110px] w-[110px] shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data} dataKey="value" nameKey="label" innerRadius={30} outerRadius={50} paddingAngle={2} strokeWidth={0}>
+                {data.map((d) => <Cell key={d.key} fill={d.color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex-1 space-y-2 min-w-0">
+          {data.map((d) => (
+            <div key={d.key} className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-foreground min-w-0">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: d.color }} />
+                {d.label}
+              </span>
+              <span className="text-[12px] font-bold text-foreground tabular-nums shrink-0">{d.value}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function McaAnalyticsSection() {
+  return (
+    <div className="pt-3 bg-background">
+      <McaRevenueCard />
+      <McaClientAnalyticsCard />
+      <McaCountryTransactionsCard />
+      <McaSummaryTilesRow />
+      <McaInvoiceTrendCard />
+      <McaCurrencySplitCard />
+    </div>
+  );
+}
+
 /* ─── Root ────────────────────────────────────────────────────────────── */
 export function MobileAnalytics({
   chartIds,
   onEditOpen,
+  productTab = "payment-gateway",
 }: {
   chartIds: string[];
   onEditOpen: () => void;
+  productTab?: ProductTab;
 }) {
+  const isMca = productTab === "multi-currency";
   const [period,    setPeriod]    = useState<Period>("1W");
   const [activeChip, setActiveChip] = useState<Chip>("All");
   const chipsScrollRef = useHorizontalScroll();
@@ -687,43 +995,56 @@ export function MobileAnalytics({
     <div className="bg-background">
       {/* Sticky header: period pills + category chips */}
       <div className="sticky top-0 z-20 bg-background border-b border-border/30">
-        {/* Period pills */}
-        <div className="flex items-center gap-1.5 px-4 pt-1 pb-2">
-          {PERIODS.map(per => (
-            <button key={per.id} type="button" onClick={() => setPeriod(per.id)}
-              className={cn(pillBase, period === per.id ? pillActive : pillInactive)}
-            >
-              {per.label}
-            </button>
-          ))}
-        </div>
-        {/* Category chips */}
-        <div ref={chipsScrollRef} className="pb-2.5 [&::-webkit-scrollbar]:hidden" style={{overflowX:"scroll", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", cursor:"grab"} as React.CSSProperties}>
-          <div className="flex items-center gap-1.5 px-4 w-max">
-            {CHIPS.map(chip => (
-              <button key={chip} type="button" onClick={() => setActiveChip(chip)}
-                className={cn("shrink-0 px-3 py-1 text-[11.5px] font-semibold rounded-lg border transition-colors",
-                  activeChip === chip ? "bg-primary text-primary-foreground border-primary shadow-sm" : "border-border text-muted-foreground bg-card hover:bg-muted/40"
-                )}
+        {/* Period pills + Edit */}
+        <div className="flex items-center justify-between gap-2 px-4 pt-1 pb-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+            {PERIODS.map(per => (
+              <button key={per.id} type="button" onClick={() => setPeriod(per.id)}
+                className={cn(pillBase, "shrink-0", period === per.id ? pillActive : pillInactive)}
               >
-                {chip}
+                {per.label}
               </button>
             ))}
           </div>
+          <button type="button" onClick={onEditOpen}
+            className="text-[13px] font-medium text-primary active:opacity-60 shrink-0"
+          >
+            Edit
+          </button>
         </div>
+        {/* Category chips — PG only */}
+        {!isMca && (
+          <div ref={chipsScrollRef} className="pb-2.5 [&::-webkit-scrollbar]:hidden" style={{overflowX:"scroll", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", cursor:"grab"} as React.CSSProperties}>
+            <div className="flex items-center gap-1.5 px-4 w-max">
+              {CHIPS.map(chip => (
+                <button key={chip} type="button" onClick={() => setActiveChip(chip)}
+                  className={cn("shrink-0 px-3 py-1 text-[11.5px] font-semibold rounded-lg border transition-colors",
+                    activeChip === chip ? "bg-primary text-primary-foreground border-primary shadow-sm" : "border-border text-muted-foreground bg-card hover:bg-muted/40"
+                  )}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chart list */}
-      <div className="pt-3 bg-background">
-        {visibleDefs.length === 0 ? (
-          <div className="mx-4 py-10 flex flex-col items-center gap-2 text-center">
-            <p className="text-[14px] font-medium text-muted-foreground">No charts in this category</p>
-            <button type="button" onClick={() => setActiveChip("All")} className="text-[13px] text-primary font-medium">Show all</button>
-          </div>
-        ) : (
-          visibleDefs.map(def => <ChartRenderer key={def.id} def={def} period={period}/>)
-        )}
-      </div>
+      {isMca ? (
+        <McaAnalyticsSection />
+      ) : (
+        <div className="pt-3 bg-background">
+          {visibleDefs.length === 0 ? (
+            <div className="mx-4 py-10 flex flex-col items-center gap-2 text-center">
+              <p className="text-[14px] font-medium text-muted-foreground">No charts in this category</p>
+              <button type="button" onClick={() => setActiveChip("All")} className="text-[13px] text-primary font-medium">Show all</button>
+            </div>
+          ) : (
+            visibleDefs.map(def => <ChartRenderer key={def.id} def={def} period={period}/>)
+          )}
+        </div>
+      )}
     </div>
   );
 }

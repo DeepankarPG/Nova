@@ -180,6 +180,7 @@ function AppStage() {
   const [intlSelectedMidId, setIntlSelectedMidId] = useState(mids[0]?.id ?? "");
   const [paymentsSubTab,       setPaymentsSubTab]       = useState<"transactions" | "payment-links" | "invoice" | "mca-links">("transactions");
   const [paymentsProductTab,   setPaymentsProductTab]   = useState<"payment-gateway" | "multi-currency">("payment-gateway");
+  const [analyticsProductTab,  setAnalyticsProductTab]  = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [swipeDir,             setSwipeDir]             = useState(0);
   const [selectedPaymentLink,  setSelectedPaymentLink]  = useState<string | null>(null);
   const [selectedInvoice,      setSelectedInvoice]      = useState<string | null>(null);
@@ -196,6 +197,7 @@ function AppStage() {
   const [criticalSheetOpen,   setCriticalSheetOpen]   = useState(false);
   const [selectedTxn,         setSelectedTxn]         = useState<RecentTxnItem | null>(null);
   const [settlementOpen,      setSettlementOpen]      = useState(false);
+  const [settlementProductTab, setSettlementProductTab] = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [settlementFilter,    setSettlementFilter]    = useState<string | null>(null);
   const [ebrcOpen,            setEbrcOpen]            = useState(false);
   const [disputesOpen,        setDisputesOpen]        = useState(false);
@@ -293,11 +295,21 @@ function AppStage() {
       ) : activeTab === "analytics" ? (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
           <h1 className="text-[20px] font-bold text-foreground tracking-tight">Analytics</h1>
-          <button type="button" onClick={() => setAnalyticsEditOpen(true)}
-            className="text-[14px] font-medium text-primary active:opacity-60"
-          >
-            Edit
-          </button>
+          <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
+            {(["payment-gateway", "multi-currency"] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAnalyticsProductTab(id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors",
+                  analyticsProductTab === id ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                {id === "payment-gateway" ? "PG" : "MCA"}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="px-5 bg-transparent shrink-0 flex items-center justify-between" style={{ paddingBottom: 12 }}>
@@ -379,7 +391,7 @@ function AppStage() {
           )}
           style={{ scrollbarWidth: "none" }}
         >
-          {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} /> :
+          {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} productTab={analyticsProductTab} /> :
            activeTab === "intl" ? (
              <MobileInternational
                onOpenCountrySheet={() => setIntlSheetOpen(true)}
@@ -590,6 +602,8 @@ function AppStage() {
         open={settlementOpen}
         onClose={() => setSettlementOpen(false)}
         contained
+        productTab={settlementProductTab}
+        onProductTabChange={setSettlementProductTab}
         onTxnLinkTap={(id) => {
           setSettlementOpen(false);
           setActiveTab("txns");

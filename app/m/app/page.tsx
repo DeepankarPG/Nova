@@ -80,11 +80,13 @@ function AppScreen() {
   const [intlTopTab,       setIntlTopTab]       = useState<IntlTopTab>("multi-currency");
   const [howItWorksOpen,   setHowItWorksOpen]   = useState(false);
   const [paymentsProductTab, setPaymentsProductTab] = useState<"payment-gateway" | "multi-currency">("payment-gateway");
+  const [analyticsProductTab, setAnalyticsProductTab] = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [analyticsChartIds, setAnalyticsChartIds] = useState<string[]>(() => loadAnalyticsCharts());
   const [analyticsEditOpen, setAnalyticsEditOpen] = useState(false);
   const [mcaLinkOpen,       setMcaLinkOpen]       = useState(false);
   const [editInvoiceId,     setEditInvoiceId]     = useState<string | null>(null);
   const [settlementOpen,    setSettlementOpen]    = useState(false);
+  const [settlementProductTab, setSettlementProductTab] = useState<"payment-gateway" | "multi-currency">("payment-gateway");
   const [settlementFilter,  setSettlementFilter]  = useState<string | null>(null);
   const [ebrcOpen,          setEbrcOpen]          = useState(false);
   const { hidden, toggle } = useHideAmounts();
@@ -134,11 +136,21 @@ function AppScreen() {
             {activeTab === "analytics" ? "Analytics" : activeTab === "txns" ? "Transactions" : "International"}
           </h1>
           {activeTab === "analytics" && (
-            <button type="button" onClick={() => setAnalyticsEditOpen(true)}
-              className="text-[14px] font-medium text-primary active:opacity-60"
-            >
-              Edit
-            </button>
+            <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
+              {(["payment-gateway", "multi-currency"] as const).map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setAnalyticsProductTab(id)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors",
+                    analyticsProductTab === id ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+                  )}
+                >
+                  {id === "payment-gateway" ? "PG" : "MCA"}
+                </button>
+              ))}
+            </div>
           )}
           {activeTab === "txns" && (
             <div className="flex items-center bg-muted/60 rounded-lg p-0.5 shrink-0">
@@ -171,7 +183,7 @@ function AppScreen() {
 
       {/* ── Scrollable content ── */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-[108px]">
-        {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} /> :
+        {activeTab === "analytics" ? <MobileAnalytics chartIds={analyticsChartIds} onEditOpen={() => setAnalyticsEditOpen(true)} productTab={analyticsProductTab} /> :
          activeTab === "txns" ? (
            <MobileTransactions
              key={paymentsProductTab}
@@ -338,6 +350,8 @@ function AppScreen() {
       <MobileSettlementReports
         open={settlementOpen}
         onClose={() => setSettlementOpen(false)}
+        productTab={settlementProductTab}
+        onProductTabChange={setSettlementProductTab}
         onTxnLinkTap={(id) => {
           setSettlementOpen(false);
           setActiveTab("txns");
