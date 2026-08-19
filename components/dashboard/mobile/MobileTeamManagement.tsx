@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft, Search, Plus, Check, ArrowRight, X, ChevronDown, Loader2, Send, Download,
+  Pencil, UserX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,160 @@ function TeamStatusBadge({ status }: { status: TeamStatus }) {
       {status === "invite-sent" && <ArrowRight className="h-3 w-3 shrink-0" strokeWidth={2.5} />}
       {status === "inactive" && <X className="h-3 w-3 shrink-0" strokeWidth={2.5} />}
     </span>
+  );
+}
+
+/* ─── Swipe-to-reveal actions — same mechanics as MobileInvoices' SwipeCard,
+ * adapted to 2 actions (Edit role / Deactivate) instead of 3. ──────── */
+const SWIPE_WIDTH = 150; // 2 actions × 75px each
+
+function SwipeCard({
+  isOpen, onOpen, onClose, onEditRole, onDeactivate, children,
+}: {
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onEditRole: () => void;
+  onDeactivate: () => void;
+  children: React.ReactNode;
+}) {
+  const [dragX,      setDragX]      = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX     = useRef(0);
+  const startY     = useRef(0);
+  const gestureDir = useRef<"h" | "v" | null>(null);
+  const didMove    = useRef(false);
+
+  const baseX      = isOpen ? -SWIPE_WIDTH : 0;
+  const translateX = isDragging
+    ? Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX))
+    : baseX;
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    startX.current     = e.clientX;
+    startY.current     = e.clientY;
+    gestureDir.current = null;
+    didMove.current    = false;
+    setDragX(0);
+    setIsDragging(true);
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDragging) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    if (!gestureDir.current) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      didMove.current    = true;
+      gestureDir.current = Math.abs(dx) >= Math.abs(dy) * 2 ? "h" : "v";
+      if (gestureDir.current === "v") { setIsDragging(false); return; }
+    }
+    if (gestureDir.current === "h") setDragX(dx);
+  }
+
+  function onPointerUp() {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (!didMove.current) {
+      setDragX(0);
+      if (isOpen) onClose();
+      return;
+    }
+    const finalX = Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX));
+    setDragX(0);
+    if (isOpen) {
+      if (finalX > -(SWIPE_WIDTH * 0.5)) onClose(); else onOpen();
+    } else {
+      if (finalX < -(SWIPE_WIDTH * 0.3)) onOpen(); else onClose();
+    }
+  }
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Action buttons — fixed behind the row */}
+      <div className="absolute right-0 top-0 bottom-0 flex" style={{ width: SWIPE_WIDTH }}>
+        <button type="button" onClick={onEditRole}
+          className="flex flex-col items-center justify-center flex-1 bg-amber-500"
+        >
+          <Pencil className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-white mt-1">Edit role</span>
+        </button>
+        <button type="button" onClick={onDeactivate}
+          className="flex flex-col items-center justify-center flex-1 bg-red-500"
+        >
+          <UserX className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-white mt-1">Deactivate</span>
+        </button>
+      </div>
+
+      {/* Row content — slides left on swipe */}
+      <div
+        className="relative z-[1] bg-card"
+        style={{
+          transform:   `translateX(${translateX}px)`,
+          transition:  isDragging ? "none" : "transform 0.22s cubic-bezier(0.22,1,0.36,1)",
+          touchAction: "pan-y",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Deactivate confirmation — centered dialog ─────────────────────── */
+function DeactivateConfirmModal({ member, onClose, onConfirm }: {
+  member: TeamMember | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {member && (
+        <motion.div
+          key="deactivate-confirm-backdrop"
+          className="absolute inset-0 z-[95] flex items-center justify-center px-6"
+          style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", background: "rgba(0,0,0,0.35)" }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[300px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden"
+            initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <div className="px-5 pt-5 pb-4 text-center">
+              <div className="h-11 w-11 rounded-full bg-red-50 dark:bg-red-950/40 flex items-center justify-center mx-auto mb-3">
+                <UserX className="h-5 w-5 text-red-600" strokeWidth={2} />
+              </div>
+              <p className="text-[15px] font-bold text-foreground leading-snug">Deactivate {member.name}?</p>
+              <p className="text-[12.5px] text-muted-foreground mt-1.5 leading-snug">
+                They will lose access to this account immediately. You can reactivate them later.
+              </p>
+            </div>
+            <div className="flex border-t border-border/60">
+              <button type="button" onClick={onClose}
+                className="flex-1 py-3 text-[14px] font-semibold text-muted-foreground border-r border-border/60 active:bg-muted/40 transition-colors"
+              >
+                Cancel
+              </button>
+              <button type="button" onClick={onConfirm}
+                className="flex-1 py-3 text-[14px] font-bold text-red-600 active:bg-muted/40 transition-colors"
+              >
+                Deactivate
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -162,21 +317,40 @@ function emptyNewMember(): NewMemberInput {
   return { firstName: "", lastName: "", username: "", role: "view-only", email: "", phone: "", whatsapp: false };
 }
 
+function memberToFormInput(member: TeamMember): NewMemberInput {
+  const [firstName, ...rest] = member.name.split(" ");
+  return {
+    firstName: firstName ?? "",
+    lastName: rest.join(" "),
+    username: member.username,
+    role: member.role,
+    email: member.email,
+    phone: member.phone.replace(/^\+91\s*/, ""),
+    whatsapp: false,
+  };
+}
+
 function AddTeamMemberSheet({
   open,
   onClose,
   contained,
+  editingMember,
   onInvited,
+  onSaved,
 }: {
   open:      boolean;
   onClose:   () => void;
   contained: boolean;
+  editingMember?: TeamMember | null;
   onInvited: (member: TeamMember) => void;
+  onSaved:   (member: TeamMember) => void;
 }) {
   const pos = contained ? "absolute" : "fixed";
-  const [form,      setForm]      = useState<NewMemberInput>(emptyNewMember());
+  const [form,      setForm]      = useState<NewMemberInput>(() => editingMember ? memberToFormInput(editingMember) : emptyNewMember());
   const [touched,   setTouched]   = useState<Record<string, boolean>>({});
   const [sending,   setSending]   = useState(false);
+
+  const isEdit = !!editingMember;
 
   const REQUIRED: (keyof NewMemberInput)[] = ["firstName", "username", "email"];
   const isMissing  = (f: keyof NewMemberInput) => !String(form[f]).trim();
@@ -192,7 +366,7 @@ function AddTeamMemberSheet({
     onClose();
   };
 
-  const handleSendInvite = () => {
+  const handleSubmit = () => {
     if (sending) return;
     if (!isComplete) {
       setTouched((t) => ({ ...t, ...Object.fromEntries(REQUIRED.map((f) => [f, true])) }));
@@ -201,18 +375,31 @@ function AddTeamMemberSheet({
     setSending(true);
     setTimeout(() => {
       setSending(false);
-      const member: TeamMember = {
-        id: `tm-${Date.now()}`,
-        name: `${form.firstName} ${form.lastName}`.trim(),
-        username: form.username.trim(),
-        role: form.role,
-        merchantId: MERCHANT_ID,
-        status: "invite-sent",
-        phone: form.phone ? `+91 ${form.phone}` : "—",
-        email: form.email.trim(),
-      };
-      onInvited(member);
-      toast.success(`Invite sent to ${member.username}`);
+      if (isEdit && editingMember) {
+        const updated: TeamMember = {
+          ...editingMember,
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          username: form.username.trim(),
+          role: form.role,
+          phone: form.phone ? `+91 ${form.phone}` : "—",
+          email: form.email.trim(),
+        };
+        onSaved(updated);
+        toast.success(`${updated.name}'s details updated`);
+      } else {
+        const member: TeamMember = {
+          id: `tm-${Date.now()}`,
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          username: form.username.trim(),
+          role: form.role,
+          merchantId: MERCHANT_ID,
+          status: "invite-sent",
+          phone: form.phone ? `+91 ${form.phone}` : "—",
+          email: form.email.trim(),
+        };
+        onInvited(member);
+        toast.success(`Invite sent to ${member.username}`);
+      }
       setForm(emptyNewMember());
       setTouched({});
       onClose();
@@ -247,8 +434,14 @@ function AddTeamMemberSheet({
             {/* Header */}
             <div className="flex items-start justify-between gap-3 px-4 pb-3 border-b border-border/40 shrink-0">
               <div className="min-w-0">
-                <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">Add team member</p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Invite a teammate and set their access role for this account.</p>
+                <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">
+                  {isEdit ? "Edit team member" : "Add team member"}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {isEdit
+                    ? "Update this teammate's details and access role."
+                    : "Invite a teammate and set their access role for this account."}
+                </p>
               </div>
               <button
                 type="button"
@@ -322,15 +515,17 @@ function AddTeamMemberSheet({
               <button
                 type="button"
                 aria-disabled={!isComplete}
-                onClick={handleSendInvite}
+                onClick={handleSubmit}
                 className={cn(
                   "flex-1 h-12 rounded-2xl text-[14.5px] font-bold transition-all flex items-center justify-center gap-2",
                   isComplete ? "bg-primary text-white active:scale-[0.98]" : "bg-muted text-muted-foreground"
                 )}
               >
                 {sending
-                  ? <><Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} /> Sending...</>
-                  : <><Send className="h-4 w-4" strokeWidth={2.25} /> Send Invite</>}
+                  ? <><Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} /> {isEdit ? "Saving..." : "Sending..."}</>
+                  : isEdit
+                    ? <><Check className="h-4 w-4" strokeWidth={2.5} /> Save changes</>
+                    : <><Send className="h-4 w-4" strokeWidth={2.25} /> Send Invite</>}
               </button>
             </div>
           </motion.div>
@@ -351,10 +546,28 @@ export function MobileTeamManagement({
   contained?: boolean;
 }) {
   const pos = contained ? "absolute" : "fixed";
-  const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM);
-  const [tab,     setTab]     = useState<TeamTab>("all");
-  const [search,  setSearch]  = useState("");
-  const [addOpen, setAddOpen] = useState(false);
+  const [members,         setMembers]         = useState<TeamMember[]>(INITIAL_TEAM);
+  const [tab,             setTab]             = useState<TeamTab>("all");
+  const [search,          setSearch]          = useState("");
+  const [addOpen,         setAddOpen]         = useState(false);
+  const [editingMember,   setEditingMember]   = useState<TeamMember | null>(null);
+  const [addSheetToken,   setAddSheetToken]   = useState(0);
+  const [swipedId,        setSwipedId]        = useState<string | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<TeamMember | null>(null);
+
+  // Bumping this key on every open forces AddTeamMemberSheet to remount, so its
+  // form state is freshly (re-)seeded from `editingMember` without an effect.
+  const openAddSheet = () => { setEditingMember(null); setAddSheetToken((t) => t + 1); setAddOpen(true); };
+  const closeAddSheet = () => { setAddOpen(false); setEditingMember(null); };
+  const requestEditRole = (member: TeamMember) => { setSwipedId(null); setEditingMember(member); setAddSheetToken((t) => t + 1); setAddOpen(true); };
+  const requestDeactivate = (member: TeamMember) => { setSwipedId(null); setDeactivateTarget(member); };
+  const confirmDeactivate = () => {
+    if (!deactivateTarget) return;
+    const name = deactivateTarget.name;
+    setMembers((prev) => prev.map((m) => m.id === deactivateTarget.id ? { ...m, status: "inactive" } : m));
+    toast.success(`${name} has been deactivated`);
+    setDeactivateTarget(null);
+  };
 
   const q = search.trim().toLowerCase();
   const filtered = members
@@ -428,7 +641,7 @@ export function MobileTeamManagement({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAddOpen(true)}
+                    onClick={openAddSheet}
                     className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
                     aria-label="Add team member"
                   >
@@ -473,37 +686,64 @@ export function MobileTeamManagement({
                 ))}
               </div>
 
-              {/* Member rows */}
+              {/* Member rows — active members get swipe-to-reveal Edit role / Deactivate */}
               <div className="divide-y divide-border">
                 {filtered.length === 0 ? (
                   <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No team members found</p>
-                ) : filtered.map((m) => (
-                  <div key={m.id} className="px-4 py-3.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{m.name}</p>
-                        <p className="text-[12px] text-muted-foreground mt-0.5 font-mono truncate">{m.username}</p>
-                        <div className="mt-1.5">
-                          <RoleBadge role={m.role} />
+                ) : filtered.map((m) => {
+                  const rowContent = (
+                    <div className="px-4 py-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{m.name}</p>
+                          <p className="text-[12px] text-muted-foreground mt-0.5 font-mono truncate">{m.username}</p>
+                          <div className="mt-1.5">
+                            <RoleBadge role={m.role} />
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right flex flex-col items-end gap-1.5">
+                          <TeamStatusBadge status={m.status} />
+                          <p className="text-[11px] text-muted-foreground leading-snug">{m.phone}</p>
                         </div>
                       </div>
-                      <div className="shrink-0 text-right flex flex-col items-end gap-1.5">
-                        <TeamStatusBadge status={m.status} />
-                        <p className="text-[11px] text-muted-foreground leading-snug">{m.phone}</p>
-                      </div>
+                      <p className="text-[11.5px] text-muted-foreground mt-1.5 truncate">{m.email}</p>
                     </div>
-                    <p className="text-[11.5px] text-muted-foreground mt-1.5 truncate">{m.email}</p>
-                  </div>
-                ))}
+                  );
+
+                  if (m.status !== "active") {
+                    return <div key={m.id}>{rowContent}</div>;
+                  }
+
+                  return (
+                    <SwipeCard key={m.id}
+                      isOpen={swipedId === m.id}
+                      onOpen={() => setSwipedId(m.id)}
+                      onClose={() => setSwipedId(null)}
+                      onEditRole={() => requestEditRole(m)}
+                      onDeactivate={() => requestDeactivate(m)}
+                    >
+                      {rowContent}
+                    </SwipeCard>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           <AddTeamMemberSheet
+            key={addSheetToken}
             open={addOpen}
-            onClose={() => setAddOpen(false)}
+            onClose={closeAddSheet}
             contained={contained}
+            editingMember={editingMember}
             onInvited={(member) => setMembers((prev) => [member, ...prev])}
+            onSaved={(updated) => setMembers((prev) => prev.map((m) => m.id === updated.id ? updated : m))}
+          />
+
+          <DeactivateConfirmModal
+            member={deactivateTarget}
+            onClose={() => setDeactivateTarget(null)}
+            onConfirm={confirmDeactivate}
           />
         </motion.div>
       )}

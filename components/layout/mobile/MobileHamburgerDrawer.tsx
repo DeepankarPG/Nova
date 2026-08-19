@@ -68,6 +68,7 @@ interface MobileHamburgerDrawerProps {
   onSettlementTap?: () => void;
   onEbrcTap?: () => void;
   onDisputesTap?: () => void;
+  onClientManagementTap?: () => void;
   onTeamManagementTap?: () => void;
   onAppSettingsTap?: () => void;
   onContactSupportTap?: () => void;
@@ -81,6 +82,7 @@ export function MobileHamburgerDrawer({
   onSettlementTap,
   onEbrcTap,
   onDisputesTap,
+  onClientManagementTap,
   onTeamManagementTap,
   onAppSettingsTap,
   onContactSupportTap,
@@ -245,6 +247,14 @@ export function MobileHamburgerDrawer({
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onDisputesTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/client-management" && onClientManagementTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onClientManagementTap(); }}
                               className={rowClass} style={itemStyle}
                             >{inner}</button>
                           );
