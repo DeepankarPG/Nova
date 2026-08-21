@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Copy, Check, AlertTriangle, X, ChevronDown, ChevronRight,
   ArrowLeft, FileText, Download, Loader2, AlertCircle, Landmark,
-  Image as ImageIcon,
+  Image as ImageIcon, Globe, Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -123,14 +123,12 @@ interface Country {
 }
 
 const COUNTRIES: Country[] = [
-  { code: "US",  name: "United States",  shortName: "USA",    flag: "🇺🇸", iso2: "us", currency: "USD", regionLabel: "US"            },
-  { code: "UK",  name: "United Kingdom", shortName: "UK",     flag: "🇬🇧", iso2: "gb", currency: "GBP", regionLabel: "UK"            },
-  { code: "UAE", name: "UAE",            shortName: "UAE",    flag: "🇦🇪", iso2: "ae", currency: "AED", regionLabel: "UAE"           },
-  { code: "EU",  name: "Europe",         shortName: "Europe", flag: "🇪🇺", iso2: "eu", currency: "EUR", regionLabel: "EUROPE"        },
-  { code: "CA",  name: "Canada",         shortName: "Canada", flag: "🇨🇦", iso2: "ca", currency: "CAD", regionLabel: "CANADA"        },
-  { code: "AU",  name: "Australia",      shortName: "AU",     flag: "🇦🇺", iso2: "au", currency: "AUD", regionLabel: "AUSTRALIA"     },
-  { code: "SG",  name: "Singapore",      shortName: "SG",     flag: "🇸🇬", iso2: "sg", currency: "SGD", regionLabel: "SINGAPORE"     },
-  { code: "ROW", name: "Rest of world",  shortName: "ROW",    flag: "🌍",  currency: "USD", regionLabel: "REST OF WORLD" },
+  { code: "US",  name: "United States",     shortName: "USA",    flag: "🇺🇸", iso2: "us", currency: "USD", regionLabel: "US"            },
+  { code: "AU",  name: "Australia",         shortName: "AU",     flag: "🇦🇺", iso2: "au", currency: "AUD", regionLabel: "AUSTRALIA"     },
+  { code: "EU",  name: "Europe",            shortName: "Europe", flag: "🇪🇺", iso2: "eu", currency: "EUR", regionLabel: "EUROPE"        },
+  { code: "CA",  name: "Canada",            shortName: "Canada", flag: "🇨🇦", iso2: "ca", currency: "CAD", regionLabel: "CANADA"        },
+  { code: "UK",  name: "United Kingdom",    shortName: "UK",     flag: "🇬🇧", iso2: "gb", currency: "GBP", regionLabel: "UK"            },
+  { code: "ROW", name: "Rest of the world", shortName: "ROW",    flag: "🌍",  currency: "USD", regionLabel: "REST OF WORLD" },
 ];
 
 /* ─── CountryFlagCircle — real flag image cropped to a filled circle ── */
@@ -205,6 +203,52 @@ const SWIFT_ACCOUNT = {
   bic:  "TCCLGB3L",
   bank: "The Currency Cloud Limited",
 };
+
+/* ─── Share account details — per-region receiving account ─────────── */
+interface ShareRegion {
+  id:                 string;
+  name:               string;
+  flag:               string;
+  currency:           string;
+  accountHolderName:  string;
+  accountNo:          string;
+  routingCode:        string;
+  routingCodeType:    string;
+  accountType:        string;
+  bankName:           string;
+  beneficiaryAddress: string;
+}
+
+const SHARE_REGIONS: ShareRegion[] = [
+  { id: "US",  name: "United States",     flag: "🇺🇸", currency: "USD",
+    accountHolderName: "Acme Exports Pvt Ltd", accountNo: "0332534665", routingCode: "026073150",
+    routingCodeType: "ach_routing_number", accountType: "Business checking account",
+    bankName: "Community Federal Savings Bank", beneficiaryAddress: "5 Penn Plaza, 14th Floor, New York, NY 10001, US" },
+  { id: "AU",  name: "Australia",         flag: "🇦🇺", currency: "AUD",
+    accountHolderName: "Acme Exports Pty Ltd", accountNo: "123456789", routingCode: "062000",
+    routingCodeType: "bsb", accountType: "Business transaction account",
+    bankName: "ANZ Bank", beneficiaryAddress: "Level 10, 20 Bond Street, Sydney NSW 2000, Australia" },
+  { id: "EU",  name: "Europe",            flag: "🇪🇺", currency: "EUR",
+    accountHolderName: "Acme Exports GmbH", accountNo: "DE89370400440532013000", routingCode: "COBADEFFXXX",
+    routingCodeType: "swift_bic", accountType: "Business current account",
+    bankName: "Commerzbank AG", beneficiaryAddress: "Kaiserplatz, 60311 Frankfurt am Main, Germany" },
+  { id: "CA",  name: "Canada",            flag: "🇨🇦", currency: "CAD",
+    accountHolderName: "Acme Exports Ltd", accountNo: "4567812340", routingCode: "001003334",
+    routingCodeType: "transit_institution_number", accountType: "Business chequing account",
+    bankName: "Royal Bank of Canada", beneficiaryAddress: "200 Bay Street, Toronto, ON M5J 2J5, Canada" },
+  { id: "UK",  name: "United Kingdom",    flag: "🇬🇧", currency: "GBP",
+    accountHolderName: "Acme Exports Pvt Ltd", accountNo: "80893347", routingCode: "041234",
+    routingCodeType: "sort_code", accountType: "Business current account",
+    bankName: "Barclays Bank PLC", beneficiaryAddress: "1 Churchill Place, London E14 5HP, UK" },
+  { id: "ROW", name: "Rest of the World", flag: "🌍",  currency: "GLOBAL",
+    accountHolderName: "Acme Exports Pvt Ltd", accountNo: "GB10TCCL04140480893347", routingCode: "TCCLGB3L",
+    routingCodeType: "swift_bic", accountType: "Business current account",
+    bankName: "The Currency Cloud Limited", beneficiaryAddress: "12 Steward Street, London E1 6FQ, United Kingdom" },
+];
+
+function shareRegionForCountry(code: string): string {
+  return SHARE_REGIONS.some((r) => r.id === code) ? code : "ROW";
+}
 
 /* ─── Transactions per country ────────────────────────────────────── */
 type TxnStatus = "settlement" | "review" | "success" | "progress";
@@ -529,6 +573,7 @@ function ActionButtons({ country, accountType }: { country: Country; accountType
       : `IBAN: ${SWIFT_ACCOUNT.iban}\nBIC/SWIFT: ${SWIFT_ACCOUNT.bic}\nBank: ${SWIFT_ACCOUNT.bank}\nCurrency: ${country.currency}`;
 
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const handleCopyAll = () => {
     navigator.clipboard.writeText(allDetails).catch(() => {});
@@ -536,35 +581,33 @@ function ActionButtons({ country, accountType }: { country: Country; accountType
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleShare = () => {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({ title: `${country.name} Account Details`, text: allDetails }).catch(() => {});
-    }
-  };
-
   return (
-    <div className="mx-4 flex flex-row items-stretch gap-2.5">
-      <button
-        type="button"
-        onClick={handleShare}
-        className="flex-1 py-3.5 rounded-2xl border border-border bg-card text-[14px] font-bold text-foreground shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-        </svg>
-        Share details
-      </button>
-      <button
-        type="button"
-        onClick={handleCopyAll}
-        className="flex-1 py-3.5 rounded-2xl bg-primary text-[14px] font-bold text-primary-foreground shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
-      >
-        {copied
-          ? <><Check className="h-4 w-4" strokeWidth={2.5} /> Copied</>
-          : <><Copy  className="h-4 w-4" strokeWidth={2} /> Copy details</>
-        }
-      </button>
-    </div>
+    <>
+      <div className="mx-4 flex flex-row items-stretch gap-2.5">
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          className="flex-1 py-3.5 rounded-2xl border border-border bg-card text-[14px] font-bold text-foreground shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+          Share details
+        </button>
+        <button
+          type="button"
+          onClick={handleCopyAll}
+          className="flex-1 py-3.5 rounded-2xl bg-primary text-[14px] font-bold text-primary-foreground shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+        >
+          {copied
+            ? <><Check className="h-4 w-4" strokeWidth={2.5} /> Copied</>
+            : <><Copy  className="h-4 w-4" strokeWidth={2} /> Copy details</>
+          }
+        </button>
+      </div>
+
+      <ShareAccountSheet key={country.code} open={shareOpen} onClose={() => setShareOpen(false)} country={country} />
+    </>
   );
 }
 
@@ -1098,6 +1141,317 @@ function SettlementStatementSheet({
               onSelect={(item) => { setField("country", item.id); markTouched("country"); setIsCountrySheetOpen(false); }}
               onClose={() => setIsCountrySheetOpen(false)}
             />
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+  return frame ? createPortal(content, frame) : content;
+}
+
+/* ─── ShareAccountSheet — share via link / share via email ─────────── */
+type ShareMethod = "link" | "email";
+
+function ShareAccountSheet({ open, onClose, country }: {
+  open:    boolean;
+  onClose: () => void;
+  country: Country;
+}) {
+  const frame = useAppFrameContainer();
+  const pos = frame ? "absolute" : "fixed";
+  const { copiedField, copy } = useCopy();
+
+  const [method,          setMethod]          = useState<ShareMethod>("link");
+  const [regionId]                            = useState<string>(() => shareRegionForCountry(country.code));
+  const [clientName,      setClientName]      = useState("");
+  const [clientEmail,     setClientEmail]     = useState("");
+  const [showCc,          setShowCc]          = useState(false);
+  const [showBcc,         setShowBcc]         = useState(false);
+  const [ccEmail,         setCcEmail]         = useState("");
+  const [bccEmail,        setBccEmail]        = useState("");
+  const [touched,         setTouched]         = useState<Record<string, boolean>>({});
+  const [sending,         setSending]         = useState(false);
+
+  const region = SHARE_REGIONS.find((r) => r.id === regionId) ?? SHARE_REGIONS[SHARE_REGIONS.length - 1];
+  const accountLabel = region.currency === "GLOBAL" ? "GLOBAL Account" : `${region.currency} Account`;
+  const shareUrl = `https://pay.payglocal.in/share/account/${country.code.toLowerCase()}-${region.id.toLowerCase()}`;
+
+  const isNameMissing  = !clientName.trim();
+  const isEmailMissing = !clientEmail.trim() || !/^\S+@\S+\.\S+$/.test(clientEmail.trim());
+  const canSend = !isNameMissing && !isEmailMissing;
+
+  const markTouched = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const handleCopyAccount = () => {
+    const details = `Account Holder Name: ${region.accountHolderName}\nAccount No.: ${region.accountNo}\nRouting Code: ${region.routingCode}\nRouting Code Type: ${region.routingCodeType}\nAccount Type: ${region.accountType}\nBank Name: ${region.bankName}\nBeneficiary Address: ${region.beneficiaryAddress}`;
+    copy("shareAccountAll", details);
+  };
+
+  const handleSendEmail = () => {
+    if (sending) return;
+    if (!canSend) {
+      markTouched("clientName");
+      markTouched("clientEmail");
+      return;
+    }
+    setSending(true);
+    setTimeout(() => {
+      setSending(false);
+      toast.success(`Account details sent to ${clientEmail.trim()}`);
+      setClientName("");
+      setClientEmail("");
+      setShowCc(false);
+      setShowBcc(false);
+      setCcEmail("");
+      setBccEmail("");
+      setTouched({});
+    }, 900);
+  };
+
+  const resetAndClose = () => {
+    setMethod("link");
+    onClose();
+  };
+
+  const content = (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            className={`${pos} inset-0 z-[80] bg-black/40 backdrop-blur-sm`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={resetAndClose}
+          />
+
+          <motion.div
+            key="share-account-sheet"
+            className={`${pos} inset-x-0 bottom-0 z-[81] flex flex-col bg-background overflow-hidden rounded-t-[24px]`}
+            style={{ height: "92%" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+          >
+            <div className="flex justify-center pt-3 pb-1 shrink-0" aria-hidden>
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
+            </div>
+
+            <div className="flex items-start justify-between gap-3 px-4 pb-3 border-b border-border/40 shrink-0">
+              <div className="min-w-0">
+                <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">Share account details</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">{accountLabel} · {region.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={resetAndClose}
+                className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-foreground active:scale-95 transition-transform shrink-0"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+              <div className="px-4 py-4 space-y-4">
+
+                <PillToggle
+                  options={[
+                    { id: "link"  as ShareMethod, label: "Share via link"  },
+                    { id: "email" as ShareMethod, label: "Share via email" },
+                  ]}
+                  value={method}
+                  onChange={setMethod}
+                />
+
+                {method === "link" ? (
+                  <>
+                    {/* Copy link */}
+                    <div className="rounded-2xl border border-border bg-card shadow-sm p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                          <Globe className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-bold text-foreground leading-tight">Copy account details</p>
+                          <p className="text-[12px] text-muted-foreground mt-0.5">{accountLabel}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2 bg-muted/50 rounded-xl px-3.5 py-2.5">
+                        <p className="flex-1 min-w-0 truncate text-[12px] text-muted-foreground font-mono">{shareUrl}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copy("shareLink", shareUrl)}
+                        className="mt-2.5 w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-[13.5px] font-bold py-2.5 active:scale-[0.98] transition-transform"
+                      >
+                        {copiedField === "shareLink"
+                          ? <><Check className="h-4 w-4" strokeWidth={2.5} /> Copied</>
+                          : <><Copy  className="h-4 w-4" strokeWidth={2} /> Copy Link</>}
+                      </button>
+                    </div>
+
+                    {/* Preview */}
+                    <div>
+                      <div className="mb-2">
+                        <p className="text-[13px] font-bold text-foreground">Preview</p>
+                        <p className="text-[11.5px] text-muted-foreground mt-0.5">This is what your client will see</p>
+                      </div>
+
+                      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50">
+                          <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                            <Globe className="h-4.5 w-4.5 text-foreground" strokeWidth={1.75} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13.5px] font-bold text-foreground leading-tight">{accountLabel}</p>
+                            <p className="text-[11.5px] text-muted-foreground mt-0.5">For clients in {region.name}</p>
+                          </div>
+                        </div>
+                        <div className="px-4">
+                          <DetailRow label="Account Holder Name" value={region.accountHolderName}  copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Account No."         value={region.accountNo}          copyable field="shareAccountNo"     copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Routing Code"        value={region.routingCode}        copyable field="shareRoutingCode"   copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Routing Code Type"   value={region.routingCodeType}    copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Account Type"        value={region.accountType}        copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Bank Name"           value={region.bankName}           copiedField={copiedField} onCopy={copy} />
+                          <DetailRow label="Beneficiary Address" value={region.beneficiaryAddress} copiedField={copiedField} onCopy={copy} />
+                        </div>
+                        <div className="p-4 pt-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyAccount}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-[13.5px] font-bold py-3 active:scale-[0.98] transition-transform"
+                          >
+                            {copiedField === "shareAccountAll"
+                              ? <><Check className="h-4 w-4" strokeWidth={2.5} /> Copied</>
+                              : <><Copy  className="h-4 w-4" strokeWidth={2} /> Copy account details</>}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Send via email */}
+                    <div className="rounded-2xl border border-border bg-card shadow-sm p-4 space-y-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                          <Globe className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-bold text-foreground leading-tight">Send account details</p>
+                          <p className="text-[12px] text-muted-foreground mt-0.5">{accountLabel}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <FormLabel text="Client Name" />
+                        <input
+                          type="text"
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          onBlur={() => markTouched("clientName")}
+                          placeholder="Enter client name"
+                          className={cn(
+                            "w-full rounded-xl border bg-[#f6f8fa] px-3.5 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors",
+                            touched.clientName && isNameMissing ? "border-red-400" : "border-border"
+                          )}
+                        />
+                        {touched.clientName && isNameMissing && (
+                          <p className="text-[12px] text-red-600 dark:text-red-400 mt-1">Enter the client&apos;s name</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <FormLabel text="Client Email" />
+                        <input
+                          type="email"
+                          value={clientEmail}
+                          onChange={(e) => setClientEmail(e.target.value)}
+                          onBlur={() => markTouched("clientEmail")}
+                          placeholder="Enter client email"
+                          className={cn(
+                            "w-full rounded-xl border bg-[#f6f8fa] px-3.5 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors",
+                            touched.clientEmail && isEmailMissing ? "border-red-400" : "border-border"
+                          )}
+                        />
+                        {touched.clientEmail && isEmailMissing && (
+                          <p className="text-[12px] text-red-600 dark:text-red-400 mt-1">Enter a valid email address</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        {!showCc && (
+                          <button type="button" onClick={() => setShowCc(true)} className="text-[12.5px] font-semibold text-primary">+ CC</button>
+                        )}
+                        {!showBcc && (
+                          <button type="button" onClick={() => setShowBcc(true)} className="text-[12.5px] font-semibold text-primary">+ BCC</button>
+                        )}
+                      </div>
+
+                      {showCc && (
+                        <input
+                          type="email" value={ccEmail} onChange={(e) => setCcEmail(e.target.value)} placeholder="CC email address"
+                          className="w-full rounded-xl border border-border bg-[#f6f8fa] px-3.5 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
+                        />
+                      )}
+                      {showBcc && (
+                        <input
+                          type="email" value={bccEmail} onChange={(e) => setBccEmail(e.target.value)} placeholder="BCC email address"
+                          className="w-full rounded-xl border border-border bg-[#f6f8fa] px-3.5 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
+                        />
+                      )}
+
+                      <button
+                        type="button"
+                        aria-disabled={!canSend || sending}
+                        onClick={handleSendEmail}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 rounded-xl text-[13.5px] font-bold py-3 transition-all",
+                          canSend ? "bg-primary text-white active:scale-[0.98]" : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {sending ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} /> : <Send className="h-4 w-4" strokeWidth={2} />}
+                        {sending ? "Sending..." : "Send Email"}
+                      </button>
+                    </div>
+
+                    {/* Preview */}
+                    <div>
+                      <p className="text-[13px] font-bold text-foreground">Preview</p>
+                      <p className="text-[11.5px] text-muted-foreground mt-0.5 mb-2">This is what your client will see</p>
+                      <div className="rounded-2xl border border-border bg-card shadow-sm p-4 space-y-3">
+                        <div className="text-[11.5px]">
+                          <span className="font-semibold text-foreground">From:</span>{" "}
+                          <span className="text-muted-foreground">client-alerts@payglocal.com</span>
+                        </div>
+                        <div className="text-[11.5px]">
+                          <span className="font-semibold text-foreground">Subject:</span>{" "}
+                          <span className="text-muted-foreground">Account Details of {clientName.trim() || "your business"}</span>
+                        </div>
+                        <div className="border-t border-border/50 pt-3 space-y-2.5">
+                          <p className="text-[12.5px] text-foreground">Hi{clientName.trim() ? ` ${clientName.trim()}` : ""},</p>
+                          <p className="text-[12px] text-muted-foreground leading-relaxed">
+                            Please find our bank account details for your upcoming payment below. You can add our account as a beneficiary to your bank to initiate your payment with us.
+                          </p>
+                          <p className="text-[12px] text-muted-foreground leading-relaxed">Kindly use these details while initiating the transfer.</p>
+                          <div className="rounded-xl bg-muted/50 px-3.5 py-3 space-y-1.5">
+                            <p className="text-[12px] text-foreground"><span className="font-bold">Account Holder Name:</span> {region.accountHolderName}</p>
+                            <p className="text-[12px] text-foreground"><span className="font-bold">Bank Name:</span> {region.bankName}</p>
+                            <p className="text-[12px] text-foreground"><span className="font-bold">Account Number / IBAN:</span> {region.accountNo}</p>
+                            <p className="text-[12px] text-foreground"><span className="font-bold">Routing Code:</span> {region.routingCode}</p>
+                            <p className="text-[12px] text-foreground"><span className="font-bold">Currency:</span> {region.currency}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </motion.div>
         </>
       )}

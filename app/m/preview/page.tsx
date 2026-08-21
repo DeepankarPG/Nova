@@ -39,6 +39,7 @@ import { MobileEbrc }               from "@/components/dashboard/mobile/MobileEb
 import { MobileDisputes }           from "@/components/dashboard/mobile/MobileDisputes";
 import { MobileTeamManagement }     from "@/components/dashboard/mobile/MobileTeamManagement";
 import { MobileClientManagement }   from "@/components/dashboard/mobile/MobileClientManagement";
+import { MobileSkuManagement }      from "@/components/dashboard/mobile/MobileSkuManagement";
 import { MobileAppSettings }        from "@/components/dashboard/mobile/MobileAppSettings";
 import { MobileAccountSettings }   from "@/components/dashboard/mobile/MobileAccountSettings";
 import {
@@ -204,6 +205,7 @@ function AppStage() {
   const [disputesOpen,        setDisputesOpen]        = useState(false);
   const [teamManagementOpen,  setTeamManagementOpen]  = useState(false);
   const [clientManagementOpen, setClientManagementOpen] = useState(false);
+  const [skuManagementOpen, setSkuManagementOpen] = useState(false);
   const [appSettingsOpen,        setAppSettingsOpen]        = useState(false);
   const [accountSettingsOpen,    setAccountSettingsOpen]    = useState(false);
   const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | "add_feedback" | undefined>(undefined);
@@ -594,7 +596,7 @@ function AppStage() {
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
         contained
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} onAddFeedbackTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("add_feedback"); setAccountSettingsOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onSkuManagementTap={() => { setDrawerOpen(false); setSkuManagementOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} onAddFeedbackTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("add_feedback"); setAccountSettingsOpen(true); }} />
       <MobileEbrc open={ebrcOpen} onClose={() => setEbrcOpen(false)} contained />
       <MobileDisputes open={disputesOpen} onClose={() => setDisputesOpen(false)} contained />
       <MobileTeamManagement open={teamManagementOpen} onClose={() => setTeamManagementOpen(false)} contained />
@@ -603,6 +605,11 @@ function AppStage() {
         onClose={() => setClientManagementOpen(false)}
         contained
         onTxnLinkTap={() => { setActiveTab("txns"); }}
+      />
+      <MobileSkuManagement
+        open={skuManagementOpen}
+        onClose={() => setSkuManagementOpen(false)}
+        contained
       />
       <MobileAppSettings open={appSettingsOpen} onClose={() => setAppSettingsOpen(false)} contained />
       <MobileAccountSettings open={accountSettingsOpen} onClose={() => { setAccountSettingsOpen(false); setAccountSettingsDirectDetail(undefined); setDrawerOpen(true); }} contained directDetail={accountSettingsDirectDetail} />

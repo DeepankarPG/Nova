@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft, Search, Plus, X, Download, ChevronDown, Check, Loader2, Copy, FileText,
+  ArrowLeft, Search, Plus, X, Download, ChevronDown, Check, Loader2, Copy, FileText, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -109,6 +109,17 @@ function emptyNewClient(): NewClientInput {
     businessName: "", businessType: null, website: "",
     primaryContactName: "", primaryContactEmail: "", contactCode: "+1", primaryContactNumber: "",
     country: "", address: "", city: "", state: "", zipcode: "",
+    gstin: "", notes: "",
+  };
+}
+
+function clientToFormInput(client: BusinessClient): NewClientInput {
+  const [code, ...rest] = client.phone.split(" ");
+  return {
+    businessName: client.businessName, businessType: "company", website: "",
+    primaryContactName: client.primaryContactName, primaryContactEmail: client.email,
+    contactCode: COUNTRY_CODES.includes(code) ? code : "+1", primaryContactNumber: rest.join(" "),
+    country: client.country, address: client.billingAddress, city: "", state: "", zipcode: "",
     gstin: "", notes: "",
   };
 }
@@ -255,6 +266,99 @@ function SelectDropdown({ value, placeholder, options, onChange }: {
   );
 }
 
+/* ─── Swipe-to-reveal row action (Edit) ─────────────────────────────── */
+const SWIPE_WIDTH = 84;
+
+function SwipeCard({ isOpen, onOpen, onClose, onEdit, children }: {
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onEdit: () => void;
+  children: React.ReactNode;
+}) {
+  const [dragX,      setDragX]      = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX     = useRef(0);
+  const startY     = useRef(0);
+  const gestureDir = useRef<"h" | "v" | null>(null);
+  const didMove    = useRef(false);
+
+  const baseX      = isOpen ? -SWIPE_WIDTH : 0;
+  const translateX = isDragging
+    ? Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX))
+    : baseX;
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    startX.current     = e.clientX;
+    startY.current     = e.clientY;
+    gestureDir.current = null;
+    didMove.current    = false;
+    setDragX(0);
+    setIsDragging(true);
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDragging) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    if (!gestureDir.current) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      didMove.current    = true;
+      gestureDir.current = Math.abs(dx) >= Math.abs(dy) * 2 ? "h" : "v";
+      if (gestureDir.current === "v") { setIsDragging(false); return; }
+    }
+    if (gestureDir.current === "h") setDragX(dx);
+  }
+
+  function onPointerUp() {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (!didMove.current) {
+      setDragX(0);
+      if (isOpen) onClose();
+      return;
+    }
+    const finalX = Math.max(-SWIPE_WIDTH, Math.min(0, baseX + dragX));
+    setDragX(0);
+    if (isOpen) {
+      if (finalX > -(SWIPE_WIDTH * 0.5)) onClose(); else onOpen();
+    } else {
+      if (finalX < -(SWIPE_WIDTH * 0.3)) onOpen(); else onClose();
+    }
+  }
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Action button — fixed behind the row */}
+      <div className="absolute right-0 top-0 bottom-0 flex" style={{ width: SWIPE_WIDTH }}>
+        <button type="button" onClick={onEdit}
+          className="flex flex-col items-center justify-center flex-1 bg-amber-500"
+        >
+          <Pencil className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-white mt-1">Edit</span>
+        </button>
+      </div>
+
+      {/* Row content — slides left on swipe */}
+      <div
+        className="relative z-[1] bg-card"
+        style={{
+          transform:   `translateX(${translateX}px)`,
+          transition:  isDragging ? "none" : "transform 0.22s cubic-bezier(0.22,1,0.36,1)",
+          touchAction: "pan-y",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Client Detail — bottom sheet ──────────────────────────────────── */
 function ClientDetail({ client, onClose, onTxnLinkTap }: {
   client: BusinessClient;
@@ -376,14 +480,17 @@ function ClientDetail({ client, onClose, onTxnLinkTap }: {
 }
 
 /* ─── Add client — bottom sheet form ────────────────────────────────── */
-function AddClientSheet({ open, onClose, contained, onAdded }: {
+function AddClientSheet({ open, onClose, contained, editingClient, onAdded, onSaved }: {
   open: boolean;
   onClose: () => void;
   contained: boolean;
+  editingClient?: BusinessClient | null;
   onAdded: (client: BusinessClient) => void;
+  onSaved?: (client: BusinessClient) => void;
 }) {
   const pos = contained ? "absolute" : "fixed";
-  const [form,    setForm]    = useState<NewClientInput>(emptyNewClient());
+  const isEdit = !!editingClient;
+  const [form,    setForm]    = useState<NewClientInput>(() => editingClient ? clientToFormInput(editingClient) : emptyNewClient());
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [sending, setSending] = useState(false);
 
@@ -401,16 +508,16 @@ function AddClientSheet({ open, onClose, contained, onAdded }: {
 
   function buildClient(): BusinessClient {
     return {
-      id: `biz_${Date.now()}`,
+      id: editingClient ? editingClient.id : `biz_${Date.now()}`,
       businessName: form.businessName.trim(),
       primaryContactName: form.primaryContactName.trim(),
       email: form.primaryContactEmail.trim(),
       phone: `${form.contactCode} ${form.primaryContactNumber}`.trim(),
       country: form.country,
-      countryFlag: "🏳️",
-      currency: "USD",
-      totalReceived: 0,
-      createdAt: new Date().toISOString().slice(0, 10),
+      countryFlag: editingClient ? editingClient.countryFlag : "🏳️",
+      currency: editingClient ? editingClient.currency : "USD",
+      totalReceived: editingClient ? editingClient.totalReceived : 0,
+      createdAt: editingClient ? editingClient.createdAt : new Date().toISOString().slice(0, 10),
       billingAddress: [form.address, form.city, form.state, form.zipcode, form.country].filter(Boolean).join(", "),
     };
   }
@@ -425,6 +532,12 @@ function AddClientSheet({ open, onClose, contained, onAdded }: {
     setTimeout(() => {
       setSending(false);
       const client = buildClient();
+      if (isEdit) {
+        onSaved?.(client);
+        toast.success(`${client.businessName}'s details updated`);
+        onClose();
+        return;
+      }
       onAdded(client);
       toast.success(`${client.businessName} added`);
       setForm(emptyNewClient());
@@ -457,8 +570,10 @@ function AddClientSheet({ open, onClose, contained, onAdded }: {
             {/* Header */}
             <div className="flex items-start justify-between gap-3 px-4 pb-3 border-b border-border/40 shrink-0">
               <div className="min-w-0">
-                <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">Add client</p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Add a business client to start tracking their payments.</p>
+                <p className="text-[17px] font-bold text-foreground tracking-tight leading-tight">{isEdit ? "Edit client" : "Add client"}</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {isEdit ? "Update this client's information." : "Add a business client to start tracking their payments."}
+                </p>
               </div>
               <button type="button" onClick={resetAndClose}
                 className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-foreground active:scale-95 transition-transform shrink-0"
@@ -605,14 +720,22 @@ function AddClientSheet({ open, onClose, contained, onAdded }: {
               style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
             >
               <div className="flex gap-2.5">
-                <button type="button" aria-disabled={!isComplete} onClick={() => submit(true)}
-                  className={cn(
-                    "flex-1 h-12 rounded-2xl border text-[14.5px] font-bold transition-all flex items-center justify-center gap-2",
-                    isComplete ? "border-border text-foreground active:scale-[0.98]" : "border-border text-muted-foreground"
-                  )}
-                >
-                  Save and add
-                </button>
+                {isEdit ? (
+                  <button type="button" onClick={resetAndClose}
+                    className="flex-1 h-12 rounded-2xl border border-border text-[14.5px] font-bold text-foreground active:scale-[0.98] transition-transform"
+                  >
+                    Cancel
+                  </button>
+                ) : (
+                  <button type="button" aria-disabled={!isComplete} onClick={() => submit(true)}
+                    className={cn(
+                      "flex-1 h-12 rounded-2xl border text-[14.5px] font-bold transition-all flex items-center justify-center gap-2",
+                      isComplete ? "border-border text-foreground active:scale-[0.98]" : "border-border text-muted-foreground"
+                    )}
+                  >
+                    Save and add
+                  </button>
+                )}
                 <button type="button" aria-disabled={!isComplete} onClick={() => submit(false)}
                   className={cn(
                     "flex-1 h-12 rounded-2xl text-[14.5px] font-bold transition-all flex items-center justify-center gap-2",
@@ -620,8 +743,8 @@ function AddClientSheet({ open, onClose, contained, onAdded }: {
                   )}
                 >
                   {sending
-                    ? <><Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} /> Adding...</>
-                    : "Add client"}
+                    ? <><Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} /> {isEdit ? "Saving..." : "Adding..."}</>
+                    : isEdit ? "Save changes" : "Add client"}
                 </button>
               </div>
             </div>
@@ -649,6 +772,18 @@ export function MobileClientManagement({ open, onClose, contained = false, onTxn
   const [openChip,      setOpenChip]      = useState<"country" | "date" | null>(null);
   const [addOpen,       setAddOpen]       = useState(false);
   const [selectedId,    setSelectedId]    = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<BusinessClient | null>(null);
+  const [addSheetToken, setAddSheetToken] = useState(0);
+  const [swipedId,      setSwipedId]      = useState<string | null>(null);
+
+  const openAddSheet = () => { setEditingClient(null); setAddSheetToken((t) => t + 1); setAddOpen(true); };
+  const closeAddSheet = () => { setAddOpen(false); setEditingClient(null); };
+  const requestEdit = (client: BusinessClient) => {
+    setSwipedId(null);
+    setEditingClient(client);
+    setAddSheetToken((t) => t + 1);
+    setAddOpen(true);
+  };
 
   const q = search.trim().toLowerCase();
   let filtered = clients
@@ -713,7 +848,7 @@ export function MobileClientManagement({ open, onClose, contained = false, onTxn
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAddOpen(true)}
+                    onClick={openAddSheet}
                     className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
                     aria-label="Add client"
                   >
@@ -830,25 +965,32 @@ export function MobileClientManagement({ open, onClose, contained = false, onTxn
                 {filtered.length === 0 ? (
                   <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">No clients found</p>
                 ) : filtered.map((c) => (
-                  <button key={c.id} type="button" onClick={() => setSelectedId(c.id)}
-                    className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
+                  <SwipeCard key={c.id}
+                    isOpen={swipedId === c.id}
+                    onOpen={() => setSwipedId(c.id)}
+                    onClose={() => setSwipedId(null)}
+                    onEdit={() => requestEdit(c)}
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{c.businessName}</p>
-                      <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{c.primaryContactName}</p>
-                      <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-snug truncate">{c.email}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-[13.5px] font-bold text-foreground tabular-nums leading-snug whitespace-nowrap">
-                        {fmtAmount(c.totalReceived, c.currency)}
-                      </p>
-                      <div className="flex items-center justify-end gap-1 mt-1">
-                        <span className="text-[12px] leading-none">{c.countryFlag}</span>
-                        <p className="text-[11px] text-muted-foreground leading-snug">{c.country}</p>
+                    <button type="button" onClick={() => setSelectedId(c.id)}
+                      className="w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors duration-100"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-bold text-foreground leading-snug truncate">{c.businessName}</p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug truncate">{c.primaryContactName}</p>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-snug truncate">{c.email}</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{fmtDate(c.createdAt)}</p>
-                    </div>
-                  </button>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[13.5px] font-bold text-foreground tabular-nums leading-snug whitespace-nowrap">
+                          {fmtAmount(c.totalReceived, c.currency)}
+                        </p>
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <span className="text-[12px] leading-none">{c.countryFlag}</span>
+                          <p className="text-[11px] text-muted-foreground leading-snug">{c.country}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{fmtDate(c.createdAt)}</p>
+                      </div>
+                    </button>
+                  </SwipeCard>
                 ))}
               </div>
             </div>
@@ -876,12 +1018,15 @@ export function MobileClientManagement({ open, onClose, contained = false, onTxn
             )}
           </AnimatePresence>
 
-          {/* Add client sheet */}
+          {/* Add / Edit client sheet */}
           <AddClientSheet
+            key={addSheetToken}
             open={addOpen}
             contained={contained}
-            onClose={() => setAddOpen(false)}
+            editingClient={editingClient}
+            onClose={closeAddSheet}
             onAdded={(client) => setClients((prev) => [client, ...prev])}
+            onSaved={(client) => setClients((prev) => prev.map((c) => c.id === client.id ? client : c))}
           />
         </motion.div>
       )}

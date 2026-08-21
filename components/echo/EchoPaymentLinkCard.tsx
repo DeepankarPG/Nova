@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Share2 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import type { EchoPaymentLinkResult } from "@/lib/echo/types";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,9 @@ export function EchoPaymentLinkCard({
         {result.currency} {result.amount.toLocaleString()}
       </p>
       <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">{result.url}</p>
+      <div className="mt-3 flex items-center justify-center rounded-xl border border-border bg-white p-3">
+        <QRCodeSVG value={result.url} size={128} level="M" />
+      </div>
       <div className="mt-3 flex gap-2">
         {/* Copy — primary */}
         <button

@@ -20,6 +20,7 @@ import {
   LogOut,
   ChevronRight,
   ChevronDown,
+  Package,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ const DRAWER_NAV = [
       { label: "International Accounts", href: "/payment-products/international-accounts", icon: Globe },
       { label: "Settlement Reports",     href: "/settlement-reports",                       icon: FileText },
       { label: "Client Management",      href: "/client-management",                        icon: Users },
+      { label: "SKU Management",         href: "/sku-management",     icon: Package,        badge: "NEW" },
       { label: "Team Management",        href: "/team-management",                          icon: UserCog },
       { label: "Dispute Management",     href: "/dispute-management", icon: AlertTriangle,   badge: "NEW" },
       { label: "eBRC",                   href: "/ebrc",               icon: BadgeCheck },
@@ -69,6 +71,7 @@ interface MobileHamburgerDrawerProps {
   onEbrcTap?: () => void;
   onDisputesTap?: () => void;
   onClientManagementTap?: () => void;
+  onSkuManagementTap?: () => void;
   onTeamManagementTap?: () => void;
   onAppSettingsTap?: () => void;
   onContactSupportTap?: () => void;
@@ -83,6 +86,7 @@ export function MobileHamburgerDrawer({
   onEbrcTap,
   onDisputesTap,
   onClientManagementTap,
+  onSkuManagementTap,
   onTeamManagementTap,
   onAppSettingsTap,
   onContactSupportTap,
@@ -209,17 +213,19 @@ export function MobileHamburgerDrawer({
                               style={{ height: 22, width: 22 }}
                               strokeWidth={1.75}
                             />
-                            <span className={cn(
-                              "flex-1 min-w-0 truncate text-[15px]",
-                              active ? "font-semibold text-primary" : "font-medium text-foreground"
-                            )}>
-                              {item.label}
-                            </span>
-                            {"badge" in item && item.badge ? (
-                              <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
-                                {item.badge}
+                            <span className="flex-1 min-w-0 flex items-center gap-1.5">
+                              <span className={cn(
+                                "min-w-0 truncate text-[15px]",
+                                active ? "font-semibold text-primary" : "font-medium text-foreground"
+                              )}>
+                                {item.label}
                               </span>
-                            ) : null}
+                              {"badge" in item && item.badge ? (
+                                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                                  {item.badge}
+                                </span>
+                              ) : null}
+                            </span>
                             <ChevronRight
                               className={cn("h-4 w-4 shrink-0", active ? "text-primary/40" : "text-foreground/20")}
                               strokeWidth={2}
@@ -255,6 +261,14 @@ export function MobileHamburgerDrawer({
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onClientManagementTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/sku-management" && onSkuManagementTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onSkuManagementTap(); }}
                               className={rowClass} style={itemStyle}
                             >{inner}</button>
                           );
