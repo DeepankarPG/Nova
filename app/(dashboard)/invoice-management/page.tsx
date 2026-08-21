@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Receipt, DollarSign, Clock, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, type Column } from "@/components/ui/data-table";
@@ -89,20 +90,13 @@ const columns: Column<Invoice>[] = [
 ];
 
 export default function InvoiceManagementPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(t);
   }, []);
-
-  const handleCreate = async () => {
-    setIsCreating(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsCreating(false);
-    toast.success("Invoice created", { description: "INV-2026-005 has been saved as draft" });
-  };
 
   const totalPaid = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount, 0);
   const totalPending = invoices.filter((i) => i.status === "pending").reduce((s, i) => s + i.amount, 0);
@@ -118,8 +112,7 @@ export default function InvoiceManagementPage() {
             variant="primary"
             size="sm"
             leftIcon={<Plus className="w-3.5 h-3.5" />}
-            isLoading={isCreating}
-            onClick={handleCreate}
+            onClick={() => router.push("/invoice-management/create")}
           >
             New Invoice
           </Button>
