@@ -40,6 +40,7 @@ import { MobileDisputes }           from "@/components/dashboard/mobile/MobileDi
 import { MobileTeamManagement }     from "@/components/dashboard/mobile/MobileTeamManagement";
 import { MobileClientManagement }   from "@/components/dashboard/mobile/MobileClientManagement";
 import { MobileSkuManagement }      from "@/components/dashboard/mobile/MobileSkuManagement";
+import { MobileGst }                from "@/components/dashboard/mobile/MobileGst";
 import { MobileAppSettings }        from "@/components/dashboard/mobile/MobileAppSettings";
 import { MobileAccountSettings }   from "@/components/dashboard/mobile/MobileAccountSettings";
 import {
@@ -206,6 +207,7 @@ function AppStage() {
   const [teamManagementOpen,  setTeamManagementOpen]  = useState(false);
   const [clientManagementOpen, setClientManagementOpen] = useState(false);
   const [skuManagementOpen, setSkuManagementOpen] = useState(false);
+  const [gstOpen, setGstOpen] = useState(false);
   const [appSettingsOpen,        setAppSettingsOpen]        = useState(false);
   const [accountSettingsOpen,    setAccountSettingsOpen]    = useState(false);
   const [accountSettingsDirectDetail, setAccountSettingsDirectDetail] = useState<"contact_support" | "add_feedback" | undefined>(undefined);
@@ -596,7 +598,7 @@ function AppStage() {
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
         contained
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onSkuManagementTap={() => { setDrawerOpen(false); setSkuManagementOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} onAddFeedbackTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("add_feedback"); setAccountSettingsOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}       contained onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onDisputesTap={() => { setDrawerOpen(false); setDisputesOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onSkuManagementTap={() => { setDrawerOpen(false); setSkuManagementOpen(true); }} onGstTap={() => { setDrawerOpen(false); setGstOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} onAppSettingsTap={() => { setDrawerOpen(false); setAccountSettingsOpen(true); }} onContactSupportTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("contact_support"); setAccountSettingsOpen(true); }} onAddFeedbackTap={() => { setDrawerOpen(false); setAccountSettingsDirectDetail("add_feedback"); setAccountSettingsOpen(true); }} />
       <MobileEbrc open={ebrcOpen} onClose={() => setEbrcOpen(false)} contained />
       <MobileDisputes open={disputesOpen} onClose={() => setDisputesOpen(false)} contained />
       <MobileTeamManagement open={teamManagementOpen} onClose={() => setTeamManagementOpen(false)} contained />
@@ -609,6 +611,11 @@ function AppStage() {
       <MobileSkuManagement
         open={skuManagementOpen}
         onClose={() => setSkuManagementOpen(false)}
+        contained
+      />
+      <MobileGst
+        open={gstOpen}
+        onClose={() => setGstOpen(false)}
         contained
       />
       <MobileAppSettings open={appSettingsOpen} onClose={() => setAppSettingsOpen(false)} contained />

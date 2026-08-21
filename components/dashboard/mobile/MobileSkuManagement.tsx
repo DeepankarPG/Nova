@@ -685,10 +685,10 @@ export function MobileSkuManagement({ open, onClose, contained = false }: Mobile
                   <button
                     type="button"
                     onClick={openAddSheet}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-[11.5px] font-semibold active:scale-[0.97] transition-all shrink-0"
+                    className="h-[30px] w-[30px] flex items-center justify-center rounded-lg bg-primary text-white active:scale-[0.97] transition-all shrink-0"
+                    aria-label="Add item"
                   >
-                    <Plus className="h-[13px] w-[13px]" strokeWidth={2.5} />
-                    Add item
+                    <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
                   </button>
                 </div>
               </div>

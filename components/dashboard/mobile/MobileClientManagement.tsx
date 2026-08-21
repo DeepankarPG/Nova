@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft, Search, Plus, X, Download, ChevronDown, Check, Loader2, Copy, FileText, Pencil,
+  ArrowLeft, Search, Plus, X, Download, ChevronDown, Check, Loader2, FileText, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,16 @@ type BusinessClient = {
   currency: string;
   totalReceived: number;
   createdAt: string;
-  billingAddress: string;
+  businessType: string;
+  gstin: string;
+  tags: string[];
+  streetAddress1: string;
+  streetAddress2: string;
+  city: string;
+  state: string;
+  zipcode: string;
+  notes: string;
+  contractFileName: string;
 };
 
 type ClientTxnStatus = "sent-for-review" | "invoice-pending" | "settled";
@@ -38,16 +47,26 @@ type ClientTransaction = {
 
 /* ─── Mock data ───────────────────────────────────────────────────── */
 const CLIENTS: BusinessClient[] = [
-  { id: "biz_001", businessName: "Northwind Trading Co.",    primaryContactName: "Amelia Hartley",    email: "amelia.hartley@northwindtrading.co.uk", phone: "+44 791 112 3456",  country: "United Kingdom",      countryFlag: "🇬🇧", currency: "GBP", totalReceived: 53149.99,  createdAt: "2024-11-04", billingAddress: "Unit 7, Chancery House, 53-64 Chancery Lane, London WC2A 1QS, United Kingdom" },
-  { id: "biz_002", businessName: "Meridian Logistics LLC",   primaryContactName: "Daniel Okafor",     email: "d.okafor@meridianlogistics.com",        phone: "+1 415 555 0142",   country: "United States",       countryFlag: "🇺🇸", currency: "USD", totalReceived: 132500.00, createdAt: "2024-08-19", billingAddress: "500 Market St, Suite 1200, San Francisco, CA 94105, United States" },
-  { id: "biz_003", businessName: "Kessler Maschinenbau GmbH",primaryContactName: "Lena Fischer",      email: "l.fischer@kesslerbau.de",               phone: "+49 151 123 45678", country: "Germany",             countryFlag: "🇩🇪", currency: "EUR", totalReceived: 22350.00,  createdAt: "2025-02-27", billingAddress: "Industriestrasse 14, 70565 Stuttgart, Germany" },
-  { id: "biz_004", businessName: "Harbourline Freight Pte Ltd", primaryContactName: "Wei Ling Tan",   email: "weiling.tan@harbourline.sg",            phone: "+65 812 34567",     country: "Singapore",           countryFlag: "🇸🇬", currency: "SGD", totalReceived: 11320.25,  createdAt: "2025-06-03", billingAddress: "1 Marina Blvd, #20-01, Singapore 018989" },
-  { id: "biz_005", businessName: "Bluegum Interiors",        primaryContactName: "Chloe Barrett",     email: "chloe.barrett@bluegum.com.au",          phone: "+61 412 345 678",   country: "Australia",           countryFlag: "🇦🇺", currency: "AUD", totalReceived: 10580.00,  createdAt: "2025-01-17", billingAddress: "88 York St, Sydney NSW 2000, Australia" },
-  { id: "biz_006", businessName: "Al Noor General Trading",  primaryContactName: "Fatima Al Zaabi",   email: "fatima.z@alnoortrading.ae",             phone: "+971 501 234 567",  country: "United Arab Emirates",countryFlag: "🇦🇪", currency: "AED", totalReceived: 142600.00, createdAt: "2024-09-30", billingAddress: "Sheikh Zayed Rd, Business Bay, Dubai, United Arab Emirates" },
-  { id: "biz_007", businessName: "Maple & Birch Studio",     primaryContactName: "Owen Tremblay",     email: "owen.tremblay@maplebirch.ca",           phone: "+1 613 555 0188",   country: "Canada",              countryFlag: "🇨🇦", currency: "CAD", totalReceived: 15380.00,  createdAt: "2025-04-08", billingAddress: "220 Sparks St, Ottawa, ON K1P 5V5, Canada" },
-  { id: "biz_008", businessName: "Atelier Rousseau SARL",    primaryContactName: "Camille Rousseau",  email: "camille.rousseau@atelier.fr",           phone: "+33 612 345 678",   country: "France",              countryFlag: "🇫🇷", currency: "EUR", totalReceived: 17960.00,  createdAt: "2024-07-22", billingAddress: "12 Rue de Rivoli, 75004 Paris, France" },
-  { id: "biz_009", businessName: "Kiyomizu Craft KK",        primaryContactName: "Haruto Nakamura",   email: "h.nakamura@kiyomizucraft.jp",           phone: "+81 901 234 5678",  country: "Japan",               countryFlag: "🇯🇵", currency: "USD", totalReceived: 59250.00,  createdAt: "2025-05-29", billingAddress: "2-1 Gion-machi, Higashiyama-ku, Kyoto 605-0073, Japan" },
-  { id: "biz_010", businessName: "Vaalpark Agri Holdings",   primaryContactName: "Thandiwe Mokoena",  email: "thandiwe.m@vaalparkagri.co.za",         phone: "+27 821 234 567",   country: "South Africa",        countryFlag: "🇿🇦", currency: "USD", totalReceived: 34700.00,  createdAt: "2024-12-11", billingAddress: "45 Bree St, Cape Town 8001, South Africa" },
+  { id: "biz_001", businessName: "Northwind Trading Co.",       primaryContactName: "Amelia Hartley",   email: "amelia.hartley@northwindtrading.co.uk", phone: "+44 791 112 3456",  country: "United Kingdom",       countryFlag: "🇬🇧", currency: "GBP", totalReceived: 53149.99,  createdAt: "2024-11-04",
+    businessType: "company",             gstin: "-", tags: ["Wholesale"], streetAddress1: "Unit 7, Chancery House", streetAddress2: "53-64 Chancery Lane", city: "London",     state: "Greater London", zipcode: "WC2A 1QS",  notes: "-", contractFileName: "" },
+  { id: "biz_002", businessName: "Meridian Logistics LLC",      primaryContactName: "Daniel Okafor",    email: "d.okafor@meridianlogistics.com",        phone: "+1 415 555 0142",   country: "United States",        countryFlag: "🇺🇸", currency: "USD", totalReceived: 132500.00, createdAt: "2024-08-19",
+    businessType: "llp",                 gstin: "-", tags: [],             streetAddress1: "500 Market St",          streetAddress2: "Suite 1200",           city: "San Francisco", state: "CA",             zipcode: "94105",     notes: "-", contractFileName: "Service_Agreement.pdf" },
+  { id: "biz_003", businessName: "Kessler Maschinenbau GmbH",   primaryContactName: "Lena Fischer",     email: "l.fischer@kesslerbau.de",               phone: "+49 151 123 45678", country: "Germany",              countryFlag: "🇩🇪", currency: "EUR", totalReceived: 22350.00,  createdAt: "2025-02-27",
+    businessType: "company",             gstin: "-", tags: [],             streetAddress1: "Industriestrasse 14",    streetAddress2: "-",                    city: "Stuttgart",  state: "-",              zipcode: "70565",     notes: "-", contractFileName: "" },
+  { id: "biz_004", businessName: "Harbourline Freight Pte Ltd", primaryContactName: "Wei Ling Tan",     email: "weiling.tan@harbourline.sg",            phone: "+65 812 34567",     country: "Singapore",            countryFlag: "🇸🇬", currency: "SGD", totalReceived: 11320.25,  createdAt: "2025-06-03",
+    businessType: "company",             gstin: "-", tags: ["Logistics"],  streetAddress1: "1 Marina Blvd",          streetAddress2: "#20-01",               city: "Singapore",  state: "-",              zipcode: "018989",    notes: "-", contractFileName: "" },
+  { id: "biz_005", businessName: "Bluegum Interiors",           primaryContactName: "Chloe Barrett",    email: "chloe.barrett@bluegum.com.au",          phone: "+61 412 345 678",   country: "Australia",            countryFlag: "🇦🇺", currency: "AUD", totalReceived: 10580.00,  createdAt: "2025-01-17",
+    businessType: "sole-proprietorship", gstin: "-", tags: [],             streetAddress1: "88 York St",             streetAddress2: "-",                    city: "Sydney",     state: "NSW",            zipcode: "2000",      notes: "-", contractFileName: "" },
+  { id: "biz_006", businessName: "Al Noor General Trading",     primaryContactName: "Fatima Al Zaabi",  email: "fatima.z@alnoortrading.ae",             phone: "+971 501 234 567",  country: "United Arab Emirates", countryFlag: "🇦🇪", currency: "AED", totalReceived: 142600.00, createdAt: "2024-09-30",
+    businessType: "company",             gstin: "-", tags: ["VIP"],        streetAddress1: "Sheikh Zayed Rd",        streetAddress2: "Business Bay",         city: "Dubai",      state: "-",              zipcode: "-",         notes: "-", contractFileName: "Distribution_Contract.pdf" },
+  { id: "biz_007", businessName: "Maple & Birch Studio",        primaryContactName: "Owen Tremblay",    email: "owen.tremblay@maplebirch.ca",           phone: "+1 613 555 0188",   country: "Canada",               countryFlag: "🇨🇦", currency: "CAD", totalReceived: 15380.00,  createdAt: "2025-04-08",
+    businessType: "sole-proprietorship", gstin: "-", tags: [],             streetAddress1: "220 Sparks St",          streetAddress2: "-",                    city: "Ottawa",     state: "ON",             zipcode: "K1P 5V5",   notes: "-", contractFileName: "" },
+  { id: "biz_008", businessName: "Atelier Rousseau SARL",       primaryContactName: "Camille Rousseau", email: "camille.rousseau@atelier.fr",           phone: "+33 612 345 678",   country: "France",               countryFlag: "🇫🇷", currency: "EUR", totalReceived: 17960.00,  createdAt: "2024-07-22",
+    businessType: "company",             gstin: "-", tags: [],             streetAddress1: "12 Rue de Rivoli",       streetAddress2: "-",                    city: "Paris",      state: "-",              zipcode: "75004",     notes: "-", contractFileName: "" },
+  { id: "biz_009", businessName: "Kiyomizu Craft KK",           primaryContactName: "Haruto Nakamura",  email: "h.nakamura@kiyomizucraft.jp",           phone: "+81 901 234 5678",  country: "Japan",                countryFlag: "🇯🇵", currency: "USD", totalReceived: 59250.00,  createdAt: "2025-05-29",
+    businessType: "company",             gstin: "-", tags: ["Artisan"],    streetAddress1: "2-1 Gion-machi",         streetAddress2: "Higashiyama-ku",       city: "Kyoto",      state: "-",              zipcode: "605-0073",  notes: "-", contractFileName: "" },
+  { id: "biz_010", businessName: "Vaalpark Agri Holdings",      primaryContactName: "Thandiwe Mokoena", email: "thandiwe.m@vaalparkagri.co.za",         phone: "+27 821 234 567",   country: "South Africa",         countryFlag: "🇿🇦", currency: "USD", totalReceived: 34700.00,  createdAt: "2024-12-11",
+    businessType: "partnership",         gstin: "-", tags: [],             streetAddress1: "45 Bree St",             streetAddress2: "-",                    city: "Cape Town",  state: "-",              zipcode: "8001",      notes: "-", contractFileName: "" },
 ];
 
 const CLIENT_TXN_STATUS_CFG: Record<ClientTxnStatus, { label: string; text: string; bg: string; dot: string }> = {
@@ -97,6 +116,7 @@ interface NewClientInput {
   primaryContactNumber:  string;
   country:                string;
   address:                string;
+  addressLine2:           string;
   city:                   string;
   state:                  string;
   zipcode:                string;
@@ -108,7 +128,7 @@ function emptyNewClient(): NewClientInput {
   return {
     businessName: "", businessType: null, website: "",
     primaryContactName: "", primaryContactEmail: "", contactCode: "+1", primaryContactNumber: "",
-    country: "", address: "", city: "", state: "", zipcode: "",
+    country: "", address: "", addressLine2: "", city: "", state: "", zipcode: "",
     gstin: "", notes: "",
   };
 }
@@ -116,11 +136,12 @@ function emptyNewClient(): NewClientInput {
 function clientToFormInput(client: BusinessClient): NewClientInput {
   const [code, ...rest] = client.phone.split(" ");
   return {
-    businessName: client.businessName, businessType: "company", website: "",
+    businessName: client.businessName, businessType: (client.businessType as BusinessType) || "company", website: "",
     primaryContactName: client.primaryContactName, primaryContactEmail: client.email,
     contactCode: COUNTRY_CODES.includes(code) ? code : "+1", primaryContactNumber: rest.join(" "),
-    country: client.country, address: client.billingAddress, city: "", state: "", zipcode: "",
-    gstin: "", notes: "",
+    country: client.country, address: client.streetAddress1, addressLine2: client.streetAddress2 === "-" ? "" : client.streetAddress2,
+    city: client.city, state: client.state === "-" ? "" : client.state, zipcode: client.zipcode === "-" ? "" : client.zipcode,
+    gstin: client.gstin === "-" ? "" : client.gstin, notes: client.notes === "-" ? "" : client.notes,
   };
 }
 
@@ -160,24 +181,6 @@ function VDivider() {
   return <span className="inline-block w-px bg-border/50 shrink-0 self-center" style={{ height: 11 }} aria-hidden />;
 }
 
-function CopyBtn({ value }: { value: string }) {
-  const [done, setDone] = useState(false);
-  function copy() {
-    navigator.clipboard.writeText(value).catch(() => {});
-    setDone(true);
-    setTimeout(() => setDone(false), 1800);
-  }
-  return (
-    <button type="button" onClick={copy}
-      className="h-7 w-7 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground"
-      aria-label="Copy">
-      {done
-        ? <Check className="h-[13px] w-[13px] text-emerald-600" strokeWidth={2.5} />
-        : <Copy  className="h-[13px] w-[13px]" strokeWidth={2} />}
-    </button>
-  );
-}
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.09em] px-4 mb-2">
@@ -186,20 +189,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DetailRow({ label, value, copy, last }: {
-  label: string; value: React.ReactNode; copy?: string; last?: boolean;
-}) {
+function InfoItem({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className={cn("px-4 py-3.5", !last && "border-b border-border/50")}>
-      <p className="text-[11px] font-medium text-muted-foreground mb-1.5 leading-none">{label}</p>
-      <div className="inline-flex items-center gap-1 max-w-full min-w-0">
-        <div className="min-w-0">
-          {typeof value === "string"
-            ? <p className="text-[13px] font-medium text-foreground leading-snug">{value}</p>
-            : value}
-        </div>
-        {copy && <CopyBtn value={copy} />}
-      </div>
+    <div className="min-w-0">
+      <p className="text-[10.5px] font-medium text-muted-foreground mb-1 leading-none">{label}</p>
+      <p className={cn("text-[13px] leading-snug break-words", muted ? "text-muted-foreground font-normal" : "text-foreground font-semibold")}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -462,14 +458,45 @@ function ClientDetail({ client, onClose, onTxnLinkTap }: {
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Contact Details */}
           <div>
-            <SectionLabel>Contact</SectionLabel>
-            <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
-              <DetailRow label="Primary contact"  value={client.primaryContactName} />
-              <DetailRow label="Email"             value={client.email}    copy={client.email} />
-              <DetailRow label="Phone number"      value={client.phone}    copy={client.phone} />
-              <DetailRow label="Billing address"   value={client.billingAddress} last />
+            <SectionLabel>Contact Details</SectionLabel>
+            <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm px-4 py-4">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <InfoItem label="Business Name" value={client.businessName} />
+                <InfoItem label="Primary Contact Name" value={client.primaryContactName} />
+                <InfoItem label="Primary Contact Number" value={client.phone} />
+                <InfoItem label="Primary Email" value={client.email} />
+                <InfoItem label="Client Type" value={(BUSINESS_TYPES.find((bt) => bt.id === client.businessType)?.label ?? client.businessType).toUpperCase()} />
+                <InfoItem label="GST Number" value={client.gstin} />
+                <InfoItem label="Tags" value={client.tags.length ? client.tags.join(", ") : "-"} />
+              </div>
+            </div>
+          </div>
+
+          {/* Billing details */}
+          <div>
+            <SectionLabel>Billing details</SectionLabel>
+            <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm px-4 py-4">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <InfoItem label="Country" value={client.country} />
+                <InfoItem label="State" value={client.state} />
+                <InfoItem label="City" value={client.city} />
+                <InfoItem label="Zipcode" value={client.zipcode} />
+                <InfoItem label="Street Address 1" value={client.streetAddress1} />
+                <InfoItem label="Street Address 2" value={client.streetAddress2} />
+              </div>
+            </div>
+          </div>
+
+          {/* Notes & Contract */}
+          <div>
+            <SectionLabel>Notes &amp; Contract</SectionLabel>
+            <div className="mx-4 rounded-2xl bg-card border border-border shadow-sm px-4 py-4">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <InfoItem label="Notes" value={client.notes} />
+                <InfoItem label="Contract" value={client.contractFileName || "No contract uploaded"} muted={!client.contractFileName} />
+              </div>
             </div>
           </div>
 
@@ -518,7 +545,16 @@ function AddClientSheet({ open, onClose, contained, editingClient, onAdded, onSa
       currency: editingClient ? editingClient.currency : "USD",
       totalReceived: editingClient ? editingClient.totalReceived : 0,
       createdAt: editingClient ? editingClient.createdAt : new Date().toISOString().slice(0, 10),
-      billingAddress: [form.address, form.city, form.state, form.zipcode, form.country].filter(Boolean).join(", "),
+      businessType: form.businessType ?? "company",
+      gstin: form.gstin.trim() || "-",
+      tags: editingClient ? editingClient.tags : [],
+      streetAddress1: form.address.trim(),
+      streetAddress2: form.addressLine2.trim() || "-",
+      city: form.city.trim(),
+      state: form.state.trim() || "-",
+      zipcode: form.zipcode.trim() || "-",
+      notes: form.notes.trim() || "-",
+      contractFileName: editingClient ? editingClient.contractFileName : "",
     };
   }
 
@@ -668,6 +704,7 @@ function AddClientSheet({ open, onClose, contained, editingClient, onAdded, onSa
                       <p className="text-[12px] text-red-600 dark:text-red-400 mt-1">Required</p>
                     )}
                   </div>
+                  <FormField label="Street Address 2 (Optional)" value={form.addressLine2} onChange={(v) => setField("addressLine2", v)} placeholder="Apartment, suite, unit, etc." />
                   <div className="grid grid-cols-2 gap-3">
                     <FormField label="City" value={form.city} onChange={(v) => setField("city", v)}
                       onBlur={() => markTouched("city")} placeholder="Enter city"

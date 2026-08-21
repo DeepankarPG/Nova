@@ -21,6 +21,7 @@ import {
   ChevronRight,
   ChevronDown,
   Package,
+  Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ const DRAWER_NAV = [
       { label: "Team Management",        href: "/team-management",                          icon: UserCog },
       { label: "Dispute Management",     href: "/dispute-management", icon: AlertTriangle,   badge: "NEW" },
       { label: "eBRC",                   href: "/ebrc",               icon: BadgeCheck },
+      { label: "GST",                    href: "/gst",                icon: Receipt },
     ],
   },
   {
@@ -73,6 +75,7 @@ interface MobileHamburgerDrawerProps {
   onClientManagementTap?: () => void;
   onSkuManagementTap?: () => void;
   onTeamManagementTap?: () => void;
+  onGstTap?: () => void;
   onAppSettingsTap?: () => void;
   onContactSupportTap?: () => void;
   onAddFeedbackTap?:    () => void;
@@ -88,6 +91,7 @@ export function MobileHamburgerDrawer({
   onClientManagementTap,
   onSkuManagementTap,
   onTeamManagementTap,
+  onGstTap,
   onAppSettingsTap,
   onContactSupportTap,
   onAddFeedbackTap,
@@ -245,6 +249,14 @@ export function MobileHamburgerDrawer({
                           return (
                             <button key={item.href} type="button"
                               onClick={() => { onClose(); onEbrcTap(); }}
+                              className={rowClass} style={itemStyle}
+                            >{inner}</button>
+                          );
+                        }
+                        if (item.href === "/gst" && onGstTap) {
+                          return (
+                            <button key={item.href} type="button"
+                              onClick={() => { onClose(); onGstTap(); }}
                               className={rowClass} style={itemStyle}
                             >{inner}</button>
                           );

@@ -20,6 +20,7 @@ import { MobileHamburgerDrawer }    from "@/components/layout/mobile/MobileHambu
 import { MobileTeamManagement }     from "@/components/dashboard/mobile/MobileTeamManagement";
 import { MobileClientManagement }   from "@/components/dashboard/mobile/MobileClientManagement";
 import { MobileSkuManagement }      from "@/components/dashboard/mobile/MobileSkuManagement";
+import { MobileGst }                from "@/components/dashboard/mobile/MobileGst";
 import { MobileMoreSheet }          from "@/components/layout/mobile/MobileMoreSheet";
 import { MobileEchoSheet }          from "@/components/layout/mobile/MobileEchoSheet";
 import { MobileNotifications }      from "@/components/layout/mobile/MobileNotifications";
@@ -70,6 +71,7 @@ function AppScreen() {
   const [teamManagementOpen, setTeamManagementOpen] = useState(false);
   const [clientManagementOpen, setClientManagementOpen] = useState(false);
   const [skuManagementOpen, setSkuManagementOpen] = useState(false);
+  const [gstOpen, setGstOpen] = useState(false);
   const [moreOpen,         setMoreOpen]         = useState(false);
   const [echoOpen,         setEchoOpen]         = useState(false);
   const [notifsOpen,       setNotifsOpen]       = useState(false);
@@ -350,7 +352,7 @@ function AppScreen() {
         onClose={() => setFilterOpen(null)}
         onApply={(id, summary) => { setAppliedFilters(prev => ({ ...prev, [id]: summary })); setFilterOpen(null); }}
       />
-      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}        onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onSkuManagementTap={() => { setDrawerOpen(false); setSkuManagementOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} />
+      <MobileHamburgerDrawer   open={drawerOpen}      onClose={() => setDrawerOpen(false)}        onSettlementTap={() => { setDrawerOpen(false); setSettlementOpen(true); }} onEbrcTap={() => { setDrawerOpen(false); setEbrcOpen(true); }} onClientManagementTap={() => { setDrawerOpen(false); setClientManagementOpen(true); }} onSkuManagementTap={() => { setDrawerOpen(false); setSkuManagementOpen(true); }} onGstTap={() => { setDrawerOpen(false); setGstOpen(true); }} onTeamManagementTap={() => { setDrawerOpen(false); setTeamManagementOpen(true); }} />
       <MobileSettlementReports
         open={settlementOpen}
         onClose={() => setSettlementOpen(false)}
@@ -372,6 +374,10 @@ function AppScreen() {
       <MobileSkuManagement
         open={skuManagementOpen}
         onClose={() => setSkuManagementOpen(false)}
+      />
+      <MobileGst
+        open={gstOpen}
+        onClose={() => setGstOpen(false)}
       />
       <MobileCreateMcaLink     open={mcaLinkOpen}     onClose={() => setMcaLinkOpen(false)}      />
 
